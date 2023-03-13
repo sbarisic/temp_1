@@ -6,59 +6,61 @@
 <PageTitle>Index</PageTitle>
 
 <div class="form-group">
-    <label>
-        User:
-        <input @bind="userInput" />
-    </label>
+	<label>
+		User:
+		<input @bind="userInput" />
+	</label>
 </div>
 <div class="form-group">
-    <label>
-        Message:
-        <input @bind="messageInput" size="50" />
-    </label>
+	<label>
+		Message:
+		<input @bind="messageInput" size="50" />
+	</label>
 </div>
 <button @onclick="Send" disabled="@(!IsConnected)">Send</button>
 
 <hr>
 
 <ul id="messagesList">
-    @foreach (var message in messages) {
-        <li>@message</li>
-    }
+	@foreach (var message in messages) {
+		<li>@message</li>
+	}
 </ul>
 
 @code {
-    private HubConnection? hubConnection;
-    private List<string> messages = new List<string>();
-    private string? userInput;
-    private string? messageInput;
+	private HubConnection? hubConnection;
+	private List<string> messages = new List<string>();
+	private string? userInput;
+	private string? messageInput;
 
-    protected override async Task OnInitializedAsync() {
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("/comhub"))
-            .Build();
+	protected override async Task OnInitializedAsync() {
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl(Navigation.ToAbsoluteUri("/comhub"))
+			.Build();
 
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) => {
-            var encodedMsg = $"{user}: {message}";
-            messages.Add(encodedMsg);
-            InvokeAsync(StateHasChanged);
-        });
+		hubConnection.On<string, string>("ReceiveMessage", (user, message) => {
+			var encodedMsg = $"{user}: {message}";
+			messages.Add(encodedMsg);
+			InvokeAsync(StateHasChanged);
+		});
 
-        await hubConnection.StartAsync();
-    }
+		await hubConnection.StartAsync();
+	}
 
-    private async Task Send() {
-        if (hubConnection is not null) {
-            await hubConnection.SendAsync("SendMessage", userInput, messageInput);
-        }
-    }
+	private async Task Send() {
+		await hubConnection.SendAsync("DebugLog", string.Format("{0} sending message", userInput));
 
-    public bool IsConnected =>
-        hubConnection?.State == HubConnectionState.Connected;
+		if (hubConnection is not null) {
+			await hubConnection.SendAsync("SendMessage", userInput, messageInput);
+		}
+	}
 
-    public async ValueTask DisposeAsync() {
-        if (hubConnection is not null) {
-            await hubConnection.DisposeAsync();
-        }
-    }
+	public bool IsConnected =>
+		hubConnection?.State == HubConnectionState.Connected;
+
+	public async ValueTask DisposeAsync() {
+		if (hubConnection is not null) {
+			await hubConnection.DisposeAsync();
+		}
+	}
 }
