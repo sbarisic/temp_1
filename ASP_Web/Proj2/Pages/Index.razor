@@ -1,66 +1,87 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.SignalR.Client
+@using Proj2.Code
+@using Proj2.Data
+
 @inject NavigationManager Navigation
+@inject ItemDataService ItemService
+
 @implements IAsyncDisposable
 
 <PageTitle>Index</PageTitle>
 
-<div class="form-group">
-	<label>
-		User:
-		<input @bind="userInput" />
-	</label>
-</div>
-<div class="form-group">
-	<label>
-		Message:
-		<input @bind="messageInput" size="50" />
-	</label>
-</div>
-<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+<div class="row mb-3">
+	<div class="form-group">
+		<label for="input_item" class="form-label">
+			Item Name:
+		</label>
 
-<hr>
+		<div class="col-sm-10">
+			<input id="input_item" class="form-control" type="text" @bind="itemInput" />
+		</div>
+	</div>
+</div>
 
-<ul id="messagesList">
-	@foreach (var message in messages) {
-		<li>@message</li>
-	}
-</ul>
+<div class="row mb-3">
+	<div class="form-group">
+		<label for="input_voltage" class="form-label">
+			Voltage:
+		</label>
+
+		<div class="col-sm-10">
+			<input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
+		</div>
+	</div>
+</div>
+
+<button class="btn btn-primary" @onclick="Update" disabled="@(!IsConnected)">Update</button>
 
 @code {
-	private HubConnection? hubConnection;
-	private List<string> messages = new List<string>();
-	private string? userInput;
-	private string? messageInput;
+	private HubConnection HubCon;
 
-	protected override async Task OnInitializedAsync() {
-		hubConnection = new HubConnectionBuilder()
-			.WithUrl(Navigation.ToAbsoluteUri("/comhub"))
-			.Build();
+	string itemInput;
+	string itemVoltage;
 
-		hubConnection.On<string, string>("ReceiveMessage", (user, message) => {
-			var encodedMsg = $"{user}: {message}";
-			messages.Add(encodedMsg);
-			InvokeAsync(StateHasChanged);
-		});
+	public bool IsConnected {
+		get {
+			if (HubCon == null)
+				return false;
 
-		await hubConnection.StartAsync();
-	}
-
-	private async Task Send() {
-		await hubConnection.SendAsync("DebugLog", string.Format("{0} sending message", userInput));
-
-		if (hubConnection is not null) {
-			await hubConnection.SendAsync("SendMessage", userInput, messageInput);
+			return HubCon.State == HubConnectionState.Connected;
 		}
 	}
 
-	public bool IsConnected =>
-		hubConnection?.State == HubConnectionState.Connected;
+	protected override async Task OnInitializedAsync() {
+		HubCon = new HubConnectionBuilder()
+			.WithUrl(Navigation.ToAbsoluteUri("/comhub"))
+			.Build();
+
+		await HubCon.StartAsync();
+	}
+
+	private async Task Update() {
+		if (!IsConnected)
+			return;
+
+		ItemData Item = await ItemService.GetItemAsync(itemInput);
+
+		if (Item == null)
+			return;
+
+		if (float.TryParse(itemVoltage, out float Voltage)) {
+			Item.TimeStamp = DateTime.Now;
+			Item.Voltage = Voltage;
+		}
+
+		await HubCon.SendAsync("SendUpdateItemData", Item);
+
+		//await hubConnection.SendAsync("DebugLog", string.Format("{0} sending message", userInput));
+		//await hubConnection.SendAsync("SendMessage", userInput, messageInput);
+	}
 
 	public async ValueTask DisposeAsync() {
-		if (hubConnection is not null) {
-			await hubConnection.DisposeAsync();
+		if (HubCon != null) {
+			await HubCon.DisposeAsync();
 		}
 	}
 }

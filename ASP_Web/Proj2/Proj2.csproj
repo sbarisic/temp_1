@@ -2,11 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BlazorStrap" Version="5.1.101" />
+    <PackageReference Include="BlazorStrap.V5" Version="5.1.101" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0-preview.1.23112.2" />
   </ItemGroup>
 
