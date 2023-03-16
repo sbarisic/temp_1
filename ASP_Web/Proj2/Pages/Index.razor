@@ -63,7 +63,7 @@
 		if (!IsConnected)
 			return;
 
-		ItemData Item = await ItemService.GetItemAsync(itemInput);
+		ItemData Item = ItemService.GetItem(itemInput);
 
 		if (Item == null)
 			return;
@@ -73,10 +73,7 @@
 			Item.Voltage = Voltage;
 		}
 
-		await HubCon.SendAsync("SendUpdateItemData", Item);
-
-		//await hubConnection.SendAsync("DebugLog", string.Format("{0} sending message", userInput));
-		//await hubConnection.SendAsync("SendMessage", userInput, messageInput);
+		await HubCon.SendAsync("SendStateHasChanged");
 	}
 
 	public async ValueTask DisposeAsync() {
