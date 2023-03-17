@@ -1,0 +1,83 @@
+﻿@page "/login"
+@using Microsoft.AspNetCore.SignalR.Client
+@using Proj2.Code
+@using Proj2.Data
+@using System.Security.Claims;
+
+@*@attribute [Authorize]  *@
+@inject NavigationManager Navigation
+@inject ItemDataService ItemService
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IHostEnvironmentAuthenticationStateProvider HostAuthentication
+
+@*@implements IAsyncDisposable*@
+
+<PageTitle>Login</PageTitle>
+
+<AuthorizeView>
+	<Authorized>
+		<button class="btn btn-primary" @onclick="PerformLogout">Logout</button>
+	</Authorized>
+
+	<NotAuthorized>
+		<div class="row mb-3">
+			<div class="form-group">
+				<label for="input_username" class="form-label">
+					Username
+				</label>
+
+				<div class="col-sm-10">
+					<input id="input_username" class="form-control" type="text" @bind="Username" />
+				</div>
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<div class="form-group">
+				<label for="input_password" class="form-label">
+					Password
+				</label>
+
+				<div class="col-sm-10">
+					<input id="input_password" class="form-control" type="password" @bind="Password" size="50" />
+				</div>
+			</div>
+		</div>
+
+		<button class="btn btn-primary" @onclick="PerformLogin">Login</button>
+	</NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+	string Username;
+	string Password;
+
+	protected override void OnInitialized() {
+
+
+
+	}
+
+	async Task PerformLogin() {
+		ClaimsPrincipal principal = new ClaimsPrincipal();
+		ClaimsIdentity Ident = new ClaimsIdentity(principal.Claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+		principal = new ClaimsPrincipal(Ident);
+
+		HostAuthentication.SetAuthenticationState(Task.FromResult(new AuthenticationState(principal)));
+
+		AuthenticationState AuthState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		Console.WriteLine("AuthState = {0}", AuthState);
+
+		// HostAuthentication.SetAuthenticationState(Task.FromResult(new AuthenticationState(principal));
+
+		
+
+		StateHasChanged();
+	}
+
+	async Task PerformLogout() {
+		//HostAuthentication.SetAuthenticationState(Task.FromResult(null));
+	}
+}

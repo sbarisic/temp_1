@@ -14,64 +14,67 @@
 <h1>Items</h1>
 
 @if (!IsConnected) {
-    <p><em>Loading...</em></p>
+	<p><em>Loading...</em></p>
 } else {
-    <table class="table table-striped table-light">
-        <thead>
-            <tr>
-                <th>TimeStamp</th>
-                <th>Name</th>
-                <th>Voltage</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var Itm in DisplayItems) {
-                Console.WriteLine("DisplayItem: " + Itm.ToString());
-
-                <tr>
-                    <td>@Itm.TimeStamp.ToShortTimeString()</td>
-                    <td>@Itm.Name</td>
-                    <td>@(Itm.Voltage + " V")</td>
-                    <td>@Itm.Description</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+	<table class="table table-striped table-light">
+		<thead>
+			<tr>
+				<th>TimeStamp</th>
+				<th>Name</th>
+				<th>Voltage</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var Itm in DisplayItems) {
+				<tr>
+					<td>@Itm.TimeStamp.ToShortTimeString()</td>
+					<td>@Itm.Name</td>
+					<td>@(Itm.Voltage + " V")</td>
+					<td>@Itm.Description</td>
+				</tr>
+			}
+		</tbody>
+	</table>
 }
 
 @code {
-    HubConnection HubCon;
-    List<ItemData> DisplayItems;
+	HubConnection HubCon;
+	List<ItemData> DisplayItems;
 
-    public bool IsConnected {
-        get {
-            if (HubCon == null || DisplayItems == null)
-                return false;
+	public bool IsConnected {
+		get {
+			if (HubCon == null || DisplayItems == null)
+				return false;
 
-            return HubCon.State == HubConnectionState.Connected;
-        }
-    }
+			return HubCon.State == HubConnectionState.Connected;
+		}
+	}
 
-    protected override async Task OnInitializedAsync() {
-        if (DisplayItems == null)
-            DisplayItems = new List<ItemData>();
+	protected override async Task OnInitializedAsync() {
+		if (DisplayItems == null)
+			DisplayItems = new List<ItemData>();
 
-        DisplayItems.Clear();
-        DisplayItems.AddRange(ItemService.GetAllItems());
+		ReloadItems();
 
-        HubCon = new HubConnectionBuilder().WithUrl(Navigation.ToAbsoluteUri("/comhub")).Build();
-        HubCon.On("OnStateHasChanged", OnStateHasChanged);
-        await HubCon.StartAsync();
-    }
+		HubCon = new HubConnectionBuilder().WithUrl(Navigation.ToAbsoluteUri("/comhub")).Build();
+		HubCon.On("OnStateHasChanged", OnStateHasChanged);
+		await HubCon.StartAsync();
+	}
 
-    void OnStateHasChanged() {
-        InvokeAsync(StateHasChanged);
-    }
+	void ReloadItems() {
+		DisplayItems.Clear();
+		DisplayItems.AddRange(ItemService.GetAllItems());
+	}
 
-    public async ValueTask DisposeAsync() {
-        if (HubCon != null) {
-            await HubCon.DisposeAsync();
-        }
-    }
+	void OnStateHasChanged() {
+		ReloadItems();
+		InvokeAsync(StateHasChanged);
+	}
+
+	public async ValueTask DisposeAsync() {
+		if (HubCon != null) {
+			await HubCon.DisposeAsync();
+		}
+	}
 }

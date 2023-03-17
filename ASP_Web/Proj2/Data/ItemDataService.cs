@@ -9,6 +9,8 @@ namespace Proj2.Data {
             Items.Add(new ItemData(DateTime.Now, "Item1", 14.2f, "Test item 1"));
             Items.Add(new ItemData(DateTime.Now, "Item2", 12.0f, "Test item 2"));
             Items.Add(new ItemData(DateTime.Now, "Item3", 13.4f, "Test item 3"));
+
+            
         }
 
         public ItemData[] GetAllItems() {
@@ -16,9 +18,6 @@ namespace Proj2.Data {
         }
 
         public ItemData GetItem(string ItemName) {
-            // TODO: RemoveDebug
-            Console.WriteLine("GetItem(\"{0}\")", ItemName);
-
             ItemData Itm = Items.Where(Itm => Itm.Name == ItemName).FirstOrDefault();
 
             if (Itm == null)
