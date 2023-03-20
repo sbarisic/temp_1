@@ -58,7 +58,7 @@ namespace Proj2.Database {
 		public DatabaseService() {
 			Instance = this;
 			Database = new DatabaseContext();
-			Database.Database.EnsureDeleted();
+			//Database.Database.EnsureDeleted();
 			Database.Database.EnsureCreated();
 
 			if (Database.Users.Where(Usr => Usr.Username == "admin").Count() == 0) {

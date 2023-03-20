@@ -18,6 +18,12 @@
 	</Authorized>
 
 	<NotAuthorized>
+		@if (ShowInvalidUsername) {
+			<div class="alert alert-danger" role="alert">
+				Invalid Username or Password
+			</div>
+		}
+
 		<div class="row mb-3">
 			<div class="form-group">
 				<label for="input_username" class="form-label">
@@ -51,19 +57,27 @@
 	string Username;
 	string Password;
 
-	protected override void OnInitialized() {
+	bool ShowInvalidUsername = false;
 
+	protected override void OnInitialized() {
+		Console.WriteLine("Login OnInitialized");
 	}
 
+
+
 	async Task PerformLogin() {
+		ShowInvalidUsername = false;
 		AuthStateProvider Auth = HostAuthentication as AuthStateProvider;
 
 		if (Auth == null)
 			return;
 
-		if (Auth.Login(Username, Password, out AuthenticationState AuthState)) {
+		if (Auth.Login(Username, Password, out AuthenticationState AuthState))
+		{
 			Auth.SetAuthenticationState(Task.FromResult(AuthState));
 		}
+		else
+			ShowInvalidUsername = true;
 
 		StateHasChanged();
 	}
@@ -71,5 +85,6 @@
 	async Task PerformLogout() {
 		HostAuthentication.SetAuthenticationState(null);
 		StateHasChanged();
+
 	}
 }

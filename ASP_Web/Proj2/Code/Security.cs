@@ -50,6 +50,12 @@ namespace Proj2.Code {
 
 		public bool Login(string Username, string Password, out AuthenticationState AuthState) {
 			DatabaseContext Db = DatabaseService.Instance.Database;
+			AuthState = null;
+
+			DbUser DbUsr = Db.Users.Where(Usr => Usr.Username == Username).FirstOrDefault();
+			if (DbUsr == null)
+				return false;
+
 
 			List<Claim> Claims = new List<Claim>();
 			Claims.Add(new Claim("Username", Username));

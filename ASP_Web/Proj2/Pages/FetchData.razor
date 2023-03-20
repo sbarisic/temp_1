@@ -23,6 +23,7 @@
 				<th>Name</th>
 				<th>Voltage</th>
 				<th>Description</th>
+				<th>Action</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -32,6 +33,7 @@
 					<td>@Itm.Name</td>
 					<td>@(Itm.Voltage + " V")</td>
 					<td>@Itm.Description</td>
+					<td><button type="button" class="btn btn-sm btn-outline-success" @onclick="@(e=> ActivateItem(Itm))">Activate</button></td>
 				</tr>
 			}
 		</tbody>
@@ -76,5 +78,9 @@
 		if (HubCon != null) {
 			await HubCon.DisposeAsync();
 		}
+	}
+
+	void ActivateItem(ItemData Itm) {
+		Console.WriteLine(string.Format("Activating {0} - Current voltage: {1}", Itm.Name, Itm.Voltage));
 	}
 }
