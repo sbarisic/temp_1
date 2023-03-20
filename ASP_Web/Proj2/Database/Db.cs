@@ -1,72 +1,122 @@
 ﻿using Microsoft.EntityFrameworkCore;
+
+using Proj2.Code;
+
 using System.ComponentModel.DataAnnotations;
 
 namespace Proj2.Database {
-	public class DbUser {
+    public class DbUser {
+        [Key]
+        public int ID {
+            get; set;
+        }
+
+        public string Username {
+            get; set;
+        }
+
+        public string Hash {
+            get; set;
+        }
+
+        public string Salt {
+            get; set;
+        }
+
+        public List<DbPermission> Permissions {
+            get;
+        } = new List<DbPermission>();
+    }
+
+    public class DbPermission {
+        [Key]
+        public int ID {
+            get; set;
+        }
+
+        public string Name {
+            get; set;
+        }
+    }
+
+    public class DbItemData {
 		[Key]
 		public int ID {
 			get; set;
 		}
 
-		public string Username {
-			get; set;
-		}
+		public DateTime TimeStamp {
+            get; set;
+        }
 
-		public string Hash {
-			get; set;
-		}
+        public string Name {
+            get; set;
+        }
 
-		public string Salt {
-			get; set;
-		}
+        public float Voltage {
+            get; set;
+        }
 
-		public List<DbPermission> Permissions {
-			get;
-		} = new List<DbPermission>();
-	}
+        public string Description {
+            get; set;
+        }
 
-	public class DbPermission {
-		[Key]
-		public int ID {
-			get; set;
-		}
+        public DbItemData() {
+        }
 
-		public string Name {
-			get; set;
-		}
-	}
+        public DbItemData(DateTime TimeStamp, string Name, float Voltage, string Description) {
+            this.TimeStamp = TimeStamp;
+            this.Name = Name;
+            this.Voltage = Voltage;
+            this.Description = Description;
+        }
 
-	public class DatabaseContext : DbContext {
-		public DbSet<DbUser> Users {
-			get; set;
-		}
+        public override string ToString() {
+            return string.Format("{0} - {1}", Name, Description);
+        }
+    }
 
-		public DbSet<DbPermission> AllPermissions {
-			get; set;
-		}
+    public class DatabaseContext : DbContext {
+        public DbSet<DbUser> Users {
+            get; set;
+        }
 
-		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-			optionsBuilder.UseSqlite("Data Source=local_sqlite.db");
-		}
-	}
+        public DbSet<DbPermission> AllPermissions {
+            get; set;
+        }
 
-	public class DatabaseService {
-		public static DatabaseService Instance;
+        public DbSet<DbItemData> Items {
+            get; set;
+        }
 
-		public DatabaseContext Database;
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
+            optionsBuilder.UseSqlite("Data Source=local_sqlite.db");
+        }
+    }
 
-		public DatabaseService() {
-			Instance = this;
-			Database = new DatabaseContext();
-			//Database.Database.EnsureDeleted();
-			Database.Database.EnsureCreated();
+    public class DatabaseService {
+        public static DatabaseService Instance;
 
-			if (Database.Users.Where(Usr => Usr.Username == "admin").Count() == 0) {
+        public DatabaseContext Database;
 
-				Database.Users.Add(new DbUser { Username = "admin" });
+        public DatabaseService() {
+            Instance = this;
+            Database = new DatabaseContext();
 
-				Database.SaveChanges();
-			}
-		}
-	}
+            // Database.Database.EnsureDeleted();
+            if (Database.Database.EnsureCreated()) {
+                Console.WriteLine("Creating new database");
+
+                Database.Users.Add(new DbUser { Username = "admin" });
+
+                Database.Items.Add(new DbItemData(DateTime.Now, "Item1", 14.2f, "Test item 1"));
+                Database.Items.Add(new DbItemData(DateTime.Now, "Item2", 12.0f, "Test item 2"));
+                Database.Items.Add(new DbItemData(DateTime.Now, "Item3", 13.4f, "Test item 3"));
+                Database.Items.Add(new DbItemData(DateTime.Now, "Test", 12.13f, "Test Test"));
+
+                Database.SaveChanges();
+            } else
+                Console.WriteLine("Using existing database");
+        }
+    }
 }

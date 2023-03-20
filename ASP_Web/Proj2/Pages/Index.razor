@@ -1,6 +1,6 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.SignalR.Client
-@using Proj2.Code
+@using Proj2.Database
 @using Proj2.Data
 
 @inject NavigationManager Navigation
@@ -67,7 +67,7 @@
 		if (!IsConnected)
 			return;
 
-		ItemData Item = ItemService.GetItem(itemInput);
+		DbItemData Item = ItemService.GetItem(itemInput);
 
 		if (Item == null)
 			return;
@@ -77,6 +77,7 @@
 			Item.Voltage = Voltage;
 		}
 
+		ItemService.UpdateItem(Item);
 		await HubCon.SendAsync("SendStateHasChanged");
 	}
 

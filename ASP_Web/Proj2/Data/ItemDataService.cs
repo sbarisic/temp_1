@@ -3,28 +3,23 @@ using Proj2.Database;
 
 namespace Proj2.Data {
     public class ItemDataService {
-        List<ItemData> Items;
-
-        public ItemDataService() {
-            Items = new List<ItemData>();
-            Items.Add(new ItemData(DateTime.Now, "Item1", 14.2f, "Test item 1"));
-            Items.Add(new ItemData(DateTime.Now, "Item2", 12.0f, "Test item 2"));
-            Items.Add(new ItemData(DateTime.Now, "Item3", 13.4f, "Test item 3"));
-
-            
+        DatabaseContext Db {
+            get {
+                return DatabaseService.Instance.Database;
+            }
         }
 
-        public ItemData[] GetAllItems() {
-            return Items.ToArray();
+        public DbItemData[] GetAllItems() {
+            return Db.Items.ToArray();
         }
 
-        public ItemData GetItem(string ItemName) {
-            ItemData Itm = Items.Where(Itm => Itm.Name == ItemName).FirstOrDefault();
+        public DbItemData GetItem(string ItemName) {
+            return Db.Items.Where(DbItem => DbItem.Name == ItemName).FirstOrDefault();
+        }
 
-            if (Itm == null)
-                return null;
-
-            return Itm;
+        public void UpdateItem(DbItemData Item) {
+            Db.Items.Update(Item);
+            Db.SaveChanges();
         }
     }
 }
