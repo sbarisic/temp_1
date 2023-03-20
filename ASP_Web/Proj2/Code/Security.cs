@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components;
+using Proj2.Database;
+using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 
 namespace Proj2.Code {
 	public class PasswdManager {
@@ -19,49 +23,56 @@ namespace Proj2.Code {
 		}
 	}*/
 
-	public class RevalidatingIdentityAuthenticationStateProvider<TUser>
-	: RevalidatingServerAuthenticationStateProvider where TUser : class {
-		private readonly IServiceScopeFactory _scopeFactory;
-		private readonly IdentityOptions _options;
+	class AuthStateProvider : AuthenticationStateProvider, IHostEnvironmentAuthenticationStateProvider {
+		AuthenticationState AuthState;
 
-		public RevalidatingIdentityAuthenticationStateProvider(
-			ILoggerFactory loggerFactory,
-			IServiceScopeFactory scopeFactory,
-			IOptions<IdentityOptions> optionsAccessor)
-			: base(loggerFactory) {
-			_scopeFactory = scopeFactory;
-			_options = optionsAccessor.Value;
+		public override Task<AuthenticationState> GetAuthenticationStateAsync() {
+			if (AuthState == null)
+				Logout();
+
+			return Task.FromResult(AuthState);
 		}
 
-		protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(30);
-
-		protected override async Task<bool> ValidateAuthenticationStateAsync(
-			AuthenticationState authenticationState, CancellationToken cancellationToken) {
-			// Get the user manager from a new scope to ensure it fetches fresh data
-			var scope = _scopeFactory.CreateScope();
-			try {
-				var userManager = scope.ServiceProvider.GetRequiredService<UserManager<TUser>>();
-				return await ValidateSecurityStampAsync(userManager, authenticationState.User);
-			} finally {
-				if (scope is IAsyncDisposable asyncDisposable) {
-					await asyncDisposable.DisposeAsync();
-				} else {
-					scope.Dispose();
-				}
-			}
-		}
-
-		private async Task<bool> ValidateSecurityStampAsync(UserManager<TUser> userManager, ClaimsPrincipal principal) {
-			var user = await userManager.GetUserAsync(principal);
-			if (user == null) {
-				return false;
-			} else if (!userManager.SupportsUserSecurityStamp) {
-				return true;
+		public void SetAuthenticationState(Task<AuthenticationState> authenticationStateTask) {
+			if (authenticationStateTask == null) {
+				Logout();
 			} else {
-				var principalStamp = principal.FindFirstValue(_options.ClaimsIdentity.SecurityStampClaimType);
-				var userStamp = await userManager.GetSecurityStampAsync(user);
-				return principalStamp == userStamp;
+				AuthState = authenticationStateTask.Result;
 			}
+
+			NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+		}
+
+		public void Logout() {
+			ClaimsPrincipal Princ = new ClaimsPrincipal();
+			AuthState = new AuthenticationState(Princ);
+		}
+
+		public bool Login(string Username, string Password, out AuthenticationState AuthState) {
+			DatabaseContext Db = DatabaseService.Instance.Database;
+
+			List<Claim> Claims = new List<Claim>();
+			Claims.Add(new Claim("Username", Username));
+
+			ClaimsIdentity Ident = new ClaimsIdentity(Claims, CookieAuthenticationDefaults.AuthenticationScheme);
+			ClaimsPrincipal Princ = new ClaimsPrincipal(Ident);
+
+			AuthState = new AuthenticationState(Princ);
+			return true;
+		}
+
+		public DbUser GetDbUser() {
+			if (AuthState == null || AuthState.User == null)
+				return null;
+
+			DatabaseContext Db = DatabaseService.Instance.Database;
+
+			Claim UsernameClaim = AuthState.User.FindFirst("Username");
+			if (UsernameClaim == null)
+				return null;
+
+			DbUser DbUsr = Db.Users.Where(Usr => Usr.Username == UsernameClaim.Value).FirstOrDefault();
+			return DbUsr;
 		}
 	}
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Proj2.Code;
 using Proj2.Data;
 using Proj2.Database;
@@ -24,16 +25,23 @@ builder.Services.AddResponseCompression(opts => {
 });
 builder.Services.AddBlazorStrap();
 
-builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
+builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
+
 builder.Services.AddScoped<IHostEnvironmentAuthenticationStateProvider>(sp => {
-	var provider = (ServerAuthenticationStateProvider)sp.GetRequiredService<AuthenticationStateProvider>();
+	var provider = (AuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>();
 	return provider;
 });
 
+builder.Services.AddScoped<AuthStateProvider>(sp => {
+	var provider = (AuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>();
+	return provider;
+});
 
 var app = builder.Build();
+app.Services.GetService<DatabaseService>();
 
 app.UseResponseCompression();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {

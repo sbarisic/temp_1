@@ -1,24 +1,57 @@
-﻿@inherits LayoutComponentBase
+﻿@using Proj2.Code
+
+@inherits LayoutComponentBase
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IHostEnvironmentAuthenticationStateProvider HostAuthentication
+
+@inject AuthStateProvider AuthStateProvider
 
 <PageTitle>Proj2</PageTitle>
 
 <HeadContent>
-    <link href="~/css/site.styles.css" rel="stylesheet">
-    <link href="~/css/bootstrap/bootstrap.min.css" rel="stylesheet" integrity="if_needed" />
+	<link href="~/css/site.styles.css" rel="stylesheet">
+	<link href="~/css/bootstrap/bootstrap.min.css" rel="stylesheet" integrity="if_needed" />
 </HeadContent>
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+	<div class="sidebar">
+		<NavMenu />
+	</div>
 
-    <main>
-        <div class="top-row px-4">
-            <p class="text-end">USERNAME - JOHN DOE</p>
-        </div>
+	<main>
+		<div class="top-row px-4">
+			<AuthorizeView>
+				<Authorized>
+					<p class="text-end">@Username</p>
+				</Authorized>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+				<NotAuthorized>
+					<p class="text-end">Please Log In</p>
+				</NotAuthorized>
+			</AuthorizeView>
+		</div>
+
+		<article class="content px-4">
+			@Body
+		</article>
+	</main>
 </div>
+
+@code {
+	string Username;
+
+	protected override async Task OnInitializedAsync() {
+		//AuthenticationState AuthState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		//AuthState.
+
+		Database.DbUser Usr = AuthStateProvider.GetDbUser();
+
+		if (Usr != null)
+			Username = Usr.Username;
+		else
+			Username = "NULL";
+
+		StateHasChanged();
+	}
+}

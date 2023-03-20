@@ -4,14 +4,11 @@
 @using Proj2.Data
 @using System.Security.Claims;
 
-@*@attribute [Authorize]  *@
 @inject NavigationManager Navigation
 @inject ItemDataService ItemService
-
+@inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IHostEnvironmentAuthenticationStateProvider HostAuthentication
-
-@*@implements IAsyncDisposable*@
 
 <PageTitle>Login</PageTitle>
 
@@ -56,28 +53,23 @@
 
 	protected override void OnInitialized() {
 
-
-
 	}
 
 	async Task PerformLogin() {
-		ClaimsPrincipal principal = new ClaimsPrincipal();
-		ClaimsIdentity Ident = new ClaimsIdentity(principal.Claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
-		principal = new ClaimsPrincipal(Ident);
+		AuthStateProvider Auth = HostAuthentication as AuthStateProvider;
 
-		HostAuthentication.SetAuthenticationState(Task.FromResult(new AuthenticationState(principal)));
+		if (Auth == null)
+			return;
 
-		AuthenticationState AuthState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		Console.WriteLine("AuthState = {0}", AuthState);
-
-		// HostAuthentication.SetAuthenticationState(Task.FromResult(new AuthenticationState(principal));
-
-		
+		if (Auth.Login(Username, Password, out AuthenticationState AuthState)) {
+			Auth.SetAuthenticationState(Task.FromResult(AuthState));
+		}
 
 		StateHasChanged();
 	}
 
 	async Task PerformLogout() {
-		//HostAuthentication.SetAuthenticationState(Task.FromResult(null));
+		HostAuthentication.SetAuthenticationState(null);
+		StateHasChanged();
 	}
 }

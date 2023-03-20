@@ -10,31 +10,35 @@
 
 <PageTitle>Index</PageTitle>
 
-<div class="row mb-3">
-	<div class="form-group">
-		<label for="input_item" class="form-label">
-			Item Name:
-		</label>
+<AuthorizeView>
+	<Authorized>
+		<div class="row mb-3">
+			<div class="form-group">
+				<label for="input_item" class="form-label">
+					Item Name:
+				</label>
 
-		<div class="col-sm-10">
-			<input id="input_item" class="form-control" type="text" @bind="itemInput" />
+				<div class="col-sm-10">
+					<input id="input_item" class="form-control" type="text" @bind="itemInput" />
+				</div>
+			</div>
 		</div>
-	</div>
-</div>
 
-<div class="row mb-3">
-	<div class="form-group">
-		<label for="input_voltage" class="form-label">
-			Voltage:
-		</label>
+		<div class="row mb-3">
+			<div class="form-group">
+				<label for="input_voltage" class="form-label">
+					Voltage:
+				</label>
 
-		<div class="col-sm-10">
-			<input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
+				<div class="col-sm-10">
+					<input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
+				</div>
+			</div>
 		</div>
-	</div>
-</div>
 
-<button class="btn btn-primary" @onclick="Update" disabled="@(!IsConnected)">Update</button>
+		<button class="btn btn-primary" @onclick="Update" disabled="@(!IsConnected)">Update</button>
+	</Authorized>
+</AuthorizeView>
 
 @code {
 	private HubConnection HubCon;

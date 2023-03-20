@@ -51,10 +51,22 @@ namespace Proj2.Database {
 	}
 
 	public class DatabaseService {
+		public static DatabaseService Instance;
+
 		public DatabaseContext Database;
 
 		public DatabaseService() {
+			Instance = this;
 			Database = new DatabaseContext();
+			Database.Database.EnsureDeleted();
+			Database.Database.EnsureCreated();
+
+			if (Database.Users.Where(Usr => Usr.Username == "admin").Count() == 0) {
+
+				Database.Users.Add(new DbUser { Username = "admin" });
+
+				Database.SaveChanges();
+			}
 		}
 	}
 }
