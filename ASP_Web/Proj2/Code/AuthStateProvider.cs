@@ -8,21 +8,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components;
 using Proj2.Database;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace Proj2.Code {
-	public class PasswdManager {
-		public PasswdManager() {
-			//PasswordHasher<string> passwordHasher = new PasswordHasher<string>();
-
-
-		}
-	}
-
-	/*public class UserIdentity {
-		public UserIdentity() {
-		}
-	}*/
-
 	class AuthStateProvider : AuthenticationStateProvider, IHostEnvironmentAuthenticationStateProvider {
 		AuthenticationState AuthState;
 
@@ -56,9 +44,16 @@ namespace Proj2.Code {
 			if (DbUsr == null)
 				return false;
 
+			using (PasswdManager PassMgr = new PasswdManager()) {
+				string SaltedHash = PassMgr.GenerateHash(Password, DbUsr.Salt);
+
+				if (SaltedHash != DbUsr.Hash)
+					return false;
+			}
 
 			List<Claim> Claims = new List<Claim>();
 			Claims.Add(new Claim("Username", Username));
+			Claims.Add(new Claim("UserID", DbUsr.ID.ToString()));
 
 			ClaimsIdentity Ident = new ClaimsIdentity(Claims, CookieAuthenticationDefaults.AuthenticationScheme);
 			ClaimsPrincipal Princ = new ClaimsPrincipal(Ident);
@@ -72,12 +67,14 @@ namespace Proj2.Code {
 				return null;
 
 			DatabaseContext Db = DatabaseService.Instance.Database;
+			Claim UserIDClaim = AuthState.User.FindFirst("UserID");
 
-			Claim UsernameClaim = AuthState.User.FindFirst("Username");
-			if (UsernameClaim == null)
+			if (UserIDClaim == null)
 				return null;
 
-			DbUser DbUsr = Db.Users.Where(Usr => Usr.Username == UsernameClaim.Value).FirstOrDefault();
+			int UserID = int.Parse(UserIDClaim.Value);
+
+			DbUser DbUsr = Db.Users.Where(Usr => Usr.ID == UserID).FirstOrDefault();
 			return DbUsr;
 		}
 	}

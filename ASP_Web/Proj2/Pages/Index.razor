@@ -11,79 +11,79 @@
 <PageTitle>Index</PageTitle>
 
 <AuthorizeView>
-	<Authorized>
-		<div class="row mb-3">
-			<div class="form-group">
-				<label for="input_item" class="form-label">
-					Item Name:
-				</label>
+    <Authorized>
+        <div class="row mb-3">
+            <div class="form-group">
+                <label for="input_item" class="form-label">
+                    Item Name:
+                </label>
 
-				<div class="col-sm-10">
-					<input id="input_item" class="form-control" type="text" @bind="itemInput" />
-				</div>
-			</div>
-		</div>
+                <div class="col-sm-10">
+                    <input id="input_item" class="form-control" type="text" @bind="itemInput" />
+                </div>
+            </div>
+        </div>
 
-		<div class="row mb-3">
-			<div class="form-group">
-				<label for="input_voltage" class="form-label">
-					Voltage:
-				</label>
+        <div class="row mb-3">
+            <div class="form-group">
+                <label for="input_voltage" class="form-label">
+                    Voltage:
+                </label>
 
-				<div class="col-sm-10">
-					<input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
-				</div>
-			</div>
-		</div>
+                <div class="col-sm-10">
+                    <input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
+                </div>
+            </div>
+        </div>
 
-		<button class="btn btn-primary" @onclick="Update" disabled="@(!IsConnected)">Update</button>
-	</Authorized>
+        <button class="btn btn-primary" @onclick="Update" disabled="@(!IsConnected)">Update</button>
+    </Authorized>
 </AuthorizeView>
 
 @code {
-	private HubConnection HubCon;
+    private HubConnection HubCon;
 
-	string itemInput;
-	string itemVoltage;
+    string itemInput;
+    string itemVoltage;
 
-	public bool IsConnected {
-		get {
-			if (HubCon == null)
-				return false;
+    public bool IsConnected {
+        get {
+            if (HubCon == null)
+                return false;
 
-			return HubCon.State == HubConnectionState.Connected;
-		}
-	}
+            return HubCon.State == HubConnectionState.Connected;
+        }
+    }
 
-	protected override async Task OnInitializedAsync() {
-		HubCon = new HubConnectionBuilder()
-			.WithUrl(Navigation.ToAbsoluteUri("/comhub"))
-			.Build();
+    protected override async Task OnInitializedAsync() {
+        HubCon = new HubConnectionBuilder()
+        .WithUrl(Navigation.ToAbsoluteUri("/comhub"))
+        .Build();
 
-		await HubCon.StartAsync();
-	}
+        await HubCon.StartAsync();
+    }
 
-	private async Task Update() {
-		if (!IsConnected)
-			return;
+    private async Task Update() {
+        if (!IsConnected)
+            return;
 
-		DbItemData Item = ItemService.GetItem(itemInput);
+        DbItemData Item = ItemService.GetItem(itemInput);
 
-		if (Item == null)
-			return;
+        if (Item == null)
+            return;
 
-		if (float.TryParse(itemVoltage, out float Voltage)) {
-			Item.TimeStamp = DateTime.Now;
-			Item.Voltage = Voltage;
-		}
+        if (float.TryParse(itemVoltage, out float Voltage)) {
+            Item.TimeStamp = DateTime.Now;
+            Item.Voltage = Voltage;
+        }
 
-		ItemService.UpdateItem(Item);
-		await HubCon.SendAsync("SendStateHasChanged");
-	}
+        ItemService.UpdateItem(Item);
+        await HubCon.SendAsync("SendStateHasChanged");
+    }
 
-	public async ValueTask DisposeAsync() {
-		if (HubCon != null) {
-			await HubCon.DisposeAsync();
-		}
-	}
+    public async ValueTask DisposeAsync() {
+        if (HubCon != null) {
+            await HubCon.DisposeAsync();
+        }
+    }
 }

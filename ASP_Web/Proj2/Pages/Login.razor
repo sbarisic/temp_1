@@ -4,87 +4,90 @@
 @using Proj2.Data
 @using System.Security.Claims;
 
-@inject NavigationManager Navigation
-@inject ItemDataService ItemService
-@inject IJSRuntime JS
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IHostEnvironmentAuthenticationStateProvider HostAuthentication
+@inject AuthStateProvider AuthStateProvider
 
 <PageTitle>Login</PageTitle>
 
 <AuthorizeView>
-	<Authorized>
-		<button class="btn btn-primary" @onclick="PerformLogout">Logout</button>
-	</Authorized>
+    <Authorized>
+        <div class="card">
+            <h5 class="card-header">Welcome, @LoggedInUsername</h5>
+            <div class="card-body">
+                <button class="btn btn-primary" @onclick="PerformLogout">Logout</button>
+            </div>
+        </div>
+    </Authorized>
 
-	<NotAuthorized>
-		@if (ShowInvalidUsername) {
-			<div class="alert alert-danger" role="alert">
-				Invalid Username or Password
-			</div>
-		}
+    <NotAuthorized>
+        <div class="card">
+            <h5 class="card-header">Login</h5>
+            <div class="card-body">
+                @if (ShowInvalidUsername) {
+                    <div class="alert alert-danger" role="alert">
+                        Invalid Username or Password
+                    </div>
+                }
 
-		<div class="row mb-3">
-			<div class="form-group">
-				<label for="input_username" class="form-label">
-					Username
-				</label>
+                <div class="row mb-3">
+                    <div class="form-group">
+                        <label for="input_username" class="form-label">
+                            Username
+                        </label>
 
-				<div class="col-sm-10">
-					<input id="input_username" class="form-control" type="text" @bind="Username" />
-				</div>
-			</div>
-		</div>
+                        <div class="col-sm-10">
+                            <input id="input_username" class="form-control" type="text" @bind="Username" />
+                        </div>
+                    </div>
+                </div>
 
-		<div class="row mb-3">
-			<div class="form-group">
-				<label for="input_password" class="form-label">
-					Password
-				</label>
+                <div class="row mb-3">
+                    <div class="form-group">
+                        <label for="input_password" class="form-label">
+                            Password
+                        </label>
 
-				<div class="col-sm-10">
-					<input id="input_password" class="form-control" type="password" @bind="Password" size="50" />
-				</div>
-			</div>
-		</div>
+                        <div class="col-sm-10">
+                            <input id="input_password" class="form-control" type="password" @bind="Password" size="50" />
+                        </div>
+                    </div>
+                </div>
 
-		<button class="btn btn-primary" @onclick="PerformLogin">Login</button>
-	</NotAuthorized>
+                <button class="btn btn-primary" @onclick="PerformLogin">Login</button>
+            </div>
+        </div>
+    </NotAuthorized>
 </AuthorizeView>
 
 
 @code {
-	string Username;
-	string Password;
+    string Username;
+    string Password;
 
-	bool ShowInvalidUsername = false;
+    bool ShowInvalidUsername = false;
 
-	protected override void OnInitialized() {
-		Console.WriteLine("Login OnInitialized");
-	}
+    string LoggedInUsername {
+        get {
+            return AuthStateProvider.GetDbUser()?.Username;
+        }
+    }
 
+    protected override void OnInitialized() {
+        Console.WriteLine("Login OnInitialized");
+    }
 
+    async Task PerformLogin() {
+        ShowInvalidUsername = false;
 
-	async Task PerformLogin() {
-		ShowInvalidUsername = false;
-		AuthStateProvider Auth = HostAuthentication as AuthStateProvider;
+        if (AuthStateProvider.Login(Username, Password, out AuthenticationState AuthState)) {
+            AuthStateProvider.SetAuthenticationState(Task.FromResult(AuthState));
+        } else
+            ShowInvalidUsername = true;
 
-		if (Auth == null)
-			return;
+        StateHasChanged();
+    }
 
-		if (Auth.Login(Username, Password, out AuthenticationState AuthState))
-		{
-			Auth.SetAuthenticationState(Task.FromResult(AuthState));
-		}
-		else
-			ShowInvalidUsername = true;
-
-		StateHasChanged();
-	}
-
-	async Task PerformLogout() {
-		HostAuthentication.SetAuthenticationState(null);
-		StateHasChanged();
-
-	}
+    async Task PerformLogout() {
+        AuthStateProvider.SetAuthenticationState(null);
+        StateHasChanged();
+    }
 }
