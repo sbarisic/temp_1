@@ -47,12 +47,9 @@ sudo micro /etc/postgresql/*/main/postgresql.conf
 sudo systemctl restart postgresql
 ```
 
+```
 TODO:
-
-- Postaviti web na server
-- API za pristup mikrokontroleru
-- Mikrokontroler salje podatke na server
-- Server salje podatke na mikrokontroler
+- JSON API za pristup mikrokontroleru
 
 
 * Uprava
@@ -65,3 +62,4 @@ TODO:
 			* Akumulator 1
 			* Akumulator 2
 			* Stanje pritiska 1 npr...
+```
