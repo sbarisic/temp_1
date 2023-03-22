@@ -32,6 +32,7 @@ bld/
 [Ll]og/
 [Ll]ogs/
 ASP_Web/publish/
+ASP_Web/Proj2/appsettings.prod.json
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
