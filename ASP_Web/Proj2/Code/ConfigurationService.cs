@@ -24,6 +24,9 @@ namespace Proj2.Code {
 			string DatabaseName = "Database_Dev";
 			Console.WriteLine("Using Database: {0}", DatabaseName);
 			ConnectionString = Config.GetConnectionString(DatabaseName);
+
+			if (ConnectionString.Length == 0 || ConnectionString == "NONE")
+				throw new Exception("Connection string was not defined");
 		}
 	}
 }
