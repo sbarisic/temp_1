@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.Configuration;
 using Proj2.Code;
-
 using System.ComponentModel.DataAnnotations;
+using System.Net.NetworkInformation;
 
 namespace Proj2.Database {
 	public class DbUser {
@@ -57,10 +57,6 @@ namespace Proj2.Database {
 			get; set;
 		}
 
-		public DateTime TimeStamp {
-			get; set;
-		}
-
 		public string Name {
 			get; set;
 		}
@@ -76,8 +72,8 @@ namespace Proj2.Database {
 		public DbItemData() {
 		}
 
-		public DbItemData(DateTime TimeStamp, string Name, float Voltage, string Description) {
-			this.TimeStamp = TimeStamp;
+		public DbItemData(string Name, float Voltage, string Description) {
+			//this.TimeStamp = TimeStamp.SetKindUtc();
 			this.Name = Name;
 			this.Voltage = Voltage;
 			this.Description = Description;
@@ -89,6 +85,11 @@ namespace Proj2.Database {
 	}
 
 	public class DatabaseContext : DbContext {
+		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
+			optionsBuilder.UseNpgsql(ConfigurationService.Instance.ConnectionString);
+		}
+
+		// Tables
 		public DbSet<DbUser> Users {
 			get; set;
 		}
@@ -99,37 +100,21 @@ namespace Proj2.Database {
 
 		public DbSet<DbItemData> Items {
 			get; set;
+		}	
+		
+		// Functions
+
+		public DbItemData[] GetAllItems() {
+			return Items.OrderBy(Itm => Itm.ID).ToArray();
 		}
 
-		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-			optionsBuilder.UseSqlite("Data Source=local_sqlite.db");
+		public DbItemData GetItem(string ItemName) {
+			return Items.Where(DbItem => DbItem.Name == ItemName).FirstOrDefault();
 		}
-	}
 
-	public class DatabaseService {
-		public static DatabaseService Instance;
-
-		public DatabaseContext Database;
-
-		public DatabaseService() {
-			Instance = this;
-			Database = new DatabaseContext();
-
-			Database.Database.EnsureDeleted();
-			if (Database.Database.EnsureCreated()) {
-				Console.WriteLine("Creating new database");
-
-				Database.Users.Add(DbUser.CreateNew("admin", "admin"));
-				Database.Users.Add(DbUser.CreateNew("user", "user"));
-
-				Database.Items.Add(new DbItemData(DateTime.Now, "Item1", 14.2f, "Test item 1"));
-				Database.Items.Add(new DbItemData(DateTime.Now, "Item2", 12.0f, "Test item 2"));
-				Database.Items.Add(new DbItemData(DateTime.Now, "Item3", 13.4f, "Test item 3"));
-				Database.Items.Add(new DbItemData(DateTime.Now, "Test", 12.13f, "Test Test"));
-
-				Database.SaveChanges();
-			} else
-				Console.WriteLine("Using existing database");
+		public void UpdateItem(DbItemData Item) {
+			Items.Update(Item);
+			SaveChanges();
 		}
 	}
 }

@@ -37,36 +37,38 @@ namespace Proj2.Code {
 		}
 
 		public bool Login(string Username, string Password, out AuthenticationState AuthState) {
-			DatabaseContext Db = DatabaseService.Instance.Database;
 			AuthState = null;
 
-			DbUser DbUsr = Db.Users.Where(Usr => Usr.Username == Username).FirstOrDefault();
-			if (DbUsr == null)
-				return false;
+			using (DatabaseContext Db = new DatabaseContext()) {
+				DbUser DbUsr = Db.Users.Where(Usr => Usr.Username == Username).FirstOrDefault();
 
-			using (PasswdManager PassMgr = new PasswdManager()) {
-				string SaltedHash = PassMgr.GenerateHash(Password, DbUsr.Salt);
-
-				if (SaltedHash != DbUsr.Hash)
+				if (DbUsr == null)
 					return false;
+
+
+				using (PasswdManager PassMgr = new PasswdManager()) {
+					string SaltedHash = PassMgr.GenerateHash(Password, DbUsr.Salt);
+
+					if (SaltedHash != DbUsr.Hash)
+						return false;
+				}
+
+				List<Claim> Claims = new List<Claim>();
+				Claims.Add(new Claim("Username", Username));
+				Claims.Add(new Claim("UserID", DbUsr.ID.ToString()));
+
+				ClaimsIdentity Ident = new ClaimsIdentity(Claims, CookieAuthenticationDefaults.AuthenticationScheme);
+				ClaimsPrincipal Princ = new ClaimsPrincipal(Ident);
+
+				AuthState = new AuthenticationState(Princ);
+				return true;
 			}
-
-			List<Claim> Claims = new List<Claim>();
-			Claims.Add(new Claim("Username", Username));
-			Claims.Add(new Claim("UserID", DbUsr.ID.ToString()));
-
-			ClaimsIdentity Ident = new ClaimsIdentity(Claims, CookieAuthenticationDefaults.AuthenticationScheme);
-			ClaimsPrincipal Princ = new ClaimsPrincipal(Ident);
-
-			AuthState = new AuthenticationState(Princ);
-			return true;
 		}
 
 		public DbUser GetDbUser() {
 			if (AuthState == null || AuthState.User == null)
 				return null;
 
-			DatabaseContext Db = DatabaseService.Instance.Database;
 			Claim UserIDClaim = AuthState.User.FindFirst("UserID");
 
 			if (UserIDClaim == null)
@@ -74,8 +76,10 @@ namespace Proj2.Code {
 
 			int UserID = int.Parse(UserIDClaim.Value);
 
-			DbUser DbUsr = Db.Users.Where(Usr => Usr.ID == UserID).FirstOrDefault();
-			return DbUsr;
+			using (DatabaseContext Db = new DatabaseContext()) {
+				DbUser DbUsr = Db.Users.Where(Usr => Usr.ID == UserID).FirstOrDefault();
+				return DbUsr;
+			}
 		}
 	}
 }

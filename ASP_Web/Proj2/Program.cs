@@ -1,24 +1,23 @@
 using BlazorStrap;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Server;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
 using Proj2.Code;
-using Proj2.Data;
 using Proj2.Database;
 using Proj2.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.json", false);
+builder.Configuration.AddJsonFile("appsettings.prod.json", true);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<ItemDataService>();
-builder.Services.AddSingleton<DatabaseService>();
+
+builder.Services.AddSingleton<ConfigurationService>();
+
+builder.Services.AddDbContext<DatabaseContext>();
 
 builder.Services.AddResponseCompression(opts => {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -26,29 +25,33 @@ builder.Services.AddResponseCompression(opts => {
 });
 builder.Services.AddBlazorStrap();
 
-builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
+builder.Services.AddScoped<AuthStateProvider>();
+//builder.Services.AddScoped<DatabaseService>();
 
 builder.Services.AddScoped<IHostEnvironmentAuthenticationStateProvider>(sp => {
-    var provider = (AuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>();
-    return provider;
+	AuthStateProvider AuthProvider = sp.GetRequiredService<AuthStateProvider>();
+    return AuthProvider;
 });
 
-builder.Services.AddScoped<AuthStateProvider>(sp => {
-    var provider = (AuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>();
-    return provider;
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => {
+	AuthStateProvider AuthProvider = sp.GetRequiredService<AuthStateProvider>();
+	return AuthProvider;
 });
 
 var app = builder.Build();
-
-app.Services.GetService<DatabaseService>();
+app.Services.GetService<ConfigurationService>();
 app.UseResponseCompression();
+
 
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {
+	Console.WriteLine("Using Production Environment");
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+} else {
+    Console.WriteLine("Using Development Environment");
 }
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions {

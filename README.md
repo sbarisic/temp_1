@@ -24,6 +24,29 @@ sudo nginx -t
 sudo systemctl restart nginx  
 ```
 
+Service
+```
+sudo systemctl enable dotnet_server.service
+
+sudo systemctl stop dotnet_server.service
+sudo systemctl start dotnet_server.service
+sudo systemctl status dotnet_server.service
+
+sudo systemctl restart dotnet_server.service  
+
+# logs
+sudo journalctl -fu dotnet_server.service
+```
+
+Database
+
+```
+# listen_addresses = '*'
+sudo micro /etc/postgresql/*/main/postgresql.conf
+
+sudo systemctl restart postgresql
+```
+
 TODO:
 
 - Postaviti web na server
