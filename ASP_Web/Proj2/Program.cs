@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides;
 using Proj2.Code;
 using Proj2.Data;
 using Proj2.Database;
@@ -28,18 +29,18 @@ builder.Services.AddBlazorStrap();
 builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
 
 builder.Services.AddScoped<IHostEnvironmentAuthenticationStateProvider>(sp => {
-	var provider = (AuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>();
-	return provider;
+    var provider = (AuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>();
+    return provider;
 });
 
 builder.Services.AddScoped<AuthStateProvider>(sp => {
-	var provider = (AuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>();
-	return provider;
+    var provider = (AuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>();
+    return provider;
 });
 
 var app = builder.Build();
-app.Services.GetService<DatabaseService>();
 
+app.Services.GetService<DatabaseService>();
 app.UseResponseCompression();
 
 
@@ -50,9 +51,14 @@ if (!app.Environment.IsDevelopment()) {
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseForwardedHeaders(new ForwardedHeadersOptions {
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
 
 app.MapBlazorHub();
 app.MapHub<ComHub>("/comhub");
