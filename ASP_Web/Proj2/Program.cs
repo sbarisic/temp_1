@@ -20,8 +20,8 @@ builder.Services.AddSingleton<ConfigurationService>();
 builder.Services.AddDbContext<DatabaseContext>();
 
 builder.Services.AddResponseCompression(opts => {
-    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-        new[] { "application/octet-stream" });
+	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+		new[] { "application/octet-stream" });
 });
 builder.Services.AddBlazorStrap();
 
@@ -30,7 +30,7 @@ builder.Services.AddScoped<AuthStateProvider>();
 
 builder.Services.AddScoped<IHostEnvironmentAuthenticationStateProvider>(sp => {
 	AuthStateProvider AuthProvider = sp.GetRequiredService<AuthStateProvider>();
-    return AuthProvider;
+	return AuthProvider;
 });
 
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => {
@@ -38,6 +38,7 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => {
 	return AuthProvider;
 });
 
+builder.Services.AddControllers();
 var app = builder.Build();
 app.Services.GetService<ConfigurationService>();
 app.UseResponseCompression();
@@ -47,15 +48,15 @@ app.UseResponseCompression();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {
 	Console.WriteLine("Using Production Environment");
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+	app.UseExceptionHandler("/Error");
+	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+	app.UseHsts();
 } else {
-    Console.WriteLine("Using Development Environment");
+	Console.WriteLine("Using Development Environment");
 }
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+	ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
 // app.UseHttpsRedirection();
@@ -66,6 +67,9 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapHub<ComHub>("/comhub");
 app.MapFallbackToPage("/_Host");
+app.MapControllers();
+
+//app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?})");
 
 
 app.Run();
