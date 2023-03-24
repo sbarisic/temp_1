@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Proj2.Code;
 using System.ComponentModel.DataAnnotations;
 using System.Net.NetworkInformation;
+using System.Security.Cryptography;
 
 namespace Proj2.Database {
 	public class DbUser {
@@ -69,18 +70,45 @@ namespace Proj2.Database {
 			get; set;
 		}
 
-		public DbItemData() {
-		}
-
-		public DbItemData(string Name, float Voltage, string Description) {
+		/*public DbItemData(string Name, float Voltage, string Description) {
 			//this.TimeStamp = TimeStamp.SetKindUtc();
 			this.Name = Name;
 			this.Voltage = Voltage;
 			this.Description = Description;
-		}
+		}*/
 
 		public override string ToString() {
 			return string.Format("{0} - {1}", Name, Description);
+		}
+	}
+
+	public class DbDeviceAPIKey {
+		[Key]
+		public int ID {
+			get; set;
+		}
+
+		public string APIKey {
+			get; set;
+		}
+
+		public string Description {
+			get; set;
+		}
+
+		public bool Enabled {
+			get; set;
+		}
+
+		public static DbDeviceAPIKey CreateNew(string Description) {
+			DbDeviceAPIKey DeviceAPIKey = new DbDeviceAPIKey();
+
+			byte[] APIKeyBytes = RandomNumberGenerator.GetBytes(256 / 8);
+			DeviceAPIKey.APIKey = Convert.ToBase64String(APIKeyBytes);
+
+			DeviceAPIKey.Description = Description;
+			DeviceAPIKey.Enabled = true;
+			return DeviceAPIKey;
 		}
 	}
 
@@ -100,8 +128,12 @@ namespace Proj2.Database {
 
 		public DbSet<DbItemData> Items {
 			get; set;
-		}	
-		
+		}
+
+		public DbSet<DbDeviceAPIKey> APIKeys {
+			get; set;
+		}
+
 		// Functions
 
 		public DbItemData[] GetAllItems() {

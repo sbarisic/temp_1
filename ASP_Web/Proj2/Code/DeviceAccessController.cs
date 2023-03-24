@@ -4,8 +4,9 @@ using Proj2.Database;
 namespace Proj2.Code {
 	public enum DeviceAccessStatus {
 		Invalid = 0,
-		Success = 1,
-		NotAuthorized = 2
+		OK = 200,
+		Forbidden = 403,
+		NotFound = 404,
 	}
 
 	public class DeviceAccessAPI {
@@ -19,6 +20,10 @@ namespace Proj2.Code {
 	}
 
 	public class DeviceAccessResponseAPI {
+		public string Title {
+			get; set;
+		}
+
 		public DeviceAccessStatus Status {
 			get; set;
 		}
@@ -28,12 +33,15 @@ namespace Proj2.Code {
 		}
 
 		public DeviceAccessResponseAPI(DeviceAccessStatus Status) {
+			Title = nameof(DeviceAccessResponseAPI);
+
 			this.Status = Status;
 			StatusString = Status.ToString();
 		}
 	}
 
 	[ApiController]
+	[RequireHttps]
 	public class DeviceAccessController : ControllerBase {
 		[HttpPost("/deviceaccess")]
 		public JsonResult Post([FromBody] DeviceAccessAPI API) {
@@ -41,15 +49,21 @@ namespace Proj2.Code {
 				return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Invalid));
 
 			if (string.IsNullOrEmpty(API.APIKey))
-				return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.NotAuthorized));
+				return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
 
 			using (DatabaseContext DbCtx = new DatabaseContext()) {
+
+
+
+				DbCtx.APIKeys.Where(AT => AT.APIKey == API.APIKey).FirstOrDefault();
+
+				//DbCtx.Database.
 
 				Console.WriteLine("Hello Database World!");
 
 			}
 
-			return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Success));
+			return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.OK));
 		}
 	}
 }
