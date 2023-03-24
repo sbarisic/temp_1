@@ -1,32 +1,41 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Proj2.Code;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Net.NetworkInformation;
 using System.Security.Cryptography;
 
 namespace Proj2.Database {
+	[PrimaryKey(nameof(ID))]
 	public class DbUser {
 		[Key]
 		public int ID {
 			get; set;
 		}
 
+		[Key]
+		[Required]
 		public string Username {
 			get; set;
 		}
 
+		[Required]
 		public string Hash {
 			get; set;
 		}
 
+		[Required]
 		public byte[] Salt {
 			get; set;
 		}
 
 		public List<DbPermission> Permissions {
 			get;
-		} = new List<DbPermission>();
+			set;
+		}
 
 		public static DbUser CreateNew(string Username, string Password) {
 			DbUser Usr = new DbUser();
@@ -82,12 +91,15 @@ namespace Proj2.Database {
 		}
 	}
 
+	[PrimaryKey(nameof(ID))]
 	public class DbDeviceAPIKey {
 		[Key]
 		public int ID {
 			get; set;
 		}
 
+		[Key]
+		[Required]
 		public string APIKey {
 			get; set;
 		}
@@ -96,6 +108,7 @@ namespace Proj2.Database {
 			get; set;
 		}
 
+		[Required]
 		public bool Enabled {
 			get; set;
 		}
@@ -113,6 +126,13 @@ namespace Proj2.Database {
 	}
 
 	public class DatabaseContext : DbContext {
+		public void CreateMissingTables() {
+			RelationalDatabaseCreator DbCreator = (Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator);
+			//DbCreator.CreateTables();
+
+			string CreateScript = DbCreator.GenerateCreateScript();
+		}
+
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
 			optionsBuilder.UseNpgsql(ConfigurationService.Instance.ConnectionString);
 		}

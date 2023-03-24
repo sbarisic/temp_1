@@ -52,10 +52,11 @@ namespace Proj2.Code {
 				return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
 
 			using (DatabaseContext DbCtx = new DatabaseContext()) {
+				DbDeviceAPIKey DbAPIKey = DbCtx.APIKeys.Where(AT => AT.APIKey == API.APIKey).FirstOrDefault();
 
+				if (DbAPIKey == null || DbAPIKey.APIKey != API.APIKey)
+					return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
 
-
-				DbCtx.APIKeys.Where(AT => AT.APIKey == API.APIKey).FirstOrDefault();
 
 				//DbCtx.Database.
 
