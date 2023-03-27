@@ -8,10 +8,22 @@
 
 		</Found>
 		<NotFound>
-			<PageTitle>Not found</PageTitle>
-			<LayoutView Layout="@typeof(MainLayout)">
+
+			<PageTitle>404 - Not found</PageTitle>
+
+			@*	<LayoutView Layout="@typeof(MainLayout)">*@
+			@*<LayoutView>
 				<p role="alert">Sorry, there's nothing at this address.</p>
-			</LayoutView>
+			</LayoutView>*@
+
+			<div class="d-flex align-items-center justify-content-center vh-100">
+				<div class="text-center">
+					<h1 class="display-1 fw-bold">404</h1>
+					<p class="fs-3">Not Found</p>
+					<a href="/" class="btn btn-outline-dark">Home</a>
+				</div>
+			</div>
+
 		</NotFound>
 	</Router>
 </CascadingAuthenticationState>
