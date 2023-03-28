@@ -15,6 +15,7 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Reflection.Metadata.Ecma335;
 using System.ComponentModel;
+using Microsoft.AspNetCore.Http;
 
 namespace Proj2.Code {
 	class SessionStorageUser {
@@ -36,11 +37,13 @@ namespace Proj2.Code {
 	}
 
 	class AuthStateProvider : AuthenticationStateProvider, IHostEnvironmentAuthenticationStateProvider {
+		IHttpContextAccessor HttpContextAccessor;
 		IJSRuntime JSRun;
 		//IUserService userService;
 		AuthenticationState AuthState;
 
-		public AuthStateProvider(IJSRuntime JSRun) {
+		public AuthStateProvider(IJSRuntime JSRun, IHttpContextAccessor HttpContextAccessor) {
+			this.HttpContextAccessor = HttpContextAccessor;
 			this.JSRun = JSRun;
 		}
 
@@ -72,11 +75,21 @@ namespace Proj2.Code {
 			if (SessionUser != null)
 				SessionUserJSON = JsonSerializer.Serialize(SessionUser);
 
-			await JSRun.InvokeVoidAsync("sessionStorage.setItem", "sessionUser", SessionUserJSON);
+			CookieOptions Opts = new CookieOptions();
+			Opts.Expires = DateTime.Now.AddDays(3);
+
+			
+
+			HttpContextAccessor.HttpContext.Response.OnStarting(async () => {
+				HttpContextAccessor.HttpContext.Response.Cookies.Append("access_token", SessionUserJSON, Opts);
+			});
+
+			//await JSRun.InvokeVoidAsync("sessionStorage.setItem", "sessionUser", SessionUserJSON);
 		}
 
 		public async Task<SessionStorageUser> LoadSessionUser() {
-			string SessionUserJSON = await JSRun.InvokeAsync<string>("sessionStorage.getItem", "sessionUser");
+			//string SessionUserJSON = await JSRun.InvokeAsync<string>("sessionStorage.getItem", "sessionUser");
+			string SessionUserJSON = HttpContextAccessor.HttpContext.Request.Cookies["access_token"];
 
 			if (string.IsNullOrEmpty(SessionUserJSON))
 				return null;
@@ -114,6 +127,8 @@ namespace Proj2.Code {
 		}
 
 		public async Task<bool> TryLoginFromSession() {
+			// Console.WriteLine("Trying SessionUser");
+
 			AuthenticationState AuthState = await GetAuthenticationStateAsync();
 
 			if (AuthState != null)
@@ -126,7 +141,7 @@ namespace Proj2.Code {
 				SessionStorageUser SessionUser = await LoadSessionUser();
 
 				if (Login(SessionUser, out AuthState)) {
-					Console.WriteLine("Logged in via SessionUser");
+					Console.WriteLine("Logged in via SessionUser({0})", SessionUser.Username);
 
 					SetAuthenticationState(Task.FromResult(AuthState));
 					return true;

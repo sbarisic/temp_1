@@ -36,7 +36,9 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => {
 	return AuthProvider;
 });
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
+
 var app = builder.Build();
 app.Services.GetService<ConfigurationService>();
 app.UseResponseCompression();
