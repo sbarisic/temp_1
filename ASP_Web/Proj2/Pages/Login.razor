@@ -3,6 +3,7 @@
 @using Proj2.Code
 @using System.Security.Claims;
 
+@inject NavigationManager Navigation
 @inject AuthStateProvider AuthStateProvider
 
 <PageTitle>Login</PageTitle>
@@ -76,19 +77,42 @@
 		}
 	}
 
-	protected override void OnInitialized() {
-		Console.WriteLine("Login OnInitialized");
+	protected override async Task OnAfterRenderAsync(bool firstRender) {
+		/*AuthenticationState AuthState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+		if (AuthState != null && !(AuthState.User?.Identity?.IsAuthenticated ?? false))
+			AuthState = null;
+
+
+		if (AuthState == null) {
+			SessionStorageUser SessionUser = await AuthStateProvider.LoadSessionUser();
+
+			if (AuthStateProvider.Login(SessionUser, out AuthState)) {
+				Console.WriteLine("Logged in via SessionUser");
+
+				AuthStateProvider.SetAuthenticationState(Task.FromResult(AuthState));
+				StateHasChanged();
+			}
+		}*/
+
+		await AuthStateProvider.TryLoginFromSession();
 	}
 
 	async Task PerformLogin() {
 		ShowInvalidUsername = false;
 
-		if (AuthStateProvider.Login(Username, Password, out AuthenticationState AuthState)) {
+		AuthenticationState AuthState = null;
+		SessionStorageUser SessionUser = null;
+
+		if (AuthStateProvider.Login(Username, Password, out AuthState, out SessionUser)) {
+			Console.WriteLine("Logged in via Username/Password");
 			AuthStateProvider.SetAuthenticationState(Task.FromResult(AuthState));
+			AuthStateProvider.SaveSessionUser(SessionUser);
+
+			StateHasChanged();
+			Navigation.NavigateTo("/");
 		} else
 			ShowInvalidUsername = true;
-
-		StateHasChanged();
 	}
 
 	async Task PerformLogout() {

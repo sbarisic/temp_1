@@ -1,4 +1,3 @@
-using BlazorStrap;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +22,6 @@ builder.Services.AddResponseCompression(opts => {
 	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
 		new[] { "application/octet-stream" });
 });
-builder.Services.AddBlazorStrap();
 
 builder.Services.AddScoped<AuthStateProvider>();
 //builder.Services.AddScoped<DatabaseService>();

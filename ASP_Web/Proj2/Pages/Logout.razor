@@ -1,0 +1,22 @@
+﻿@page "/logout"
+@using Microsoft.AspNetCore.SignalR.Client
+@using Proj2.Code
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Mvc
+
+@inject NavigationManager Navigation
+@inject AuthStateProvider AuthStateProvider
+
+<PageTitle>Logout</PageTitle>
+
+<div class="card">
+	<h5 class="card-header">Please Wait</h5>
+</div>
+
+@code {
+	protected override void OnAfterRender(bool firstRender) {
+		AuthStateProvider.SetAuthenticationState(null);
+		AuthStateProvider.SaveSessionUser(null);
+		Navigation.NavigateTo("/");
+	}
+}
