@@ -39,6 +39,8 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => {
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 
+builder.Services.AddAuthentication("Cookies").AddCookie();
+
 var app = builder.Build();
 app.Services.GetService<ConfigurationService>();
 app.UseResponseCompression();
@@ -63,11 +65,17 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions {
 app.UseStaticFiles();
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapBlazorHub();
 app.MapHub<ComHub>("/comhub");
 app.MapFallbackToPage("/_Host");
-app.MapControllers();
+//app.MapControllers();
+
+app.UseEndpoints(Endpoints => {
+	Endpoints.MapControllers();
+});
 
 //app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?})");
 

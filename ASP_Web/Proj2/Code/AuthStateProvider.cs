@@ -18,24 +18,6 @@ using System.ComponentModel;
 using Microsoft.AspNetCore.Http;
 
 namespace Proj2.Code {
-	class SessionStorageUser {
-		public string Username {
-			get; set;
-		}
-
-		public int UserID {
-			get; set;
-		}
-
-		public SessionStorageUser() {
-		}
-
-		public SessionStorageUser(string Username, int UserID) {
-			this.Username = Username;
-			this.UserID = UserID;
-		}
-	}
-
 	class AuthStateProvider : AuthenticationStateProvider, IHostEnvironmentAuthenticationStateProvider {
 		IHttpContextAccessor HttpContextAccessor;
 		IJSRuntime JSRun;
@@ -69,42 +51,14 @@ namespace Proj2.Code {
 			NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
 		}
 
-		public async void SaveSessionUser(SessionStorageUser SessionUser) {
-			string SessionUserJSON = "";
-
-			if (SessionUser != null)
-				SessionUserJSON = JsonSerializer.Serialize(SessionUser);
-
-			CookieOptions Opts = new CookieOptions();
-			Opts.Expires = DateTime.Now.AddDays(3);
-
-			
-
-			HttpContextAccessor.HttpContext.Response.OnStarting(async () => {
-				HttpContextAccessor.HttpContext.Response.Cookies.Append("access_token", SessionUserJSON, Opts);
-			});
-
-			//await JSRun.InvokeVoidAsync("sessionStorage.setItem", "sessionUser", SessionUserJSON);
-		}
-
-		public async Task<SessionStorageUser> LoadSessionUser() {
-			//string SessionUserJSON = await JSRun.InvokeAsync<string>("sessionStorage.getItem", "sessionUser");
-			string SessionUserJSON = HttpContextAccessor.HttpContext.Request.Cookies["access_token"];
-
-			if (string.IsNullOrEmpty(SessionUserJSON))
-				return null;
-
-			return JsonSerializer.Deserialize<SessionStorageUser>(SessionUserJSON);
-		}
-
 		public void Logout() {
 			ClaimsPrincipal Princ = new ClaimsPrincipal();
 			AuthState = new AuthenticationState(Princ);
 		}
 
-		public bool Login(string Username, string Password, out AuthenticationState AuthState, out SessionStorageUser SessionUser) {
+		public static bool Login(string Username, string Password, out AuthenticationState AuthState) {
 			AuthState = null;
-			SessionUser = null;
+			//SessionUser = null;
 
 			using (DatabaseContext Db = new DatabaseContext()) {
 				DbUser DbUsr = Db.Users.Where(Usr => Usr.Username == Username).FirstOrDefault();
@@ -120,48 +74,13 @@ namespace Proj2.Code {
 						return false;
 				}
 
-				AuthState = CreateAuthState(DbUsr.Username, DbUsr.ID);
-				SessionUser = new SessionStorageUser(DbUsr.Username, DbUsr.ID);
+				AuthState = new AuthenticationState(CreateClaimsPrincipal(DbUsr.Username, DbUsr.ID));
+				//SessionUser = new SessionStorageUser(DbUsr.Username, DbUsr.ID);
 				return true;
 			}
 		}
 
-		public async Task<bool> TryLoginFromSession() {
-			// Console.WriteLine("Trying SessionUser");
-
-			AuthenticationState AuthState = await GetAuthenticationStateAsync();
-
-			if (AuthState != null)
-				if (AuthState.User?.Identity?.IsAuthenticated ?? false)
-					return true;
-				else
-					AuthState = null;
-
-			if (AuthState == null) {
-				SessionStorageUser SessionUser = await LoadSessionUser();
-
-				if (Login(SessionUser, out AuthState)) {
-					Console.WriteLine("Logged in via SessionUser({0})", SessionUser.Username);
-
-					SetAuthenticationState(Task.FromResult(AuthState));
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		public bool Login(SessionStorageUser SessionUser, out AuthenticationState AuthState) {
-			AuthState = null;
-
-			if (SessionUser == null)
-				return false;
-
-			AuthState = CreateAuthState(SessionUser.Username, SessionUser.UserID);
-			return true;
-		}
-
-		AuthenticationState CreateAuthState(string Username, int UserID) {
+		public static ClaimsPrincipal CreateClaimsPrincipal(string Username, int UserID) {
 			List<Claim> Claims = new List<Claim>();
 			Claims.Add(new Claim("Username", Username));
 			Claims.Add(new Claim("UserID", UserID.ToString()));
@@ -169,8 +88,7 @@ namespace Proj2.Code {
 			ClaimsIdentity Ident = new ClaimsIdentity(Claims, CookieAuthenticationDefaults.AuthenticationScheme);
 			ClaimsPrincipal Princ = new ClaimsPrincipal(Ident);
 
-			//SessionUser = new SessionStorageUser(DbUsr.Username, DbUsr.ID);
-			return new AuthenticationState(Princ);
+			return Princ;
 		}
 
 		public DbUser GetDbUser() {

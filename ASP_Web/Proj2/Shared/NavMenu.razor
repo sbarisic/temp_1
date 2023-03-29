@@ -35,24 +35,16 @@
 						</NavLink>
 					</li>
 
-				</Authorized>			
+				</Authorized>
 			</AuthorizeView>
 		</ul>
 	</nav>
 </div>
 
 @code {
-	private bool collapseNavMenu = false;
-
-	private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-	string Username {
+	/*string Username {
 		get {
 			return AuthStateProvider.GetDbUser().Username;
 		}
-	}
-
-	private void ToggleNavMenu() {
-		collapseNavMenu = !collapseNavMenu;
-	}
+	}*/
 }

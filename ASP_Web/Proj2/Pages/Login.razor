@@ -1,33 +1,29 @@
 ﻿@page "/login"
 @using Microsoft.AspNetCore.SignalR.Client
 @using Proj2.Code
-@using System.Security.Claims;
+@using System.Security.Claims
+@using Microsoft.Extensions.Primitives
 
 @inject NavigationManager Navigation
 @inject AuthStateProvider AuthStateProvider
+@inject IHttpContextAccessor HttpContext
 
 <PageTitle>Login</PageTitle>
 
 <AuthorizeView>
 	<Authorized>
-		<div class="card">
+		<form class="card" action="cookie/logout" method="get">
 			<h5 class="card-header">Welcome, @LoggedInUsername</h5>
 			<div class="card-body">
-				<button class="btn btn-primary" @onclick="PerformLogout">Logout</button>
+				<input class="btn btn-primary" type="submit" value="Logout" />
 			</div>
-		</div>
+		</form>
 	</Authorized>
-
-	<Authorizing>
-		<div class="card">
-			<h5 class="card-header">Please Wait</h5>
-		</div>
-	</Authorizing>
 
 	<NotAuthorized>
 		<div class="card">
 			<h5 class="card-header">Login</h5>
-			<div class="card-body">
+			<form class="card-body" action="cookie/login" method="post">
 				@if (ShowInvalidUsername) {
 					<div class="alert alert-danger" role="alert">
 						Invalid Username or Password
@@ -41,7 +37,7 @@
 						</label>
 
 						<div class="col-sm-10">
-							<input id="input_username" class="form-control" type="text" @bind="Username" />
+							<input id="input_username" class="form-control" type="text" name="username" />
 						</div>
 					</div>
 				</div>
@@ -53,23 +49,37 @@
 						</label>
 
 						<div class="col-sm-10">
-							<input id="input_password" class="form-control" type="password" @bind="Password" size="50" />
+							<input id="input_password" class="form-control" type="password" name="password" size="50" />
 						</div>
 					</div>
 				</div>
 
-				<button class="btn btn-primary" @onclick="PerformLogin">Login</button>
-			</div>
+				@*<button class="btn btn-primary" @onclick="PerformLogin">Login</button>*@
+
+				<input class="btn btn-primary" type="submit" value="Login" />
+			</form>
 		</div>
+
+
+		@*<form action="cookie" method="post">
+		<input type="text" name="name" />
+		<input type="submit" />
+		</form>*@
 	</NotAuthorized>
 </AuthorizeView>
 
 
 @code {
-	string Username;
-	string Password;
+	bool ShowInvalidUsername {
+		get {
+			StringValues IsInvalid = HttpContext.HttpContext.Request.Query["invalid"];
 
-	bool ShowInvalidUsername = false;
+			if (!string.IsNullOrWhiteSpace(IsInvalid))
+				return true;
+
+			return false;
+		}
+	}
 
 	string LoggedInUsername {
 		get {
@@ -77,46 +87,10 @@
 		}
 	}
 
-	protected override async Task OnAfterRenderAsync(bool firstRender) {
-		/*AuthenticationState AuthState = await AuthStateProvider.GetAuthenticationStateAsync();
+	protected override void OnAfterRender(bool firstRender) {
+		Console.WriteLine("Called OnAfterRender");
 
-		if (AuthState != null && !(AuthState.User?.Identity?.IsAuthenticated ?? false))
-			AuthState = null;
-
-
-		if (AuthState == null) {
-			SessionStorageUser SessionUser = await AuthStateProvider.LoadSessionUser();
-
-			if (AuthStateProvider.Login(SessionUser, out AuthState)) {
-				Console.WriteLine("Logged in via SessionUser");
-
-				AuthStateProvider.SetAuthenticationState(Task.FromResult(AuthState));
-				StateHasChanged();
-			}
-		}*/
-
-		await AuthStateProvider.TryLoginFromSession();
-	}
-
-	async Task PerformLogin() {
-		ShowInvalidUsername = false;
-
-		AuthenticationState AuthState = null;
-		SessionStorageUser SessionUser = null;
-
-		if (AuthStateProvider.Login(Username, Password, out AuthState, out SessionUser)) {
-			Console.WriteLine("Logged in via Username/Password");
-			AuthStateProvider.SetAuthenticationState(Task.FromResult(AuthState));
-			AuthStateProvider.SaveSessionUser(SessionUser);
-
-			StateHasChanged();
-			Navigation.NavigateTo("/");
-		} else
-			ShowInvalidUsername = true;
-	}
-
-	async Task PerformLogout() {
-		AuthStateProvider.SetAuthenticationState(null);
-		StateHasChanged();
+		StringValues IsInvalid = HttpContext.HttpContext.Request.Query["invalid"];
+		Console.WriteLine("IsInvalid[{0}]", IsInvalid.Count);
 	}
 }
