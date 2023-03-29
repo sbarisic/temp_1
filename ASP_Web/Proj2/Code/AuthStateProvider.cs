@@ -40,7 +40,6 @@ namespace Proj2.Code {
 			return AuthState;
 		}
 
-
 		public void SetAuthenticationState(Task<AuthenticationState> authenticationStateTask) {
 			if (authenticationStateTask == null) {
 				Logout();
@@ -49,6 +48,13 @@ namespace Proj2.Code {
 			}
 
 			NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+		}
+
+		public bool IsAuthenticated() {
+			if (AuthState == null || AuthState.User == null || AuthState.User.Identity == null)
+				return false;
+
+			return AuthState.User.Identity.IsAuthenticated;
 		}
 
 		public void Logout() {

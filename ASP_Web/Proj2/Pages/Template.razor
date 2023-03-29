@@ -1,0 +1,26 @@
+﻿@page "/template"
+@using Microsoft.AspNetCore.SignalR.Client
+@using Proj2.Database
+@using Proj2.Code
+
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Template</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Template</h1>
+
+        <p><em>Loading...</em></p>
+    </Authorized>
+
+
+</AuthorizeView>
+
+@code {
+    protected override void OnAfterRender(bool firstRender) {
+        if (!AuthStateProvider.IsAuthenticated())
+            Navigation.NavigateTo("/login");
+    }
+}

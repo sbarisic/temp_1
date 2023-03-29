@@ -72,10 +72,10 @@
 @code {
 	bool ShowInvalidUsername {
 		get {
-			StringValues IsInvalid = HttpContext.HttpContext.Request.Query["invalid"];
+			/*StringValues IsInvalid = HttpContext.HttpContext.Request.Query["invalid"];
 
 			if (!string.IsNullOrWhiteSpace(IsInvalid))
-				return true;
+				return true;*/
 
 			return false;
 		}
@@ -85,12 +85,5 @@
 		get {
 			return AuthStateProvider.GetDbUser()?.Username;
 		}
-	}
-
-	protected override void OnAfterRender(bool firstRender) {
-		Console.WriteLine("Called OnAfterRender");
-
-		StringValues IsInvalid = HttpContext.HttpContext.Request.Query["invalid"];
-		Console.WriteLine("IsInvalid[{0}]", IsInvalid.Count);
 	}
 }
