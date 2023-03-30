@@ -1,0 +1,21 @@
+﻿@using Proj2.Code
+
+@inject AuthStateProvider AuthStateProvider
+
+<strong>Street: </strong>@CurrentAddress.Street
+<br />
+<strong>City: </strong>@CurrentAddress.City
+<br />
+<strong>Region: </strong>@CurrentAddress.Region
+<br />
+<strong>Postal Code: </strong>@CurrentAddress.PostalCode
+<br />
+<strong>Phone Number: </strong>@CurrentAddress.PhoneNumber
+<br />
+
+@code {
+	[Parameter]
+	public Address CurrentAddress {
+		get; set;
+	}
+}
