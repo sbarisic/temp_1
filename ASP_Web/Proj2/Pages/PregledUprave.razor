@@ -3,9 +3,13 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using Proj2.Database
 @using Proj2.Code
+@using System.Collections.Specialized
+@using System.Linq
 
 @inject AuthStateProvider AuthStateProvider
 @inject NavigationManager Navigation
+
+@implements IDisposable
 
 
 <PageTitle>Pregled Uprave</PageTitle>
@@ -13,23 +17,133 @@
 <AuthorizeView>
 	<Authorized>
 
+		@if (CurrentUprava != null) {
+			@* Uprava i informacije o uopravi *@
 
-		<div class="card" style="width: 18rem;">
-		<div class="card-body">
-		<h5 class="card-title">Card title</h5>
-		<h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-		<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-		<a href="#" class="card-link">Card link</a>
-		<a href="#" class="card-link">Another link</a>
-		</div>
-		</div>
+			<div class="card">
+				<div class="card-body">
+					<div class="container">
+						<div class="row">
+							<div class="col">
+								<h4 class="card-title">@CurrentUprava.Name</h4>
+							</div>
+						</div>
+
+						@if (HasError || HasWarning) {
+							<div class="row my-2">
+								<div class="col">
+									@if (HasError) {
+										<span class="badge bg-danger mx-1">ERROR</span>
+									}
+
+									@if (HasWarning) {
+										<span class="badge bg-warning mx-1">WARNING</span>
+									}
+								</div>
+							</div>
+						}
+
+						<div class="row">
+							<div class="col">
+								<AddressView CurrentAddress="CurrentUprava.Address" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			@if (CurrentUprava.Vozila.Count > 0) {
+				<table class="table table-striped table-hover mt-4">
+					<thead>
+						<tr>
+							<th scope="col">Vozilo</th>
+							<th scope="col">Tablica</th>
+							<th scope="col">Error / Warning</th>
+							<th scope="col"></th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (Vozilo V in CurrentUprava.Vozila) {
+							GetVoziloTableRowStyle(V, out string TableRowStyle, out bool HasError, out bool HasWarning);
+
+							<tr class="@TableRowStyle">
+								<td>@V.Name</td>
+								<td>@V.Tablica</td>
+
+								<td>
+									@if (HasError) {
+										<span class="badge bg-danger mx-1">ERROR</span>
+									}
+
+									@if (HasWarning) {
+										<span class="badge bg-warning mx-1">WARNING</span>
+									}
+								</td>
+
+								<td><button class="btn btn-sm float-end btn-outline-secondary" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button></td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+
+		} else {
+			<p><em>Loading...</em></p>
+		}
 
 	</Authorized>
 </AuthorizeView>
 
 @code {
+	NameValueCollection Query = null;
+	DatabaseContext DbCtx;
+
+	Uprava CurrentUprava = null;
+	bool HasError = false;
+	bool HasWarning = false;
+
+	void GetVoziloTableRowStyle(Vozilo V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
+		TableRowStyle = "";
+		HasError = V.HasErrors();
+		HasWarning = V.HasWarnings();
+
+		if (HasError) {
+			TableRowStyle = "table-danger";
+		} else if (HasWarning) {
+			TableRowStyle = "table-warning";
+		}
+	}
+
+	protected override void OnInitialized() {
+		Query = Query ?? Utils.ParseQuery(Navigation.Uri);
+		DbCtx = new DatabaseContext();
+
+		string ViewID = Query.Get("i") ?? "";
+
+		if (!string.IsNullOrEmpty(ViewID)) {
+			CurrentUprava = Structures.Uprave.Where(U => U.ID == ViewID).FirstOrDefault();
+
+			if (CurrentUprava != null) {
+				HasError = CurrentUprava.HasErrors();
+				HasWarning = CurrentUprava.HasWarnings();
+
+
+			}
+		}
+	}
+
 	protected override void OnAfterRender(bool firstRender) {
 		if (!AuthStateProvider.IsAuthenticated())
 			Navigation.NavigateTo("/login");
+
+		Console.WriteLine("Query: {0}", Query);
+	}
+
+	void OnPregledVozila(Vozilo V) {
+		Navigation.NavigateTo("/pregled_vozila?i=" + V.ID);
+	}
+
+	public void Dispose() {
+		DbCtx.Dispose();
 	}
 }

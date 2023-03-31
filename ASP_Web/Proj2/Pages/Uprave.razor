@@ -183,10 +183,10 @@
 	}
 
 	void OnPregledUprave(Uprava Up) {
-		Navigation.NavigateTo("/pregled_uprave?uprava=test");
+		Navigation.NavigateTo("/pregled_uprave?i=" + Up.ID);
 	}
 
 	void OnPregledVozila(Vozilo V) {
-		Navigation.NavigateTo("/pregled_vozila?vozilo=test");
+		Navigation.NavigateTo("/pregled_vozila?i=" + V.ID);
 	}
 }

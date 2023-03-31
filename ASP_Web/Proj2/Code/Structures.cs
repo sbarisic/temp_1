@@ -16,6 +16,7 @@
 	}
 
 	public class Vozilo {
+		public string ID;
 		public string Name;
 		public string Tablica;
 		public List<OpremaVozila> Oprema = new List<OpremaVozila>();
@@ -59,6 +60,7 @@
 	}
 
 	public class Uprava {
+		public string ID;
 		public string Name;
 		public Address Address;
 		public List<Vozilo> Vozila = new List<Vozilo>();
@@ -133,6 +135,7 @@
 
 			for (int i = 0; i < 3; i++) {
 				Uprava Up = new Uprava("Uprava " + (i + 1).ToString(), Address[i]);
+				Up.ID = Utils.GenerateShortID();
 
 				int VoziloCount = 0;
 
@@ -141,6 +144,7 @@
 
 				for (int j = 0; j < VoziloCount; j++) {
 					Vozilo V = new Vozilo(GenerateVehicleName(), GenerateTablica());
+					V.ID = Utils.GenerateShortID();
 
 					OpremaVozila B1 = new OpremaVozila("Battery 1");
 					OpremaVozila B2 = new OpremaVozila("Battery 2");

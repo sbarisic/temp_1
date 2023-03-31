@@ -1,4 +1,7 @@
-﻿namespace Proj2.Code {
+﻿using System.Web;
+using System.Collections.Specialized;
+
+namespace Proj2.Code {
 	public static class Utils {
 		static Random Rnd = new Random();
 
@@ -12,6 +15,33 @@
 			}
 
 			return DateTime.SpecifyKind(DT, DateTimeKind.Utc);
+		}
+
+		public static string ToShortString(Guid guid) {
+			var base64Guid = Convert.ToBase64String(guid.ToByteArray());
+
+			// Replace URL unfriendly characters
+			base64Guid = base64Guid.Replace('+', '-').Replace('/', '_');
+
+			// Remove the trailing ==
+			return base64Guid.Substring(0, base64Guid.Length - 2);
+		}
+
+		public static Guid FromShortString(string str) {
+			str = str.Replace('_', '/').Replace('-', '+');
+			var byteArray = Convert.FromBase64String(str + "==");
+			return new Guid(byteArray);
+		}
+
+		public static string GenerateShortID() {
+			return ToShortString(Guid.NewGuid());
+		}
+
+		public static NameValueCollection ParseQuery(string Query) {
+			Query = new Uri(Query).Query;
+
+			return HttpUtility.ParseQueryString(Query);
+
 		}
 	}
 }
