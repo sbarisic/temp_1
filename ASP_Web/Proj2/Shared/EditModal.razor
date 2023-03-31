@@ -1,0 +1,70 @@
+﻿@using Proj2.Code
+@using System.Reflection
+@using Blazored.Modal
+
+@inject AuthStateProvider AuthStateProvider
+
+<div class="modal-dialog">
+	<div class="modal-content">
+		<div class="modal-header">
+			<h5 class="modal-title" id="editAdminModalLabel">@BlazoredModal.Title</h5>
+		</div>
+
+		<div class="modal-body">
+
+			@foreach (EditModalField F in Fields) {
+				<div class="input-group mb-1">
+					<span class="input-group-text">@F.Name</span>
+					<input type="text" class="form-control" placeholder="@F.Value" @bind=F.Value>
+				</div>
+			}
+
+
+
+			@*<div class="input-group mb-1">
+				<span class="input-group-text">Qwedawdaw</span>
+				<input type="text" class="form-control" placeholder="Username" aria-label="Username">
+			</div>*@
+
+
+		</div>
+
+		<div class="modal-footer">
+			<button type="button" class="btn btn-secondary" @onclick="@(e => Close())">Close</button>
+			<button type="button" class="btn btn-primary" @onclick="@(e => SaveChanges())">Save Changes</button>
+		</div>
+	</div>
+</div>
+
+@code {
+	[CascadingParameter]
+	BlazoredModalInstance BlazoredModal {
+		get; set;
+	}
+
+	[Parameter]
+	public EditModalField[] Fields {
+		get; set;
+	}
+
+	protected override void OnInitialized() {
+	}
+
+	void Close() {
+		BlazoredModal.CancelAsync();
+	}
+
+	void SaveChanges() {
+		BlazoredModal.CloseAsync();
+	}
+
+	public class EditModalField {
+		public string Name {
+			get; set;
+		}
+
+		public string Value {
+			get; set;
+		}
+	}
+}

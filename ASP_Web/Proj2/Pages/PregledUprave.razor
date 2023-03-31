@@ -5,6 +5,8 @@
 @using Proj2.Code
 @using System.Collections.Specialized
 @using System.Linq
+@using Blazored.Modal
+@using Blazored.Modal.Services
 
 @inject AuthStateProvider AuthStateProvider
 @inject NavigationManager Navigation
@@ -16,7 +18,6 @@
 
 <AuthorizeView>
 	<Authorized>
-
 		@if (CurrentUprava != null) {
 			@* Uprava i informacije o uopravi *@
 
@@ -30,7 +31,7 @@
 						</div>
 
 						@if (HasError || HasWarning) {
-							<div class="row my-2">
+							<div class="row my-1">
 								<div class="col">
 									@if (HasError) {
 										<span class="badge bg-danger mx-1">ERROR</span>
@@ -42,6 +43,14 @@
 								</div>
 							</div>
 						}
+
+
+						<div class="row mb-2 my-2">
+							<div class="col">
+								<button class="btn btn-sm btn-outline-primary" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
+								<button class="btn btn-sm btn-outline-success" @onclick="@(e => OnAddVehicle())">Dodaj Vozilo</button>
+							</div>
+						</div>
 
 						<div class="row">
 							<div class="col">
@@ -95,6 +104,11 @@
 </AuthorizeView>
 
 @code {
+	[CascadingParameter]
+	public IModalService Modal {
+		get; set;
+	}
+
 	NameValueCollection Query = null;
 	DatabaseContext DbCtx;
 
@@ -141,6 +155,49 @@
 
 	void OnPregledVozila(Vozilo V) {
 		Navigation.NavigateTo("/pregled_vozila?i=" + V.ID);
+	}
+
+	async void OnAddVehicle() {
+		EditModal.EditModalField[] EditFields = new[] {
+				new EditModal.EditModalField(){ Name = "Naziv", Value = "Nema Naziva" },
+				new EditModal.EditModalField(){ Name = "Tablica", Value = "" }
+};
+
+		ModalResult Result = await Modal.Show<EditModal>("Dodaj Vozilo", new ModalParameters().Add("Fields", EditFields)).Result;
+		if (Result.Confirmed) {
+			if (string.IsNullOrEmpty(EditFields[1].Value)) {
+				return;
+			}
+
+			Vozilo NewVehicle = new Vozilo(EditFields[0].Value, EditFields[1].Value);
+			CurrentUprava.Vozila.Add(NewVehicle);
+
+			StateHasChanged();
+		}
+	}
+
+	async void OnEditDescription() {
+		EditModal.EditModalField[] EditFields = new[] {
+			new EditModal.EditModalField(){ Name = "Street", Value = CurrentUprava.Address.Street },
+			new EditModal.EditModalField(){ Name = "City", Value = CurrentUprava.Address.City },
+			new EditModal.EditModalField(){ Name = "Region", Value = CurrentUprava.Address.Region },
+			new EditModal.EditModalField(){ Name = "Postal Code", Value = CurrentUprava.Address.PostalCode },
+			new EditModal.EditModalField(){ Name = "Phone Number", Value = CurrentUprava.Address.PhoneNumber }
+	};
+
+		ModalResult Result = await Modal.Show<EditModal>("Uredi Opis", new ModalParameters().Add("Fields", EditFields)).Result;
+		if (Result.Confirmed) {
+			CurrentUprava.Address.Street = EditFields[0].Value;
+			CurrentUprava.Address.City = EditFields[1].Value;
+			CurrentUprava.Address.Region = EditFields[2].Value;
+			CurrentUprava.Address.PostalCode = EditFields[3].Value;
+			CurrentUprava.Address.PhoneNumber = EditFields[4].Value;
+			OnSaveDescription();
+		}
+	}
+
+	void OnSaveDescription() {
+		StateHasChanged();
 	}
 
 	public void Dispose() {

@@ -41,7 +41,10 @@ namespace Proj2.Code {
 			Query = new Uri(Query).Query;
 
 			return HttpUtility.ParseQueryString(Query);
+		}
 
+		public static string GenerateID() {
+			return "id_" + Guid.NewGuid().ToString("N");
 		}
 	}
 }

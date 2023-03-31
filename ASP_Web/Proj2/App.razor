@@ -1,29 +1,31 @@
 ﻿<CascadingAuthenticationState>
-	<Router AppAssembly="@typeof(App).Assembly">
-		<Found Context="routeData">
+	<Blazored.Modal.CascadingBlazoredModal Class="_none">
+		<Router AppAssembly="@typeof(App).Assembly">
+			<Found Context="routeData">
 
-			<RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-			<FocusOnNavigate RouteData="@routeData" Selector="h1" />
+				<RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+				<FocusOnNavigate RouteData="@routeData" Selector="h1" />
 
 
-		</Found>
-		<NotFound>
+			</Found>
+			<NotFound>
 
-			<PageTitle>404 - Not found</PageTitle>
+				<PageTitle>404 - Not found</PageTitle>
 
-			@*	<LayoutView Layout="@typeof(MainLayout)">*@
-			@*<LayoutView>
+				@*	<LayoutView Layout="@typeof(MainLayout)">*@
+				@*<LayoutView>
 				<p role="alert">Sorry, there's nothing at this address.</p>
-			</LayoutView>*@
+				</LayoutView>*@
 
-			<div class="d-flex align-items-center justify-content-center vh-100">
-				<div class="text-center">
-					<h1 class="display-1 fw-bold">404</h1>
-					<p class="fs-3">Not Found</p>
-					<a href="/" class="btn btn-outline-dark">Home</a>
+				<div class="d-flex align-items-center justify-content-center vh-100">
+					<div class="text-center">
+						<h1 class="display-1 fw-bold">404</h1>
+						<p class="fs-3">Not Found</p>
+						<a href="/" class="btn btn-outline-dark">Home</a>
+					</div>
 				</div>
-			</div>
 
-		</NotFound>
-	</Router>
+			</NotFound>
+		</Router>
+	</Blazored.Modal.CascadingBlazoredModal>
 </CascadingAuthenticationState>
