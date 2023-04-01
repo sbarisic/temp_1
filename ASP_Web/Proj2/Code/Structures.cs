@@ -1,5 +1,5 @@
 ﻿namespace Proj2.Code {
-	public class Address {
+	/*public class Address {
 		public string Street;
 		public string City;
 		public string Region;
@@ -85,8 +85,9 @@
 
 			return false;
 		}
-	}
+	}*/
 
+	/*
 	public static class Structures {
 		static Random Rnd = new Random(25848952);
 
@@ -121,15 +122,6 @@
 				GetRandomAddress(),
 				GetRandomAddress()
 			};
-
-			/*Vozila = new Vozilo[] {
-				new Vozilo(GenerateVehicleName(), GenerateTablica()),
-				new Vozilo(GenerateVehicleName(), GenerateTablica()),
-				new Vozilo(GenerateVehicleName(), GenerateTablica()),
-				new Vozilo(GenerateVehicleName(), GenerateTablica()),
-				new Vozilo(GenerateVehicleName(), GenerateTablica()),
-			};*/
-
 
 			List<Uprava> UpraveTemp = new List<Uprava>();
 
@@ -224,4 +216,5 @@
 			return GetRandom(Prefix) + " " + GetRandom(VehicleNames);
 		}
 	}
+	//*/
 }

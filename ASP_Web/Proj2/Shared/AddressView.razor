@@ -1,21 +1,37 @@
 ﻿@using Proj2.Code
+@using Proj2.Database
 
 @inject AuthStateProvider AuthStateProvider
 
-<strong>Street: </strong>@CurrentAddress.Street
-<br />
-<strong>City: </strong>@CurrentAddress.City
-<br />
-<strong>Region: </strong>@CurrentAddress.Region
-<br />
-<strong>Postal Code: </strong>@CurrentAddress.PostalCode
-<br />
-<strong>Phone Number: </strong>@CurrentAddress.PhoneNumber
-<br />
+@if (CurrentAddress != null) {
+    <strong>Street: </strong>
+
+    @CurrentAddress.Street
+    <br />
+    <strong>City: </strong>
+
+    @CurrentAddress.City
+    <br />
+    <strong>Region: </strong>
+
+    @CurrentAddress.Region
+    <br />
+    <strong>Postal Code: </strong>
+
+    @CurrentAddress.PostalCode
+    <br />
+    <strong>Phone Number: </strong>
+
+    @CurrentAddress.PhoneNumber
+    <br />
+} else {
+    <strong>No Address Details Found</strong>
+    <br />
+}
 
 @code {
-	[Parameter]
-	public Address CurrentAddress {
-		get; set;
-	}
+    [Parameter]
+    public DbAddress CurrentAddress {
+        get; set;
+    }
 }

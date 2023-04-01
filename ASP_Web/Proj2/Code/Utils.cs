@@ -43,8 +43,8 @@ namespace Proj2.Code {
 			return HttpUtility.ParseQueryString(Query);
 		}
 
-		public static string GenerateID() {
+		/*public static string GenerateID() {
 			return "id_" + Guid.NewGuid().ToString("N");
-		}
+		}*/
 	}
 }

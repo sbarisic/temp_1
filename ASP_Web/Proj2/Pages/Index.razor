@@ -5,87 +5,131 @@
 @inject NavigationManager Navigation
 @*@inject ItemDataService ItemService*@
 
-@implements IAsyncDisposable
-
 <PageTitle>Index</PageTitle>
 
 <AuthorizeView>
-	<Authorized>
-		<div class="row mb-3">
-			<div class="form-group">
-				<label for="input_item" class="form-label">
-					Item Name:
-				</label>
+    <Authorized>
+        @*<div class="row mb-3">
+        <div class="form-group">
+        <label for="input_item" class="form-label">
+        Item Name:
+        </label>
 
-				<div class="col-sm-10">
-					<input id="input_item" class="form-control" type="text" @bind="itemInput" />
-				</div>
-			</div>
-		</div>
+        <div class="col-sm-10">
+        <input id="input_item" class="form-control" type="text" @bind="itemInput" />
+        </div>
+        </div>
+        </div>
 
-		<div class="row mb-3">
-			<div class="form-group">
-				<label for="input_voltage" class="form-label">
-					Voltage:
-				</label>
+        <div class="row mb-3">
+        <div class="form-group">
+        <label for="input_voltage" class="form-label">
+        Voltage:
+        </label>
 
-				<div class="col-sm-10">
-					<input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
-				</div>
-			</div>
-		</div>
+        <div class="col-sm-10">
+        <input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
+        </div>
+        </div>
+        </div>*@
 
-		<button class="btn btn-primary" @onclick="Update" disabled="@(!IsConnected)">Update</button>
-	</Authorized>
+        <button class="btn btn-primary" @onclick="@(e=>CreateDb())">Create Database</button>
+    </Authorized>
 </AuthorizeView>
 
 @code {
-	private HubConnection HubCon;
+    /*private HubConnection HubCon;
 
-	string itemInput;
-	string itemVoltage;
+    string itemInput;
+    string itemVoltage;
 
-	public bool IsConnected {
-		get {
-			if (HubCon == null)
-				return false;
+    public bool IsConnected {
+    get {
+    if (HubCon == null)
+    return false;
 
-			return HubCon.State == HubConnectionState.Connected;
-		}
-	}
+    return HubCon.State == HubConnectionState.Connected;
+    }
+    }
 
-	protected override async Task OnInitializedAsync() {
-		HubCon = new HubConnectionBuilder()
-		.WithUrl(Navigation.ToAbsoluteUri("/comhub"))
-		.Build();
+    protected override async Task OnInitializedAsync() {
+    HubCon = new HubConnectionBuilder()
+    .WithUrl(Navigation.ToAbsoluteUri("/comhub"))
+    .Build();
 
-		await HubCon.StartAsync();
-	}
+    await HubCon.StartAsync();
+    }*/
 
-	private async Task Update() {
-		if (!IsConnected)
-			return;
+    private void CreateDb() {
+        using (DatabaseContext DbCtx = new DatabaseContext()) {
+            Console.Write("Recreating test database ...");
+            DbCtx.Database.EnsureDeleted();
+            DbCtx.Database.EnsureCreated();
 
-		using (DatabaseContext DbCtx = new DatabaseContext()) {
-			DbItemData Item = DbCtx.GetItem(itemInput);
 
-			if (Item == null)
-				return;
+            DbCtx.CreateNew<DbUser>(Usr => {
+                Usr.SetUsernamePassword("admin", "admin");
+            });
 
-			if (float.TryParse(itemVoltage, out float Voltage)) {
-				//Item.TimeStamp = DateTime.Now;
-				Item.Voltage = Voltage;
-			}
 
-			DbCtx.UpdateItem(Item);
-		}
 
-		await HubCon.SendAsync("SendStateHasChanged");
-	}
+            DbAddress Addr1 = DbCtx.CreateNew<DbAddress>(Addr => {
+                Addr.Street = "Ante Trumbica 1B";
+                Addr.City = "Bjelovar";
+                Addr.Region = "Bjelovarsko Bilogorska";
+                Addr.PostalCode = "43000";
+                Addr.PhoneNumber = "095 545 1181";
+            });
 
-	public async ValueTask DisposeAsync() {
-		if (HubCon != null) {
-			await HubCon.DisposeAsync();
-		}
-	}
+
+            DbAddress Addr2 = DbCtx.CreateNew<DbAddress>(Addr => {
+                Addr.Street = "Antuna Radica 52";
+                Addr.City = "Bjelovar";
+                Addr.Region = "Bjelovarsko Bilogorska";
+                Addr.PostalCode = "43000";
+                Addr.PhoneNumber = "091 816 0014";
+            });
+
+
+            DbAdministration Test1 = DbCtx.CreateNew<DbAdministration>(Admin => {
+                Admin.Name = "Test 1";
+                Admin.Address = Addr1;
+            });
+
+
+            DbCtx.CreateNew<DbAdministration>(Admin => {
+                Admin.Name = "Test 2";
+                Admin.Address = Addr2;
+            });
+
+
+            DbCtx.Commit();
+            Console.WriteLine("OK");
+        }
+
+        //if (!IsConnected)
+        //	return;
+
+        /*using (DatabaseContext DbCtx = new DatabaseContext()) {
+            DbItemData Item = DbCtx.GetItem(itemInput);
+
+                if (Item == null)
+            return;
+
+            if (float.TryParse(itemVoltage, out float Voltage)) {
+                //Item.TimeStamp = DateTime.Now;
+                Item.Voltage = Voltage;
+            }
+
+            DbCtx.UpdateItem(Item);
+        }*/
+
+        //await HubCon.SendAsync("SendStateHasChanged");
+    }
+
+    /* public async ValueTask DisposeAsync() {
+         if (HubCon != null) {
+             await HubCon.DisposeAsync();
+    }
+    }*/
 }

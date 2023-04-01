@@ -65,7 +65,7 @@
 	void ReloadItems() {
 		using (DatabaseContext DbCtx = new DatabaseContext()) {
 			DisplayItems.Clear();
-			DisplayItems.AddRange(DbCtx.GetAllItems());
+			//DisplayItems.AddRange(DbCtx.GetAllItems());
 		}
 	}
 
