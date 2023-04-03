@@ -13,12 +13,14 @@
 
 		<div class="modal-body">
 
-			@foreach (Field F in Fields) {
-				<div class="input-group mb-1">
-					<span class="input-group-text">@F.Name</span>
-					<input type="text" class="form-control" placeholder="@F.Value" @bind=F.Value>
-				</div>
-			}
+			@Message
+
+			@*@foreach (Field F in Fields) {
+			<div class="input-group mb-1">
+			<span class="input-group-text">@F.Name</span>
+			<input type="text" class="form-control" placeholder="@F.Value" @bind=F.Value>
+			</div>
+			}*@
 
 
 
@@ -31,8 +33,8 @@
 		</div>
 
 		<div class="modal-footer">
-			<button type="button" class="btn btn-secondary" @onclick="@(e => Close())">Close</button>
-			<button type="button" class="btn btn-primary" @onclick="@(e => SaveChanges())">Save Changes</button>
+			<button type="button" class="btn btn-primary" @onclick="@(e => OnOK())">OK</button>
+			<button type="button" class="btn btn-secondary" @onclick="@(e => OnCancel())">Cancel</button>
 		</div>
 	</div>
 </div>
@@ -44,33 +46,22 @@
 	}
 
 	[Parameter]
-	public Field[] Fields {
+	public string Message {
 		get; set;
 	}
 
 	protected override void OnInitialized() {
 	}
 
-	void Close() {
+	void OnCancel() {
 		BlazoredModal.CancelAsync();
 	}
 
-	void SaveChanges() {
+	void OnOK() {
 		BlazoredModal.CloseAsync();
 	}
 
-	public class Field {
-		public string Name {
-			get; set;
-		}
-
-		public string Value {
-			get; set;
-		}
-
-		public Field(string Name, string Value) {
-			this.Name = Name;
-			this.Value = Value;
-		}
+	public static async Task<ModalResult> Show(IModalService Modal, string Title, string Message) {
+		return await Modal.Show<QueryModal>(Title, new ModalParameters().Add(nameof(Message), Message)).Result;
 	}
 }

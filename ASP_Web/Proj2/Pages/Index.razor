@@ -8,128 +8,135 @@
 <PageTitle>Index</PageTitle>
 
 <AuthorizeView>
-    <Authorized>
-        @*<div class="row mb-3">
-        <div class="form-group">
-        <label for="input_item" class="form-label">
-        Item Name:
-        </label>
+	<Authorized>
+		@*<div class="row mb-3">
+		<div class="form-group">
+		<label for="input_item" class="form-label">
+		Item Name:
+		</label>
 
-        <div class="col-sm-10">
-        <input id="input_item" class="form-control" type="text" @bind="itemInput" />
-        </div>
-        </div>
-        </div>
+		<div class="col-sm-10">
+		<input id="input_item" class="form-control" type="text" @bind="itemInput" />
+		</div>
+		</div>
+		</div>
 
-        <div class="row mb-3">
-        <div class="form-group">
-        <label for="input_voltage" class="form-label">
-        Voltage:
-        </label>
+		<div class="row mb-3">
+		<div class="form-group">
+		<label for="input_voltage" class="form-label">
+		Voltage:
+		</label>
 
-        <div class="col-sm-10">
-        <input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
-        </div>
-        </div>
-        </div>*@
+		<div class="col-sm-10">
+		<input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
+		</div>
+		</div>
+		</div>*@
 
-        <button class="btn btn-primary" @onclick="@(e=>CreateDb())">Create Database</button>
-    </Authorized>
+		<button class="btn btn-primary" @onclick="@(e=>CreateDb())">Create Database</button>
+	</Authorized>
 </AuthorizeView>
 
 @code {
-    /*private HubConnection HubCon;
+	/*private HubConnection HubCon;
 
-    string itemInput;
-    string itemVoltage;
+	string itemInput;
+	string itemVoltage;
 
-    public bool IsConnected {
-    get {
-    if (HubCon == null)
-    return false;
+	public bool IsConnected {
+	get {
+	if (HubCon == null)
+	return false;
 
-    return HubCon.State == HubConnectionState.Connected;
-    }
-    }
+	return HubCon.State == HubConnectionState.Connected;
+	}
+	}
 
-    protected override async Task OnInitializedAsync() {
-    HubCon = new HubConnectionBuilder()
-    .WithUrl(Navigation.ToAbsoluteUri("/comhub"))
-    .Build();
+	protected override async Task OnInitializedAsync() {
+	HubCon = new HubConnectionBuilder()
+	.WithUrl(Navigation.ToAbsoluteUri("/comhub"))
+	.Build();
 
-    await HubCon.StartAsync();
-    }*/
+	await HubCon.StartAsync();
+	}*/
 
-    private void CreateDb() {
-        using (DatabaseContext DbCtx = new DatabaseContext()) {
-            Console.Write("Recreating test database ...");
-            DbCtx.Database.EnsureDeleted();
-            DbCtx.Database.EnsureCreated();
-
-
-            DbCtx.CreateNew<DbUser>(Usr => {
-                Usr.SetUsernamePassword("admin", "admin");
-            });
+	private void CreateDb() {
+		using (DatabaseContext DbCtx = new DatabaseContext()) {
+			Console.Write("Recreating test database ...");
+			DbCtx.Database.EnsureDeleted();
+			DbCtx.Database.EnsureCreated();
 
 
+			DbCtx.CreateNew<DbUser>(Usr => {
+				Usr.SetUsernamePassword("admin", "admin");
+			});
 
-            DbAddress Addr1 = DbCtx.CreateNew<DbAddress>(Addr => {
-                Addr.Street = "Ante Trumbica 1B";
-                Addr.City = "Bjelovar";
-                Addr.Region = "Bjelovarsko Bilogorska";
-                Addr.PostalCode = "43000";
-                Addr.PhoneNumber = "095 545 1181";
-            });
-
-
-            DbAddress Addr2 = DbCtx.CreateNew<DbAddress>(Addr => {
-                Addr.Street = "Antuna Radica 52";
-                Addr.City = "Bjelovar";
-                Addr.Region = "Bjelovarsko Bilogorska";
-                Addr.PostalCode = "43000";
-                Addr.PhoneNumber = "091 816 0014";
-            });
+			DbAdministration Test1 = DbCtx.CreateNew<DbAdministration>(Admin => {
+				Admin.Name = "Test 1";
+				Admin.Address = DbCtx.CreateNew<DbAddress>(Addr => {
+					Addr.Street = "Ante Trumbica 1B";
+					Addr.City = "Bjelovar";
+					Addr.Region = "Bjelovarsko Bilogorska";
+					Addr.PostalCode = "43000";
+					Addr.PhoneNumber = "095 545 1181";
+				});
+			});
 
 
-            DbAdministration Test1 = DbCtx.CreateNew<DbAdministration>(Admin => {
-                Admin.Name = "Test 1";
-                Admin.Address = Addr1;
-            });
+			DbAdministration Test2 = DbCtx.CreateNew<DbAdministration>(Admin => {
+				Admin.Name = "Test 2";
+				Admin.Address = DbCtx.CreateNew<DbAddress>(Addr => {
+					Addr.Street = "Antuna Radica 52";
+					Addr.City = "Bjelovar";
+					Addr.Region = "Bjelovarsko Bilogorska";
+					Addr.PostalCode = "43000";
+					Addr.PhoneNumber = "091 816 0014";
+				});
+			});
+
+			Test1.Vehicles.Add(DbCtx.CreateNew<DbVehicle>(Veh => {
+				Veh.Name = "Vozilo 1";
+				Veh.LicensePlate = "BJ000AA";
+			}));
+
+			Test2.Vehicles.Add(DbCtx.CreateNew<DbVehicle>(Veh => {
+				Veh.Name = "Vozilo 2";
+				Veh.LicensePlate = "BJ001AB";
+			}));
+
+			Test2.Vehicles.Add(DbCtx.CreateNew<DbVehicle>(Veh => {
+				Veh.Name = "Vozilo 3";
+				Veh.LicensePlate = "BJ002AC";
+			}));
 
 
-            DbCtx.CreateNew<DbAdministration>(Admin => {
-                Admin.Name = "Test 2";
-                Admin.Address = Addr2;
-            });
+			DbCtx.Commit();
+			Console.WriteLine("OK");
+		}
 
+		//if (!IsConnected)
+		//	return;
 
-            DbCtx.Commit();
-            Console.WriteLine("OK");
-        }
+		/*using (DatabaseContext DbCtx = new DatabaseContext()) {
+			DbItemData Item = DbCtx.GetItem(itemInput);
 
-        //if (!IsConnected)
-        //	return;
+				if (Item == null)
+			return;
 
-        /*using (DatabaseContext DbCtx = new DatabaseContext()) {
-            DbItemData Item = DbCtx.GetItem(itemInput);
+			if (float.TryParse(itemVoltage, out float Voltage)) {
+				//Item.TimeStamp = DateTime.Now;
+				Item.Voltage = Voltage;
+			}
 
-                if (Item == null)
-            return;
+			DbCtx.UpdateItem(Item);
+		}*/
 
-            if (float.TryParse(itemVoltage, out float Voltage)) {
-                //Item.TimeStamp = DateTime.Now;
-                Item.Voltage = Voltage;
-            }
+		//await HubCon.SendAsync("SendStateHasChanged");
+	}
 
-            DbCtx.UpdateItem(Item);
-        }*/
-
-        //await HubCon.SendAsync("SendStateHasChanged");
-    }
-
-    /* public async ValueTask DisposeAsync() {
-         if (HubCon != null) {
-             await HubCon.DisposeAsync();
-    }
-    }*/
+	/* public async ValueTask DisposeAsync() {
+			if (HubCon != null) {
+				await HubCon.DisposeAsync();
+	}
+	}*/
 }

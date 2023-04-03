@@ -14,50 +14,50 @@ using System.Net.NetworkInformation;
 using System.Security.Cryptography;
 
 namespace Proj2.Database {
-    public class DatabaseContext : DbContext {
-        public void CreateMissingTables() {
-            RelationalDatabaseCreator DbCreator = (Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator);
-            //DbCreator.CreateTables();
+	public class DatabaseContext : DbContext {
+		public void CreateMissingTables() {
+			RelationalDatabaseCreator DbCreator = (Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator);
+			//DbCreator.CreateTables();
 
-            string CreateScript = DbCreator.GenerateCreateScript();
-        }
+			string CreateScript = DbCreator.GenerateCreateScript();
+		}
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-            optionsBuilder.UseNpgsql(ConfigurationService.Instance.ConnectionString);
-        }
+		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
+			optionsBuilder.UseLazyLoadingProxies().UseNpgsql(ConfigurationService.Instance.ConnectionString);
+		}
 
-        // Tables
-        public DbSet<DbUser> Users {
-            get; set;
-        }
+		// Tables
+		public DbSet<DbUser> Users {
+			get; set;
+		}
 
-        public DbSet<DbPermission> AllPermissions {
-            get; set;
-        }
+		public DbSet<DbPermission> AllPermissions {
+			get; set;
+		}
 
-        public DbSet<DbDeviceAPIKey> APIKeys {
-            get; set;
-        }
+		public DbSet<DbDeviceAPIKey> APIKeys {
+			get; set;
+		}
 
-        public DbSet<DbAddress> Addresses {
-            get; set;
-        }
+		public DbSet<DbAddress> Addresses {
+			get; set;
+		}
 
-        public DbSet<DbAdministration> Administrations {
-            get; set;
-        }
+		public DbSet<DbAdministration> Administrations {
+			get; set;
+		}
 
-        public DbSet<DbVehicle> Vehicles {
-            get; set;
-        }
+		public DbSet<DbVehicle> Vehicles {
+			get; set;
+		}
 
-        public DbSet<DbVehicleEquipment> VehicleEquipment {
-            get; set;
-        }
+		public DbSet<DbVehicleEquipment> VehicleEquipment {
+			get; set;
+		}
 
-        // Functions
+		// Functions
 
-        /*public DbItemData[] GetAllItems() {
+		/*public DbItemData[] GetAllItems() {
             return Items.OrderBy(Itm => Itm.ID).ToArray();
         }
 
@@ -70,47 +70,92 @@ namespace Proj2.Database {
             SaveChanges();
         }*/
 
-        public void Commit() {
-            SaveChanges();
-        }
+		public void Commit() {
+			SaveChanges();
+		}
 
-        public T CreateNew<T>(Action<T> Act) where T : DbTable, new() {
-            T NewObject = new T();
-            NewObject.InitializeNew();
+		DbSet<T> GetDbSet<T>() where T : DbTable {
+			PropertyInfo[] Props = typeof(DatabaseContext).GetProperties();
 
-            PropertyInfo[] Props = typeof(DatabaseContext).GetProperties();
+			for (int i = 0; i < Props.Length; i++) {
+				if (Props[i].PropertyType == typeof(DbSet<T>)) {
+					PropertyInfo Prop = Props[i];
 
-            for (int i = 0; i < Props.Length; i++) {
-                if (Props[i].PropertyType == typeof(DbSet<T>)) {
-                    PropertyInfo Prop = Props[i];
+					DbSet<T> DbSet = (DbSet<T>)Prop.GetGetMethod().Invoke(this, null);
 
-                    DbSet<T> DbSet = (DbSet<T>)Prop.GetGetMethod().Invoke(this, null);
+					return DbSet;
+				}
+			}
 
-                    DbSet.Add(NewObject);
-                    //SaveChanges();
-                }
-            }
+			return null;
+		}
 
-            Act(NewObject);
+		public void Reload<T>(T Ent) where T : DbTable {
+			Entry(Ent).Reload();
+		}
 
-            SaveChanges();
-            Entry(NewObject).Reload();
+		public T CreateNew<T>(Action<T> Act = null) where T : DbTable, new() {
+			T NewObject = new T();
+			NewObject.InitializeNew();
 
-            return NewObject;
-        }
+			DbSet<T> DbSet = GetDbSet<T>();
+			DbSet.Add(NewObject);
 
-        public DbVehicle GetVehicle(string ID) {
-            DbVehicle Veh = Vehicles.Where(V => V.ID == ID).FirstOrDefault();
+			/*PropertyInfo[] Props = typeof(DatabaseContext).GetProperties();
 
-            return Veh;
-        }
+			for (int i = 0; i < Props.Length; i++) {
+				if (Props[i].PropertyType == typeof(DbSet<T>)) {
+					PropertyInfo Prop = Props[i];
 
-        public DbAdministration GetAdministration(string ID) {
-            DbAdministration Admin = Administrations.Where(A => A.ID == ID).FirstOrDefault();
+					DbSet<T> DbSet = (DbSet<T>)Prop.GetGetMethod().Invoke(this, null);
 
-            Entry(Admin).Reference(X => X.Address).Load();
+					DbSet.Add(NewObject);
+					//SaveChanges();
+				}
+			}*/
 
-            return Admin;
-        }
-    }
+			if (Act != null) {
+				Act(NewObject);
+			}
+
+			SaveChanges();
+			Reload(NewObject);
+			return NewObject;
+		}
+
+		public void DeleteEntity<T>(T Ent) where T : DbTable {
+			/*DbSet<T> DbSet = GetDbSet<T>();
+			DbSet.Remove(Ent);*/
+
+			Remove(Ent);
+			SaveChanges();
+		}
+
+		public DbVehicle GetVehicle(string ID) {
+			DbVehicle Veh = Vehicles.Where(V => V.ID == ID).FirstOrDefault();
+
+			return Veh;
+		}
+
+		public DbAdministration GetAdministration(string ID) {
+			DbAdministration Admin = Administrations.Where(A => A.ID == ID).FirstOrDefault();
+
+			//Entry(Admin).Reference(X => X.Address).Load();
+
+			return Admin;
+		}
+
+		public DbAdministration GetAdministrationForVehicle(DbVehicle Veh) {
+			DbAdministration Admin = Administrations.Where(A => A.Vehicles.Contains(Veh)).FirstOrDefault();
+
+			return Admin;
+		}
+
+		public DbDeviceAPIKey GetDeviceAPIKey(string APIKey) {
+			// TODO:
+			DbDeviceAPIKey DbAPIKey = APIKeys.Where(AT => AT.APIKey == APIKey).FirstOrDefault();
+
+			return DbAPIKey;
+		}
+	}
 }

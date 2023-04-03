@@ -8,81 +8,103 @@
 <PageTitle>Proj2</PageTitle>
 
 <HeadContent>
-    <link href="~/css/site.styles.css" rel="stylesheet">
-    <link href="~/css/bootstrap/bootstrap.min.css" rel="stylesheet" integrity="if_needed" />
+	<link href="~/css/site.styles.css" rel="stylesheet">
+	<link href="~/css/bootstrap/bootstrap.min.css" rel="stylesheet" integrity="if_needed" />
 </HeadContent>
 
-<div class="page">
-    <div class="sidebar flex-column flex-shrink-0 p-3 text-white bg-dark">
-        <a href="/" class="d-flex justify-content-center align-items-center text-white text-decoration-none">
-            <span class="fs-4">Proj2</span>
-        </a>
-        <hr>
+<CascadingValue Value="this">
+	<div class="page">
+		<div class="sidebar flex-column flex-shrink-0 p-3 text-white bg-dark">
+			<a href="/" class="d-flex justify-content-center align-items-center text-white text-decoration-none">
+				<span class="fs-4">Proj2</span>
+			</a>
+			<hr>
 
-        <NavMenu />
+			<NavMenu />
 
-        <hr>
+			<hr>
 
-        <AuthorizeView>
-            <Authorized>
-                <div class="dropdown">
-                    <a href="" class="align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://github.com/sbarisic.png" alt="" class="rounded-circle me-2 avatar-circle">
-                        <strong>@Username</strong>
-                    </a>
+			<AuthorizeView>
+				<Authorized>
+					<div class="dropdown">
+						<a href="" class="align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+							<img src="https://github.com/sbarisic.png" alt="" class="rounded-circle me-2 avatar-circle">
+							<strong>@Username</strong>
+						</a>
 
-                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
-                        @*<li><a class="dropdown-item" href="#">New project...</a></li>*@
-                        <li><a class="dropdown-item" href="settings">Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="cookie/logout">Logout</a></li>
-                    </ul>
-                </div>
-            </Authorized>
-        </AuthorizeView>
-    </div>
+						<ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
+							@*<li><a class="dropdown-item" href="#">New project...</a></li>*@
+							<li><a class="dropdown-item" href="settings">Settings</a></li>
+							<li><hr class="dropdown-divider"></li>
+							<li><a class="dropdown-item" href="cookie/logout">Logout</a></li>
+						</ul>
+					</div>
+				</Authorized>
+			</AuthorizeView>
+		</div>
 
-    <main>
-        <div class="top-row px-4">
-            <AuthorizeView>
-                <Authorized>
-                    <p class="text-end mt-2 mb-2 text-primary fw-bold">Welcome, @Username</p>
-                </Authorized>
+		<main>
+			<div class="top-row px-4">
 
-                <NotAuthorized>
-                    <p class="text-end mt-2 mb-2 text-secondary fw-bold">Not logged in</p>
-                </NotAuthorized>
-            </AuthorizeView>
-        </div>
+				<div class="container">
+					<div class="row">
+						<div class="col">
+							<p class="mt-2 mb-2 fw-bold">@NaviText</p>
+						</div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+						<div class="col">
+							<AuthorizeView>
+								<Authorized>
+									<p class="text-end mt-2 mb-2 text-primary fw-bold">Welcome, @Username</p>
+								</Authorized>
+
+								<NotAuthorized>
+									<p class="text-end mt-2 mb-2 text-secondary fw-bold">Not logged in</p>
+								</NotAuthorized>
+							</AuthorizeView>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<article class="content px-4">
+				@Body
+			</article>
+		</main>
+	</div>
+</CascadingValue>
 
 @code {
-    string Username {
-        get {
-            Database.DbUser Usr = AuthStateProvider.GetDbUser();
+	public string NaviText {
+		get; set;
+	}
 
-            if (Usr == null)
-                return "[NULL]";
+	string Username {
+		get {
+			Database.DbUser Usr = AuthStateProvider.GetDbUser();
 
-            return Usr.Username;
-        }
-    }
+			if (Usr == null)
+				return "[NULL]";
 
-    protected override void OnAfterRender(bool firstRender) {
-        /*if (firstRender) {
-            string CurURI = Navigation.Uri;
-            CurURI = Navigation.ToBaseRelativePath(CurURI);
+			return Usr.Username;
+		}
+	}
 
-            if (CurURI.Contains('?'))
-                CurURI = CurURI.Substring(0, CurURI.IndexOf('?'));
+	protected override void OnAfterRender(bool firstRender) {
+		/*if (firstRender) {
+			string CurURI = Navigation.Uri;
+			CurURI = Navigation.ToBaseRelativePath(CurURI);
 
-            if (CurURI != "login" && !AuthStateProvider.IsAuthenticated())
-                Navigation.NavigateTo("/login");
-        }*/
-    }
+			if (CurURI.Contains('?'))
+				CurURI = CurURI.Substring(0, CurURI.IndexOf('?'));
+
+			if (CurURI != "login" && !AuthStateProvider.IsAuthenticated())
+				Navigation.NavigateTo("/login");
+		}*/
+	}
+
+	public void SetNaviText(string Text) {
+		NaviText = Text;
+		StateHasChanged();
+	}
 }
