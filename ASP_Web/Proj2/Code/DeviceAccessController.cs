@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
 using Proj2.Database;
+using Microsoft.AspNetCore.SignalR;
+using Proj2.Hubs;
+using System.Threading.Tasks;
 
 namespace Proj2.Code {
     public enum DeviceAccessStatus {
@@ -52,6 +55,12 @@ namespace Proj2.Code {
     [ApiController]
     [RequireHttps]
     public class DeviceAccessController : ControllerBase {
+        IHubContext<ComHub> HubContext;
+
+        public DeviceAccessController(IHubContext<ComHub> HubContext) {
+            this.HubContext = HubContext;
+        }
+
         [HttpPost("/deviceaccess")]
         public JsonResult Post([FromBody] DeviceAccessAPI API) {
             if (API == null || API.APIVersion == 0)
@@ -83,6 +92,8 @@ namespace Proj2.Code {
                 DbCtx.Commit();
                 //Console.WriteLine("Hello Database World!");
 
+                Console.WriteLine("Dispatching changes");
+                HubContext.Clients.All.SendAsync("OnStateHasChanged").Wait();
             }
 
             return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.OK));

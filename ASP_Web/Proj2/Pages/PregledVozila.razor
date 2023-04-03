@@ -11,7 +11,7 @@
 @inject AuthStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 
-@implements IDisposable
+@implements IAsyncDisposable
 
 
 <PageTitle>Pregled Vozila</PageTitle>
@@ -152,7 +152,6 @@
 </AuthorizeView>
 
 @code {
-
     [CascadingParameter]
     public IModalService Modal {
         get; set;
@@ -161,6 +160,17 @@
     [CascadingParameter]
     public MainLayout Layout {
         get; set;
+    }
+
+    HubConnection HubCon;
+
+    public bool IsConnected {
+        get {
+            if (HubCon == null)
+                return false;
+
+            return HubCon.State == HubConnectionState.Connected;
+        }
     }
 
     NameValueCollection Query = null;
@@ -209,6 +219,17 @@
         }
 
         Layout?.SetNaviText("Pregled Vozila");
+    }
+
+    protected override async Task OnInitializedAsync() {
+        HubCon = new HubConnectionBuilder().WithUrl(Navigation.ToAbsoluteUri("/comhub")).Build();
+
+        HubCon.On("OnStateHasChanged", () => {
+            Console.WriteLine("State has changed!");
+            InvokeAsync(StateHasChanged);
+        });
+
+        await HubCon.StartAsync();
     }
 
     protected override void OnAfterRender(bool firstRender) {
@@ -318,7 +339,11 @@
         return Val.FloatValue.ToString() + Suffix;
     }
 
-    public void Dispose() {
+    public async ValueTask DisposeAsync() {
         DbCtx.Dispose();
+
+        if (HubCon != null) {
+            await HubCon.DisposeAsync();
+        }
     }
 }

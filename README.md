@@ -47,6 +47,17 @@ sudo micro /etc/postgresql/*/main/postgresql.conf
 sudo systemctl restart postgresql
 ```
 
+Device API
+
+```
+{
+	"APIVersion": 1,
+	"APIKey": "ZJC8cR4XXJyNYh9MKzDkowszMkKqqfxw6fmn5TErkaE=",
+	"EquipmentKey": "5xQfOnd__Ea75WWZJ3r2YA",
+	"Value": "12.5"
+}
+```
+
 ```
 TODO:
 - JSON API za pristup mikrokontroleru
