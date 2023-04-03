@@ -34,10 +34,7 @@ namespace Proj2.Database {
             get; set;
         }
 
-        public virtual ICollection<DbPermission> Permissions {
-            get;
-            set;
-        } 
+        public virtual List<DbPermission> Permissions { get; set; } = new();
 
         public void SetUsernamePassword(string Username, string Password) {
             this.Username = Username;
@@ -137,6 +134,10 @@ namespace Proj2.Database {
             get; set;
         }
 
+        public virtual List<DbVehicle> Vehicles {
+            get; set;
+        } = new();
+
         /*public static DbDeviceAPIKey CreateNew(string Description) {
             DbDeviceAPIKey DeviceAPIKey = new DbDeviceAPIKey();
 
@@ -214,9 +215,9 @@ namespace Proj2.Database {
             get; set;
         }
 
-        public virtual ICollection<DbVehicle> Vehicles {
+        public virtual List<DbVehicle> Vehicles {
             get; set;
-        }
+        } = new();
 
         /*public DbAdministration CreateNew(string Name, DbAddress Address) {
             DbAdministration Admin = new DbAdministration();
@@ -253,14 +254,15 @@ namespace Proj2.Database {
             get; set;
         }
 
+        [Key]
         [Required]
         public string LicensePlate {
             get; set;
         }
 
-        public virtual ICollection<DbVehicleEquipment> Equipment {
+        public virtual List<DbVehicleEquipment> Equipment {
             get; set;
-        } 
+        } = new();
 
         public bool HasErrors() {
             return false;
@@ -282,12 +284,53 @@ namespace Proj2.Database {
             get; set;
         }
 
+        [Required]
         public string Name {
             get; set;
         }
 
+        [Required]
+        public DbEquipmentType EquipmentType {
+            get; set;
+        }
+
+        public virtual List<DbEquipmentValues> Values { get; set; } = new();
+
         public override void InitializeNew() {
             ID = Utils.GenerateShortID();
         }
+    }
+
+    [PrimaryKey(nameof(ID))]
+    public class DbEquipmentValues : DbTable {
+        [Key]
+        public int ID {
+            get; set;
+        }
+
+        [Required]
+        public DateTime CreatedOn {
+            get; set;
+        }
+
+        [Required]
+        public virtual DbDeviceAPIKey CreatedByKey {
+            get; set;
+        }
+
+        [Required]
+        public float FloatValue {
+            get; set;
+        }
+
+        public override void InitializeNew() {
+            CreatedOn = DateTime.Now.ToUniversalTime();
+        }
+    }
+
+    public enum DbEquipmentType : int {
+        NONE = 0,
+        BATTERY = 1,
+        PRESSURE = 2
     }
 }

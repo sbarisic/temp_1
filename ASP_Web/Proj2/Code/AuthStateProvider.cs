@@ -67,7 +67,7 @@ namespace Proj2.Code {
 			//SessionUser = null;
 
 			using (DatabaseContext Db = new DatabaseContext()) {
-				DbUser DbUsr = Db.Users.Where(Usr => Usr.Username == Username).FirstOrDefault();
+				DbUser DbUsr = Db.GetUser(Username);
 
 				if (DbUsr == null)
 					return false;
@@ -109,7 +109,8 @@ namespace Proj2.Code {
 			int UserID = int.Parse(UserIDClaim.Value);
 
 			using (DatabaseContext Db = new DatabaseContext()) {
-				DbUser DbUsr = Db.Users.Where(Usr => Usr.ID == UserID).FirstOrDefault();
+				DbUser DbUsr = Db.GetUser(UserID);
+
 				return DbUsr;
 			}
 		}

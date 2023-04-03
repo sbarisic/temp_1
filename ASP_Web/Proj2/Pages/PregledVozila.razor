@@ -17,246 +17,308 @@
 <PageTitle>Pregled Vozila</PageTitle>
 
 <AuthorizeView>
-	<Authorized>
-		@if (CurrentVehicle != null) {
-			@* Uprava i informacije o uopravi *@
+    <Authorized>
+        @if (CurrentVehicle != null) {
+            @* Uprava i informacije o uopravi *@
 
-			<div class="card">
-				<div class="card-body">
-					<div class="container">
-						<div class="row">
-							<div class="col">
-								<h4 class="card-title">@CurrentVehicle.Name</h4>
-							</div>
-						</div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col">
+                                <h4 class="card-title">@CurrentVehicle.Name</h4>
+                            </div>
+                        </div>
 
-						@if (HasError || HasWarning) {
-							<div class="row my-1">
-								<div class="col">
-									@if (HasError) {
-										<span class="badge bg-danger mx-1">ERROR</span>
-									}
+                        @if (HasError || HasWarning) {
+                            <div class="row my-1">
+                                <div class="col">
+                                    @if (HasError) {
+                                        <span class="badge bg-danger mx-1">ERROR</span>
+                                    }
 
-									@if (HasWarning) {
-										<span class="badge bg-warning mx-1">WARNING</span>
-									}
-								</div>
-							</div>
-						}
+                                    @if (HasWarning) {
+                                        <span class="badge bg-warning mx-1">WARNING</span>
+                                    }
+                                </div>
+                            </div>
+                        }
 
 
-						<div class="row mb-2 my-2">
-							<div class="col">
-								<button class="btn btn-sm btn-outline-primary" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
-								<button class="btn btn-sm btn-outline-success">Pridruži vozilo upravi</button>
-								<button class="btn btn-sm btn-outline-success" @onclick="@OnAddEquipment">Dodaj Opremu</button>
-							</div>
-						</div>
+                        <div class="row mb-2 my-2">
+                            <div class="col">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
+                                <button class="btn btn-sm btn-outline-success">Pridruži vozilo upravi</button>
+                                <button class="btn btn-sm btn-outline-success" @onclick="@OnAddEquipment">Dodaj Opremu</button>
+                            </div>
+                        </div>
 
-						<div class="row my-2">
-							<div class="col">
-								<strong>API Key: </strong>[REDACTED]
-							</div>
-						</div>
+                        <div class="row my-2">
+                            <div class="col">
+                                <strong>API Key: </strong>@(GetAPIKey() ?? "None")
+                            </div>
 
-						<div class="row">
-							@if (CurrentVehicleAdmin != null) {
-								<div class="col">
-									<strong>Uprava: </strong>@CurrentVehicleAdmin.Name
-								</div>
+                            <div class="col">
+                                <button class="btn btn-sm btn-outline-dark" @onclick="@OnGenerateAPIKey">Generiraj APIKey</button>
+                            </div>
+                        </div>
 
-								<div class="col">
-									<button class="btn btn-sm btn-outline-primary" @onclick="@(e=> OnPregledUprave(CurrentVehicleAdmin))">Pregled Uprave</button>
-								</div>
-							} else {
-								<div class="col">
-									<string>
-										Vozilo nije pridruženo upravi
-									</string>
-								</div>
-							}
-						</div>
+                        <div class="row">
+                            @if (CurrentVehicleAdmin != null) {
+                                <div class="col">
+                                    <strong>Uprava: </strong>@CurrentVehicleAdmin.Name
+                                </div>
 
-						<div class="row">
-							<div class="col">
-								@*<AddressView CurrentAddress="CurrentVehicle.Address" />*@
+                                <div class="col">
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="@(e=> OnPregledUprave(CurrentVehicleAdmin))">Pregled Uprave</button>
+                                </div>
+                            } else {
+                                <div class="col">
+                                    <string>
+                                        Vozilo nije pridruženo upravi
+                                    </string>
+                                </div>
+                            }
+                        </div>
 
-								<strong>Tablica: </strong>@CurrentVehicle.LicensePlate
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+                        <div class="row">
+                            <div class="col">
+                                @*<AddressView CurrentAddress="CurrentVehicle.Address" />*@
 
-			@if (CurrentVehicle.Equipment.Count > 0) {
-				<table class="table table-striped table-hover mt-4">
-					<thead>
-						<tr>
-							<th scope="col">Naziv</th>
-							<th scope="col">Pregled</th>
-							<th scope="col">Error / Warning</th>
-							<th scope="col">Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						@foreach (DbVehicleEquipment Op in CurrentVehicle.Equipment) {
-							var TableRowStyle = "";
+                                <strong>Tablica: </strong>@CurrentVehicle.LicensePlate
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-							//GetVoziloTableRowStyle(V, out string TableRowStyle, out bool HasError, out bool HasWarning);
+            @if (CurrentVehicle.Equipment.Count > 0) {
+                <table class="table table-striped table-hover mt-4">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Naziv</th>
+                            <th scope="col">Pregled</th>
+                            <th scope="col">Error / Warning</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (DbVehicleEquipment Op in CurrentVehicle.Equipment) {
+                            var TableRowStyle = "";
 
-							<tr class="@TableRowStyle">
-								<td>@Op.Name</td>
-								<td>0 V</td>
+                            //GetVoziloTableRowStyle(V, out string TableRowStyle, out bool HasError, out bool HasWarning);
 
-								<td>
-									@if (HasError) {
-										<span class="badge bg-danger mx-1">ERROR</span>
-									}
+                            <tr class="@TableRowStyle">
+                                <td>@Op.ID</td>
+                                <td>@Op.Name</td>
+                                <td>@GetLastValue(Op)</td>
 
-									@if (HasWarning) {
-										<span class="badge bg-warning mx-1">WARNING</span>
-									}
-								</td>
+                                <td>
+                                    @if (HasError) {
+                                        <span class="badge bg-danger mx-1">ERROR</span>
+                                    }
 
-								<td>
-									<div class="container">
-										<div class="row">
-											<div class="col">
-												<div class="float-end">
-													@*<button class="btn btn-sm btn-outline-secondary mx-1" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button>
+                                    @if (HasWarning) {
+                                        <span class="badge bg-warning mx-1">WARNING</span>
+                                    }
+                                </td>
 
-										<button class="btn btn-sm btn-outline-danger mx-1">Obriši</button>*@
-												</div>
-											</div>
-										</div>
-									</div>
+                                <td>
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="col">
+                                                <div class="float-end">
+                                                    @*<button class="btn btn-sm btn-outline-secondary mx-1" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button>
 
-								</td>
-							</tr>
-						}
-					</tbody>
-				</table>
-			}
+                                        <button class="btn btn-sm btn-outline-danger mx-1">Obriši</button>*@
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-		} else {
-			<p><em>Loading...</em></p>
-		}
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
 
-	</Authorized>
+        } else {
+            <p><em>Loading...</em></p>
+        }
+
+    </Authorized>
 </AuthorizeView>
 
 @code {
-	[CascadingParameter]
-	public IModalService Modal {
-		get; set;
-	}
 
-	[CascadingParameter]
-	public MainLayout Layout {
-		get; set;
-	}
+    [CascadingParameter]
+    public IModalService Modal {
+        get; set;
+    }
 
-	NameValueCollection Query = null;
-	DatabaseContext DbCtx;
+    [CascadingParameter]
+    public MainLayout Layout {
+        get; set;
+    }
 
-	DbVehicle CurrentVehicle = null;
-	DbAdministration CurrentVehicleAdmin = null;
+    NameValueCollection Query = null;
+    DatabaseContext DbCtx;
 
-	bool HasError = false;
-	bool HasWarning = false;
+    DbVehicle CurrentVehicle = null;
+    DbAdministration CurrentVehicleAdmin = null;
 
-	void GetVoziloTableRowStyle(DbVehicle V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
-		TableRowStyle = "";
-		HasError = V.HasErrors();
-		HasWarning = V.HasWarnings();
+    bool HasError = false;
+    bool HasWarning = false;
 
-		if (HasError) {
-			TableRowStyle = "table-danger";
-		} else if (HasWarning) {
-			TableRowStyle = "table-warning";
-		}
-	}
+    void GetVoziloTableRowStyle(DbVehicle V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
+        TableRowStyle = "";
+        HasError = V.HasErrors();
+        HasWarning = V.HasWarnings();
 
-	protected override void OnInitialized() {
-		Query = Query ?? Utils.ParseQuery(Navigation.Uri);
-		DbCtx = new DatabaseContext();
+        if (HasError) {
+            TableRowStyle = "table-danger";
+        } else if (HasWarning) {
+            TableRowStyle = "table-warning";
+        }
+    }
 
-		string ViewID = Query.Get("i") ?? "";
+    protected override void OnInitialized() {
+        Query = Query ?? Utils.ParseQuery(Navigation.Uri);
+        DbCtx = new DatabaseContext();
 
-		if (!string.IsNullOrEmpty(ViewID)) {
-			//CurrentVehicle = Structures.Uprave.Where(U => U.ID == ViewID).FirstOrDefault();
+        string ViewID = Query.Get("i") ?? "";
 
-			CurrentVehicle = DbCtx.GetVehicle(ViewID);
+        if (!string.IsNullOrEmpty(ViewID)) {
+            //CurrentVehicle = Structures.Uprave.Where(U => U.ID == ViewID).FirstOrDefault();
 
-			//CurrentVehicle = new Vozilo("Test Vozilo", "BJ000SB");
-			//CurrentVehicle.Oprema.Add(new OpremaVozila("Battery 1"));
-			//CurrentVehicle.Oprema.Add(new OpremaVozila("Battery 2"));
+            CurrentVehicle = DbCtx.GetVehicle(ViewID);
+
+            //CurrentVehicle = new Vozilo("Test Vozilo", "BJ000SB");
+            //CurrentVehicle.Oprema.Add(new OpremaVozila("Battery 1"));
+            //CurrentVehicle.Oprema.Add(new OpremaVozila("Battery 2"));
 
 
-			if (CurrentVehicle != null) {
-				HasError = CurrentVehicle.HasErrors();
-				HasWarning = CurrentVehicle.HasWarnings();
+            if (CurrentVehicle != null) {
+                HasError = CurrentVehicle.HasErrors();
+                HasWarning = CurrentVehicle.HasWarnings();
 
-				CurrentVehicleAdmin = DbCtx.GetAdministrationForVehicle(CurrentVehicle);
-			}
-		}
+                CurrentVehicleAdmin = DbCtx.GetAdministrationForVehicle(CurrentVehicle);
+            }
+        }
 
-		Layout?.SetNaviText("Pregled Vozila");
-	}
+        Layout?.SetNaviText("Pregled Vozila");
+    }
 
-	protected override void OnAfterRender(bool firstRender) {
-		if (!AuthStateProvider.IsAuthenticated())
-			Navigation.NavigateTo("/login");
-	}
+    protected override void OnAfterRender(bool firstRender) {
+        if (!AuthStateProvider.IsAuthenticated())
+            Navigation.NavigateTo("/login");
+    }
 
-	async void OnEditDescription() {
-		EditModal.Field[] EditFields = new[] {
-			new EditModal.Field("Naziv", CurrentVehicle.Name),
-			new EditModal.Field("Tablica", CurrentVehicle.LicensePlate)
-	};
+    async void OnEditDescription() {
+        EditModal.Field[] EditFields = new[] {
+            new EditModal.Field("Naziv", CurrentVehicle.Name),
+            new EditModal.Field("Tablica", CurrentVehicle.LicensePlate)
+    };
 
-		ModalResult Result = await Modal.Show<EditModal>("Opis Vozila", new ModalParameters().Add("Fields", EditFields)).Result;
+        ModalResult Result = await Modal.Show<EditModal>("Opis Vozila", new ModalParameters().Add("Fields", EditFields)).Result;
 
-		if (Result.Confirmed) {
-			if (string.IsNullOrEmpty(EditFields[0].Value) || string.IsNullOrEmpty(EditFields[1].Value)) {
-				return;
-			}
+        if (Result.Confirmed) {
+            if (string.IsNullOrEmpty(EditFields[0].Value) || string.IsNullOrEmpty(EditFields[1].Value)) {
+                return;
+            }
 
-			CurrentVehicle.Name = EditFields[0].Value;
-			CurrentVehicle.LicensePlate = EditFields[1].Value;
+            CurrentVehicle.Name = EditFields[0].Value;
+            CurrentVehicle.LicensePlate = EditFields[1].Value;
 
-			DbCtx.Commit();
-			StateHasChanged();
-		}
-	}
+            DbCtx.Commit();
+            StateHasChanged();
+        }
+    }
 
-	void OnPregledUprave(DbAdministration Up) {
-		Navigation.NavigateTo("/pregled_uprave?i=" + Up.ID);
-	}
+    void OnPregledUprave(DbAdministration Up) {
+        Navigation.NavigateTo("/pregled_uprave?i=" + Up.ID);
+    }
 
-	async Task OnAddEquipment() {
-		EditModal.Field[] EditFields = new[] {
-				new EditModal.Field("Naziv", "Nova Oprema"),
-};
+    async Task OnGenerateAPIKey() {
+        if (CurrentVehicle == null)
+            return;
 
-		ModalResult Result = await Modal.Show<EditModal>("Dodaj Opremu", new ModalParameters().Add("Fields", EditFields)).Result;
-		if (Result.Confirmed) {
-			if (string.IsNullOrEmpty(EditFields[0].Value)) {
-				return;
-			}
+        DbCtx.InvalidateAllAPIKeysForVehicle(CurrentVehicle);
 
-			DbVehicleEquipment NewEquipment = DbCtx.CreateNew<DbVehicleEquipment>(E => {
-				E.Name = EditFields[0].Value;
-			});
+        DbDeviceAPIKey APIKey = DbCtx.CreateNew<DbDeviceAPIKey>(Key => {
+            Key.Vehicles.Add(CurrentVehicle);
+        });
 
-			CurrentVehicle.Equipment.Add(NewEquipment);
+        DbCtx.Commit();
+    }
 
-			DbCtx.Commit();
-			StateHasChanged();
-		}
-	}
+    async Task OnAddEquipment() {
+        EditModal.Field[] EditFields = new[] {
+                new EditModal.Field("Naziv", "Nova Oprema"),
+                new EditModal.Field("Tip Opreme", new[]{
+                    new KeyValuePair<string,string>("Akumulatori", DbEquipmentType.BATTERY.ToString()),
+                    new KeyValuePair<string,string>("Pritisak", DbEquipmentType.PRESSURE.ToString())
+                })
+    };
 
-	public void Dispose() {
-		DbCtx.Dispose();
-	}
+        ModalResult Result = await Modal.Show<EditModal>("Dodaj Opremu", new ModalParameters().Add("Fields", EditFields)).Result;
+        if (Result.Confirmed) {
+            if (string.IsNullOrEmpty(EditFields[0].Value)) {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(EditFields[1].Value) || EditFields[1].Value == "0") {
+                return;
+            }
+
+            DbVehicleEquipment NewEquipment = DbCtx.CreateNew<DbVehicleEquipment>(E => {
+                E.Name = EditFields[0].Value;
+                E.EquipmentType = Enum.Parse<DbEquipmentType>(EditFields[1].Value);
+            });
+
+            CurrentVehicle.Equipment.Add(NewEquipment);
+
+            DbCtx.Commit();
+            StateHasChanged();
+        }
+    }
+
+    string GetAPIKey() {
+        DbDeviceAPIKey APIKey = DbCtx.GetValidAPIKey(CurrentVehicle);
+
+        if (APIKey == null)
+            return null;
+
+        return APIKey.APIKey;
+    }
+
+    string GetLastValue(DbVehicleEquipment Eq) {
+        DbEquipmentValues Val = Eq.Values.OrderByDescending(V => V.ID).FirstOrDefault();
+
+        if (Val == null)
+            return "NONE";
+
+        string Suffix = "";
+
+        switch (Eq.EquipmentType) {
+            case DbEquipmentType.BATTERY:
+                Suffix = " V";
+                break;
+
+            case DbEquipmentType.PRESSURE:
+                Suffix = " bar";
+                break;
+
+            default:
+                throw new Exception("Unknown EquipmentType " + Eq.EquipmentType);
+        }
+
+        return Val.FloatValue.ToString() + Suffix;
+    }
+
+    public void Dispose() {
+        DbCtx.Dispose();
+    }
 }

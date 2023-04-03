@@ -1,69 +1,91 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using Proj2.Database;
 
 namespace Proj2.Code {
-	public enum DeviceAccessStatus {
-		Invalid = 0,
-		OK = 200,
-		Forbidden = 403,
-		NotFound = 404,
-	}
+    public enum DeviceAccessStatus {
+        Invalid = 0,
+        OK = 200,
+        Forbidden = 403,
+        NotFound = 404,
+    }
 
-	public class DeviceAccessAPI {
-		public int APIVersion {
-			get; set;
-		}
+    public class DeviceAccessAPI {
+        public int APIVersion {
+            get; set;
+        }
 
-		public string APIKey {
-			get; set;
-		}
-	}
+        public string APIKey {
+            get; set;
+        }
 
-	public class DeviceAccessResponseAPI {
-		public string Title {
-			get; set;
-		}
+        public string EquipmentKey {
+            get; set;
+        }
 
-		public DeviceAccessStatus Status {
-			get; set;
-		}
+        public string Value {
+            get; set;
+        }
+    }
 
-		public string StatusString {
-			get; set;
-		}
+    public class DeviceAccessResponseAPI {
+        public string Title {
+            get; set;
+        }
 
-		public DeviceAccessResponseAPI(DeviceAccessStatus Status) {
-			Title = nameof(DeviceAccessResponseAPI);
+        public DeviceAccessStatus Status {
+            get; set;
+        }
 
-			this.Status = Status;
-			StatusString = Status.ToString();
-		}
-	}
+        public string StatusString {
+            get; set;
+        }
 
-	[ApiController]
-	[RequireHttps]
-	public class DeviceAccessController : ControllerBase {
-		[HttpPost("/deviceaccess")]
-		public JsonResult Post([FromBody] DeviceAccessAPI API) {
-			if (API == null || API.APIVersion == 0)
-				return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Invalid));
+        public DeviceAccessResponseAPI(DeviceAccessStatus Status) {
+            Title = nameof(DeviceAccessResponseAPI);
 
-			if (string.IsNullOrEmpty(API.APIKey))
-				return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
+            this.Status = Status;
+            StatusString = Status.ToString();
+        }
+    }
 
-			using (DatabaseContext DbCtx = new DatabaseContext()) {
-				DbDeviceAPIKey DbAPIKey = DbCtx.GetDeviceAPIKey(API.APIKey);
+    [ApiController]
+    [RequireHttps]
+    public class DeviceAccessController : ControllerBase {
+        [HttpPost("/deviceaccess")]
+        public JsonResult Post([FromBody] DeviceAccessAPI API) {
+            if (API == null || API.APIVersion == 0)
+                return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Invalid));
 
-				if (DbAPIKey == null || DbAPIKey.APIKey != API.APIKey)
-					return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
+            if (string.IsNullOrEmpty(API.APIKey))
+                return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
 
-				//DbCtx.Database.
+            using (DatabaseContext DbCtx = new DatabaseContext()) {
+                DbDeviceAPIKey DbAPIKey = DbCtx.GetDeviceAPIKey(API.APIKey);
 
-				Console.WriteLine("Hello Database World!");
+                if (DbAPIKey == null || DbAPIKey.APIKey != API.APIKey)
+                    return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
 
-			}
+                //DbCtx.Database.
 
-			return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.OK));
-		}
-	}
+                List<DbVehicle> Vehicles = DbCtx.GetVehiclesByAPIKey(DbAPIKey);
+                foreach (DbVehicle V in Vehicles) {
+                    DbVehicleEquipment Eq = V.Equipment.Where(E => E.ID == API.EquipmentKey).SingleOrDefault();
+
+                    DbEquipmentValues Val = DbCtx.CreateNew<DbEquipmentValues>(V => {
+                        V.CreatedByKey = DbAPIKey;
+                        V.FloatValue = float.Parse(API.Value, System.Globalization.CultureInfo.InvariantCulture);
+                    });
+
+                    Eq.Values.Add(Val);
+                }
+
+                DbCtx.Commit();
+                //Console.WriteLine("Hello Database World!");
+
+            }
+
+            return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.OK));
+        }
+    }
 }
