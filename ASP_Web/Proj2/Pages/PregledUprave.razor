@@ -47,12 +47,16 @@
 
 						<div class="row mb-2 my-2">
 							<div class="col">
+								@{
+									var ButtonPaddingX = "mx-1";
+								}
+
 								@if (OnEditDescriptionEnabled) {
-									<button class="btn btn-sm btn-outline-primary" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
+									<button class="btn btn-sm btn-outline-primary @ButtonPaddingX" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
 								}
 
 								@if (OnAddVehicleEnabled) {
-									<button class="btn btn-sm btn-outline-success" @onclick="@(e => OnAddVehicle())">Dodaj Vozilo</button>
+									<button class="btn btn-sm btn-outline-success @ButtonPaddingX" @onclick="@(e => OnAddVehicle())">Dodaj Vozilo</button>
 								}
 							</div>
 						</div>

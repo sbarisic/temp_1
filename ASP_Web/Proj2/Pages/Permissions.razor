@@ -1,0 +1,145 @@
+﻿@page "/permissions"
+@using System.Collections.Specialized
+@using Microsoft.AspNetCore.SignalR.Client
+@using Proj2.Database
+@using Proj2.Code
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+@implements IAsyncDisposable
+
+<PageTitle>@PageTitle</PageTitle>
+
+<AuthorizeView>
+	<Authorized>
+		@{
+			string RowStyle = "my-2";
+		}
+
+		<div class="container">
+			<div class="row @RowStyle">
+				<div class="input-group">
+					<label class="input-group-text">Korisnik</label>
+
+					<select class="form-select" @onchange="OnUserSelectionChanged">
+						<option selected value="0">...</option>
+
+						@foreach (DbUser U in AllUsers) {
+							<option value="@U.ID">@U.Username</option>
+						}
+					</select>
+				</div>
+			</div>
+
+			<div class="row @RowStyle">
+				<div class="col">
+					<label class="form-label">Email</label>
+					<input type="email" class="form-control">
+				</div>
+			</div>
+
+			<div class="row @RowStyle">
+				<div class="col">
+					<input type="text" class="form-control" placeholder="First name" aria-label="First name">
+				</div>
+
+				<div class="col">
+					<input type="text" class="form-control" placeholder="Last name" aria-label="Last name">
+				</div>
+			</div>
+
+			<div class="row @RowStyle">
+
+				@* Table with all the permissions *@
+				<table class="table table-striped table-hover mt-4">
+					<thead>
+						<tr>
+							<th scope="col">A</th>
+							<th scope="col">B</th>
+						</tr>
+					</thead>
+					<tbody>
+
+						@if (SelectedUserPermissions != null) {
+							@foreach (DbPermission Perm in SelectedUserPermissions) {
+								<tr class="">
+									<td>@Perm.Permission</td>
+									<td>@Perm.Value</td>
+								</tr>
+							}
+						}
+
+					</tbody>
+				</table>
+
+			</div>
+		</div>
+
+
+	</Authorized>
+</AuthorizeView>
+
+@code {
+	string PageTitle { get; set; } = "Permissions";
+
+	[CascadingParameter]
+	public IModalService Modal {
+		get; set;
+	}
+
+	[CascadingParameter]
+	public MainLayout Layout {
+		get; set;
+	}
+
+	bool IsAdmin {
+		get; set;
+	}
+
+	List<DbUser> AllUsers;
+	List<DbPermission> SelectedUserPermissions;
+
+	NameValueCollection Query = null;
+	DatabaseContext DbCtx;
+
+	protected override void OnInitialized() {
+		Query = Query ?? Utils.ParseQuery(Navigation.Uri);
+		DbCtx = new DatabaseContext();
+
+		ReloadData();
+		Layout?.SetNaviText(PageTitle);
+	}
+
+	public async ValueTask DisposeAsync() {
+		DbCtx.Dispose();
+	}
+
+	protected override void OnAfterRender(bool firstRender) {
+		if (!AuthStateProvider.IsAuthenticated())
+			Navigation.NavigateTo("/login");
+	}
+
+	void ReloadData() {
+		IsAdmin = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADMIN);
+
+		AllUsers = DbCtx.GetAllUsers();
+	}
+
+	async Task OnUserSelectionChanged(ChangeEventArgs E) {
+		object SelectedUserID = E.Value;
+
+		if (string.IsNullOrEmpty(SelectedUserID as string)) {
+			return;
+		} else {
+			SelectedUserID = int.Parse((string)SelectedUserID);
+		}
+
+		DbUser SelectedUser = DbCtx.GetUser((int)SelectedUserID);
+
+		SelectedUserPermissions = SelectedUser.Permissions;
+
+	}
+}

@@ -197,6 +197,10 @@ namespace Proj2.Database {
 			return Usr;
 		}
 
+		public List<DbUser> GetAllUsers() {
+			return Users.ToList();
+		}
+
 		public List<DbAdministration> GetAllAdministrations(DbUser User) {
 			if (HasPermission(User, DbPermission.PermissionNames.ADMIN))
 				return Administrations.ToList();
