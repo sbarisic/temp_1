@@ -49,8 +49,15 @@
 							<div class="container">
 								<div class="row mb-2">
 									<div class="col">
-										<button class="btn btn-outline-primary" @onclick="@(e=> OnViewAdministration(Administration))">Pregled Uprave</button>
-										<button class="btn btn-outline-danger" @onclick="@(e=> OnDeleteAdministration(Administration))">Obriši</button>
+										@{
+											var ButtonPaddingX = "mx-1";
+										}
+
+										<button class="btn btn-outline-primary @ButtonPaddingX" @onclick="@(e=> OnViewAdministration(Administration))">Pregled Uprave</button>
+
+										@if (OnDeleteAdministrationEnabled) {
+											<button class="btn btn-outline-danger @ButtonPaddingX" @onclick="@(e=> OnDeleteAdministration(Administration))">Obriši</button>
+										}
 									</div>
 								</div>
 
@@ -129,21 +136,23 @@
 				</div>
 			}
 
-			<div class="accordion-item">
-				<h2 class="accordion-header">
-					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#item_addnew" aria-expanded="true" aria-controls="item_addnew">
-						<p class="mx-0 my-0">
-							<span class="oi oi-wrench"></span>
-							<span> Edit</span>
-						</p>
-					</button>
-				</h2>
-				<div id="item_addnew" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-					<div class="accordion-body">
-						<button class="btn btn-outline-success" @onclick="@OnNewAdministration">Nova Uprava</button>
+			@if (EditMenuEnabled) {
+				<div class="accordion-item">
+					<h2 class="accordion-header">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#item_addnew" aria-expanded="true" aria-controls="item_addnew">
+							<p class="mx-0 my-0">
+								<span class="oi oi-wrench"></span>
+								<span> Edit</span>
+							</p>
+						</button>
+					</h2>
+					<div id="item_addnew" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+						<div class="accordion-body">
+							<button class="btn btn-outline-success" @onclick="@OnNewAdministration">Nova Uprava</button>
+						</div>
 					</div>
 				</div>
-			</div>
+			}
 		</div>
 	</Authorized>
 
@@ -160,11 +169,32 @@
 		get; set;
 	}
 
+	bool EditMenuEnabled {
+		get; set;
+	}
+
+	bool OnDeleteAdministrationEnabled {
+		get; set;
+	}
+
 	DatabaseContext DbCtx;
 	public List<DbAdministration> AllAdministrations;
 
 	void ReloadData() {
-		AllAdministrations = DbCtx.GetAllAdministrations();
+		DbUser Usr = AuthStateProvider.GetDbUser(DbCtx);
+
+		if (AllAdministrations != null) {
+			AllAdministrations.Clear();
+			AllAdministrations = null;
+		}
+
+		if (Usr == null)
+			return;
+
+		AllAdministrations = DbCtx.GetAllAdministrations(Usr);
+
+		EditMenuEnabled = DbCtx.HasPermission(Usr, DbPermission.PermissionNames.ADMIN);
+		OnDeleteAdministrationEnabled = EditMenuEnabled;
 	}
 
 	protected override void OnInitialized() {
@@ -214,6 +244,9 @@
 	}
 
 	async Task OnDeleteAdministration(DbAdministration Up) {
+		if (!OnDeleteAdministrationEnabled)
+			return;
+
 		ModalResult Result = await QueryModal.Show(Modal, "Obriši Upravu", string.Format("Jeste li sigurni da želite obrisati \"{0}\"", Up.Name));
 
 		if (Result.Confirmed) {

@@ -47,19 +47,38 @@
 
 						<div class="row mb-2 my-2">
 							<div class="col">
-								<button class="btn btn-sm btn-outline-primary" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
-								<button class="btn btn-sm btn-outline-success">Pridruži vozilo upravi</button>
-								<button class="btn btn-sm btn-outline-success" @onclick="@OnAddEquipment">Dodaj Opremu</button>
+								@{
+									var ButtonPaddingX = "mx-1";
+								}
+
+								@if (OnEditDescriptionEnabled) {
+									<button class="btn btn-sm btn-outline-primary @ButtonPaddingX" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
+								}
+
+								@if (OnAssignVehicleToAdministrationEnabled) {
+									<button class="btn btn-sm btn-outline-success @ButtonPaddingX" @onclick="@OnAssignVehicleToAdministration">Pridruži vozilo upravi</button>
+								}
+
+								@if (OnAddEquipmentEnabled) {
+									<button class="btn btn-sm btn-outline-success @ButtonPaddingX" @onclick="@OnAddEquipment">Dodaj Opremu</button>
+								}
+
+								@if (OnGenerateAPIKeyEnabled) {
+									<button class="btn btn-sm btn-outline-dark @ButtonPaddingX" @onclick="@OnGenerateAPIKey">Generiraj APIKey</button>
+								}
+
+								@if (OnViewAdministrationEnabled) {
+									<button class="btn btn-sm btn-outline-primary @ButtonPaddingX" @onclick="@(e=> OnViewAdministration(CurrentVehicleAdmin))">Pregled Uprave</button>
+								}
 							</div>
 						</div>
 
 						<div class="row my-2">
 							<div class="col">
-								<strong>API Key: </strong>@(GetAPIKey() ?? "None")
-							</div>
-
-							<div class="col">
-								<button class="btn btn-sm btn-outline-dark" @onclick="@OnGenerateAPIKey">Generiraj APIKey</button>
+								<div class="input-group">
+									<span class="input-group-text">API Key</span>
+									<input class="form-control" type="text" value="@(GetAPIKey() ?? "None")" readonly>
+								</div>
 							</div>
 						</div>
 
@@ -69,9 +88,9 @@
 									<strong>Uprava: </strong>@CurrentVehicleAdmin.Name
 								</div>
 
-								<div class="col">
-									<button class="btn btn-sm btn-outline-primary" @onclick="@(e=> OnPregledUprave(CurrentVehicleAdmin))">Pregled Uprave</button>
-								</div>
+								@*<div class="col">
+						<button class="btn btn-sm btn-outline-primary" @onclick="@(e=> OnPregledUprave(CurrentVehicleAdmin))">Pregled Uprave</button>
+						</div>*@
 							} else {
 								<div class="col">
 									<string>
@@ -97,6 +116,7 @@
 					<thead>
 						<tr>
 							<th scope="col">ID</th>
+							<th scope="col">Last Update</th>
 							<th scope="col">Naziv</th>
 							<th scope="col">Pregled</th>
 							<th scope="col">Error / Warning</th>
@@ -111,6 +131,7 @@
 
 							<tr class="@TableRowStyle">
 								<td>@Op.ID</td>
+								<td>@GetLastUpdate(Op)</td>
 								<td>@Op.Name</td>
 								<td>@GetLastValue(Op)</td>
 
@@ -159,6 +180,26 @@
 
 	[CascadingParameter]
 	public MainLayout Layout {
+		get; set;
+	}
+
+	bool OnEditDescriptionEnabled {
+		get; set;
+	}
+
+	bool OnAssignVehicleToAdministrationEnabled {
+		get; set;
+	}
+
+	bool OnAddEquipmentEnabled {
+		get; set;
+	}
+
+	bool OnGenerateAPIKeyEnabled {
+		get; set;
+	}
+
+	bool OnViewAdministrationEnabled {
 		get; set;
 	}
 
@@ -222,6 +263,15 @@
 				HasWarning = CurrentVehicle.HasWarnings();
 
 				CurrentVehicleAdmin = DbCtx.GetAdministrationForVehicle(CurrentVehicle);
+
+
+				OnEditDescriptionEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.EDIT_VEHICLE_DETAILS, CurrentVehicle);
+				OnAssignVehicleToAdministrationEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADMIN);
+				OnAddEquipmentEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADD_REMOVE_VEHICLE_EQUIPMENT, CurrentVehicle);
+				OnGenerateAPIKeyEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.GENERATE_API_KEY, CurrentVehicle);
+
+				//OnViewAdministrationEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.EDIT_VEHICLE_DETAILS, CurrentVehicle);
+				OnViewAdministrationEnabled = true;
 			}
 		}
 	}
@@ -232,6 +282,9 @@
 	}
 
 	async void OnEditDescription() {
+		if (!OnEditDescriptionEnabled)
+			return;
+
 		EditModal.Field[] EditFields = new[] {
 			new EditModal.Field("Naziv", CurrentVehicle.Name),
 			new EditModal.Field("Tablica", CurrentVehicle.LicensePlate)
@@ -252,24 +305,38 @@
 		}
 	}
 
-	void OnPregledUprave(DbAdministration Up) {
+	void OnViewAdministration(DbAdministration Up) {
+		if (!OnViewAdministrationEnabled)
+			return;
+
 		Navigation.NavigateTo("/pregled_uprave?i=" + Up.ID);
 	}
 
 	async Task OnGenerateAPIKey() {
+		if (!OnGenerateAPIKeyEnabled)
+			return;
+
 		if (CurrentVehicle == null)
 			return;
 
-		DbCtx.InvalidateAllAPIKeysForVehicle(CurrentVehicle);
+		DbVehicle Veh = DbCtx.GetVehicle(CurrentVehicle.ID, false);
+		ModalResult Result = await QueryModal.Show(Modal, "API Key", "Jeste li sigurni da želite generirati novi API Key?");
 
-		DbDeviceAPIKey APIKey = DbCtx.CreateNew<DbDeviceAPIKey>(Key => {
-			Key.Vehicles.Add(CurrentVehicle);
-		});
+		if (Result.Confirmed) {
+			DbCtx.InvalidateAllAPIKeysForVehicle(Veh);
 
-		DbCtx.Commit();
+			DbDeviceAPIKey APIKey = DbCtx.CreateNew<DbDeviceAPIKey>();
+			APIKey.Vehicles.Add(Veh);
+
+			DbCtx.Commit();
+			StateHasChanged();
+		}
 	}
 
 	async Task OnAddEquipment() {
+		if (!OnAddEquipmentEnabled)
+			return;
+
 		EditModal.Field[] EditFields = new[] {
 				new EditModal.Field("Naziv", "Nova Oprema"),
 				new EditModal.Field("Tip Opreme", new[]{
@@ -298,6 +365,11 @@
 			DbCtx.Commit();
 			StateHasChanged();
 		}
+	}
+
+	async Task OnAssignVehicleToAdministration() {
+		if (!OnAssignVehicleToAdministrationEnabled)
+			return;
 	}
 
 	void GetVoziloTableRowStyle(DbVehicle V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
@@ -345,9 +417,16 @@
 		return Val.FloatValue.ToString() + Suffix;
 	}
 
-	public async ValueTask DisposeAsync() {
-		Console.WriteLine("Disposing!");
+	string GetLastUpdate(DbVehicleEquipment Eq) {
+		DbEquipmentValues EqValue = Eq.Values.OrderBy(V => V.CreatedOn).FirstOrDefault();
 
+		if (EqValue == null)
+			return "";
+
+		return EqValue.ToString();
+	}
+
+	public async ValueTask DisposeAsync() {
 		DbCtx.Dispose();
 
 		if (HubCon != null) {

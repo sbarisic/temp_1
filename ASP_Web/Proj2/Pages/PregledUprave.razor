@@ -47,8 +47,13 @@
 
 						<div class="row mb-2 my-2">
 							<div class="col">
-								<button class="btn btn-sm btn-outline-primary" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
-								<button class="btn btn-sm btn-outline-success" @onclick="@(e => OnAddVehicle())">Dodaj Vozilo</button>
+								@if (OnEditDescriptionEnabled) {
+									<button class="btn btn-sm btn-outline-primary" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
+								}
+
+								@if (OnAddVehicleEnabled) {
+									<button class="btn btn-sm btn-outline-success" @onclick="@(e => OnAddVehicle())">Dodaj Vozilo</button>
+								}
 							</div>
 						</div>
 
@@ -96,7 +101,9 @@
 												<div class="float-end">
 													<button class="btn btn-sm btn-outline-secondary mx-1" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button>
 
-													<button class="btn btn-sm btn-outline-danger mx-1">Obriši</button>
+													@if (OnDeleteVehicleEnabled) {
+														<button class="btn btn-sm btn-outline-danger mx-1" @onclick="@(e => OnDeleteVehicle())">Obriši</button>
+													}
 												</div>
 											</div>
 										</div>
@@ -124,6 +131,18 @@
 
 	[CascadingParameter]
 	public MainLayout Layout {
+		get; set;
+	}
+
+	bool OnEditDescriptionEnabled {
+		get; set;
+	}
+
+	bool OnAddVehicleEnabled {
+		get; set;
+	}
+
+	bool OnDeleteVehicleEnabled {
 		get; set;
 	}
 
@@ -165,6 +184,10 @@
 			}
 		}
 
+		OnEditDescriptionEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.EDIT_ADMINISTRATION_DETAILS, CurrentAdministration);
+		OnAddVehicleEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADD_REMOVE_ADMINISTRATION_VEHICLE, CurrentAdministration);
+		OnDeleteVehicleEnabled = OnAddVehicleEnabled;
+
 		Layout?.SetNaviText("Pregled Uprave");
 	}
 
@@ -178,6 +201,9 @@
 	}
 
 	async void OnAddVehicle() {
+		if (!OnAddVehicleEnabled)
+			return;
+
 		EditModal.Field[] EditFields = new[] {
 				new EditModal.Field("Naziv", "Nema Naziva"),
 				new EditModal.Field("Tablica","")
@@ -204,7 +230,15 @@
 		}
 	}
 
+	async void OnDeleteVehicle() {
+		if (!OnDeleteVehicleEnabled)
+			return;
+	}
+
 	async void OnEditDescription() {
+		if (!OnEditDescriptionEnabled)
+			return;
+
 		EditModal.Field[] EditFields = new[] {
 			new EditModal.Field( "Naziv", CurrentAdministration.Name),
 			new EditModal.Field( "Street", CurrentAdministration.Address.Street),

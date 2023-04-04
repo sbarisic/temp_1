@@ -1,4 +1,5 @@
 ﻿@using Proj2.Code
+@using Proj2.Database
 
 @inherits LayoutComponentBase
 
@@ -81,12 +82,14 @@
 
 	string Username {
 		get {
-			Database.DbUser Usr = AuthStateProvider.GetDbUser();
+			using (DatabaseContext DbCtx = new DatabaseContext()) {
+				Database.DbUser Usr = AuthStateProvider.GetDbUser(DbCtx);
 
-			if (Usr == null)
+				if (Usr == null)
 				return "[NULL]";
 
 			return Usr.Username;
+			}
 		}
 	}
 

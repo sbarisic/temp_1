@@ -18,7 +18,7 @@ using System.ComponentModel;
 using Microsoft.AspNetCore.Http;
 
 namespace Proj2.Code {
-	class AuthStateProvider : AuthenticationStateProvider, IHostEnvironmentAuthenticationStateProvider {
+	public class AuthStateProvider : AuthenticationStateProvider, IHostEnvironmentAuthenticationStateProvider {
 		IHttpContextAccessor HttpContextAccessor;
 		IJSRuntime JSRun;
 		//IUserService userService;
@@ -97,7 +97,7 @@ namespace Proj2.Code {
 			return Princ;
 		}
 
-		public DbUser GetDbUser() {
+		public DbUser GetDbUser(DatabaseContext Db) {
 			if (AuthState == null || AuthState.User == null)
 				return null;
 
@@ -108,11 +108,11 @@ namespace Proj2.Code {
 
 			int UserID = int.Parse(UserIDClaim.Value);
 
-			using (DatabaseContext Db = new DatabaseContext()) {
-				DbUser DbUsr = Db.GetUser(UserID);
+			//using (DatabaseContext Db = new DatabaseContext()) {
+			DbUser DbUsr = Db.GetUser(UserID);
 
-				return DbUsr;
-			}
+			return DbUsr;
+			//}
 		}
 	}
 }

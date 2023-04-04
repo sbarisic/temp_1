@@ -9,6 +9,10 @@ namespace Proj2.Database {
 	public class DbTable {
 		public virtual void InitializeNew() {
 		}
+
+		public virtual string GetPermissionID() {
+			throw new NotImplementedException();
+		}
 	}
 
 	[PrimaryKey(nameof(ID))]
@@ -59,19 +63,19 @@ namespace Proj2.Database {
 	}
 
 	public class DbPermission : DbTable {
-		[Flags]
 		public enum PermissionNames : int {
 			INVALID = 0,
-			ADMIN = 1,
+			ADMIN = 1, // Everything
 
-			VIEW_ADMINISTRATION = 2,
-			VIEW_VEHICLE = 4,
+			VIEW_ADMINISTRATION, // ID of administration
+			EDIT_ADMINISTRATION_DETAILS, // ID of administration, edit details of administration
 
-			EDIT_ADMINISTRATION = 8,
-			EDIT_VEHICLE = 16,
+			ADD_REMOVE_ADMINISTRATION_VEHICLE, // ID of administration, add/remove administration vehicles
 
-			VIEW_EDIT_ADMINISTRATION = VIEW_ADMINISTRATION | EDIT_ADMINISTRATION,
-			VIEW_EDIT_VEHICLE = VIEW_VEHICLE | EDIT_VEHICLE
+			EDIT_VEHICLE_DETAILS, // ID of vehicle, edit details of vehicle
+			ADD_REMOVE_VEHICLE_EQUIPMENT, // ID of vehicle, add/remove vehicle equipment
+			GENERATE_API_KEY, // ID of vehicle, ability to generate API key for vehicle
+			DELETE_ADMINISTRATION, // ID of vehicle, ability to generate API key for vehicle
 		}
 
 		[Key]
@@ -233,6 +237,10 @@ namespace Proj2.Database {
 			ID = Utils.GenerateShortID();
 		}
 
+		public override string GetPermissionID() {
+			return ID;
+		}
+
 		public bool HasErrors() {
 			return false;
 		}
@@ -275,6 +283,10 @@ namespace Proj2.Database {
 		public override void InitializeNew() {
 			ID = Utils.GenerateShortID();
 		}
+
+		public override string GetPermissionID() {
+			return ID;
+		}
 	}
 
 	[PrimaryKey(nameof(ID))]
@@ -298,16 +310,16 @@ namespace Proj2.Database {
 			get; set;
 		} = new();
 
-		/*public virtual List<DbEquipmentNotifications> Notifications {
+		public virtual List<DbEquipmentNotifications> Notifications {
 			get; set;
-		} = new();*/
+		} = new();
 
 		public override void InitializeNew() {
 			ID = Utils.GenerateShortID();
 		}
 	}
 
-	/*[PrimaryKey(nameof(ID))]
+	[PrimaryKey(nameof(ID))]
 	public class DbEquipmentNotifications : DbTable {
 		[Key]
 		public int ID {
@@ -335,7 +347,7 @@ namespace Proj2.Database {
 		public override void InitializeNew() {
 			CreatedOn = DateTime.Now.ToUniversalTime();
 		}
-	}*/
+	}
 
 	[PrimaryKey(nameof(ID))]
 	public class DbEquipmentValues : DbTable {
