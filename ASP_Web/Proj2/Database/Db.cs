@@ -131,9 +131,13 @@ namespace Proj2.Database {
             SaveChanges();
         }
 
-        public DbVehicle GetVehicle(string ID) {
-            DbVehicle Veh = Vehicles.Where(V => V.ID == ID).SingleOrDefault();
+        public DbVehicle GetVehicle(string ID, bool DoNotTrack) {
+            IQueryable<DbVehicle> VehQ = Vehicles.Where(V => V.ID == ID);
 
+            if (DoNotTrack)
+                VehQ = VehQ.AsNoTracking();
+
+            DbVehicle Veh = VehQ.SingleOrDefault();
             return Veh;
         }
 
@@ -187,6 +191,10 @@ namespace Proj2.Database {
             DbUser Usr = Users.Where(U => U.ID == UserID).SingleOrDefault();
 
             return Usr;
+        }
+
+        public List<DbAdministration> GetAllAdministrations() {
+            return Administrations.ToList();
         }
     }
 }

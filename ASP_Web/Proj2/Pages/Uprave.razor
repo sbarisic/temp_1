@@ -164,7 +164,7 @@
 	public List<DbAdministration> AllAdministrations;
 
 	void ReloadData() {
-		AllAdministrations = DbCtx.Administrations.ToList();
+		AllAdministrations = DbCtx.GetAllAdministrations();
 	}
 
 	protected override void OnInitialized() {
