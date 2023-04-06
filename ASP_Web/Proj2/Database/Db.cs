@@ -225,6 +225,9 @@ namespace Proj2.Database {
 		}
 
 		public bool HasPermission(DbUser User, DbPermission.PermissionNames Permission, string Value = "") {
+			if (User == null)
+				return false;
+
 			List<DbPermission> Permissions = User.Permissions;
 
 			if (Permissions == null || Permissions.Count == 0)
@@ -252,6 +255,20 @@ namespace Proj2.Database {
 
 			User.Permissions.Add(NewPerm);
 			Commit();
+		}
+
+		KeyValuePair<string, object>[] GetAllNamesIDs<T>() where T : DbTable {
+			return GetDbSet<T>().AsNoTracking().ToList().Select(V => new KeyValuePair<string, object>(V.GetName(), V.GetID())).ToArray();
+		}
+
+		public KeyValuePair<string, object>[] GetAllNamesIDsForType(Type T) {
+			if (!T.IsSubclassOf(typeof(DbTable)))
+				throw new Exception(string.Format("{0} is not a DbTable", T.FullName));
+
+			MethodInfo GetAllValuesMethod = GetType().GetMethod(nameof(GetAllNamesIDs), BindingFlags.Instance | BindingFlags.NonPublic);
+
+			KeyValuePair<string, object>[] Result = (KeyValuePair<string, object>[])GetAllValuesMethod.MakeGenericMethod(T).Invoke(this, null);
+			return Result;
 		}
 	}
 }

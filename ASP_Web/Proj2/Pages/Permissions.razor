@@ -16,16 +16,18 @@
 <AuthorizeView>
 	<Authorized>
 		@{
-			string RowStyle = "my-2";
+			string RowStyle = "my-3";
+			string Placeholder = "...";
 		}
 
 		<div class="container">
+			@* Korisnici *@
 			<div class="row @RowStyle">
 				<div class="input-group">
 					<label class="input-group-text">Korisnik</label>
 
 					<select class="form-select" @onchange="OnUserSelectionChanged">
-						<option selected value="0">...</option>
+						<option selected value="0">@Placeholder</option>
 
 						@foreach (DbUser U in AllUsers) {
 							<option value="@U.ID">@U.Username</option>
@@ -34,22 +36,54 @@
 				</div>
 			</div>
 
+
 			<div class="row @RowStyle">
 				<div class="col">
-					<label class="form-label">Email</label>
-					<input type="email" class="form-control">
+					<label class="form-label">Key</label>
+
+					<select class="form-select" required="" @attributes="HandleAttributes(KeyDisabled)" @onchange="OnKeyChanged">
+						<option value="">@Placeholder</option>
+
+						@foreach (IKeyKeyValue KV in Keys) {
+							<option value="@KV.OptionValue">@KV.OptionTitle</option>
+						}
+					</select>
+				</div>
+				<div class="col">
+					<label class="form-label">Value</label>
+
+					<select class="form-select" required="" @bind=@Values.Selected @attributes="HandleAttributes(ValueDisabled)">
+						<option value="">@Placeholder</option>
+
+						@foreach (IKeyKeyValue KV in Values) {
+							<option value="@KV.OptionValue">@KV.OptionTitle</option>
+						}
+					</select>
 				</div>
 			</div>
 
 			<div class="row @RowStyle">
 				<div class="col">
-					<input type="text" class="form-control" placeholder="First name" aria-label="First name">
-				</div>
-
-				<div class="col">
-					<input type="text" class="form-control" placeholder="Last name" aria-label="Last name">
+					<button class="btn btn-success w-100" @attributes="HandleAttributes(ButtonDisabled)" @onclick="OnAddPermission">Dodaj</button>
 				</div>
 			</div>
+
+			@*			<div class="row @RowStyle">
+			<div class="col">
+			<label class="form-label">Email</label>
+			<input type="email" class="form-control">
+			</div>
+			</div>
+
+			<div class="row @RowStyle">
+			<div class="col">
+			<input type="text" class="form-control" placeholder="First name" >
+			</div>
+
+			<div class="col">
+			<input type="text" class="form-control" placeholder="Last name" >
+			</div>
+			</div>*@
 
 			<div class="row @RowStyle">
 
@@ -57,8 +91,9 @@
 				<table class="table table-striped table-hover mt-4">
 					<thead>
 						<tr>
-							<th scope="col">A</th>
-							<th scope="col">B</th>
+							<th scope="col">Key</th>
+							<th scope="col">Value</th>
+							<th scope="col">Akcije</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -68,6 +103,13 @@
 								<tr class="">
 									<td>@Perm.Permission</td>
 									<td>@Perm.Value</td>
+
+									<td>
+										<div class="float-end">
+											<button class="btn btn-sm btn-outline-primary">Pregled</button>
+											<button class="btn btn-sm btn-outline-danger">Obriši</button>
+										</div>
+									</td>
 								</tr>
 							}
 						}
@@ -95,6 +137,11 @@
 		get; set;
 	}
 
+	bool InputsDisabled = true;
+	bool KeyDisabled;
+	bool ValueDisabled;
+	bool ButtonDisabled;
+
 	bool IsAdmin {
 		get; set;
 	}
@@ -105,12 +152,24 @@
 	NameValueCollection Query = null;
 	DatabaseContext DbCtx;
 
+	KeyValueOptions<DbPermission.PermissionNames> Keys = new();
+	KeyValueOptions<string> Values = new();
+
 	protected override void OnInitialized() {
 		Query = Query ?? Utils.ParseQuery(Navigation.Uri);
 		DbCtx = new DatabaseContext();
 
 		ReloadData();
 		Layout?.SetNaviText(PageTitle);
+
+
+		Keys.Clear();
+		foreach (var KV in DbPermission.GetPermissions()) {
+			if (KV.Value == DbPermission.PermissionNames.INVALID)
+				continue;
+
+			Keys.Add(KV);
+		}
 	}
 
 	public async ValueTask DisposeAsync() {
@@ -130,16 +189,89 @@
 
 	async Task OnUserSelectionChanged(ChangeEventArgs E) {
 		object SelectedUserID = E.Value;
+		OnNoSelection();
 
 		if (string.IsNullOrEmpty(SelectedUserID as string)) {
 			return;
 		} else {
-			SelectedUserID = int.Parse((string)SelectedUserID);
+			if (int.TryParse((string)SelectedUserID, out int SelectedUserIDInt)) {
+				SelectedUserID = SelectedUserIDInt;
+			} else {
+				SelectedUserID = 0;
+			}
+		}
+
+		if ((int)SelectedUserID == 0) {
+			return;
 		}
 
 		DbUser SelectedUser = DbCtx.GetUser((int)SelectedUserID);
 
-		SelectedUserPermissions = SelectedUser.Permissions;
+		if (SelectedUser != null)
+			OnValidSelection(SelectedUser);
+	}
 
+	void OnNoSelection() {
+		InputsDisabled = true;
+		SelectedUserPermissions = null;
+
+		Keys.ClearSelected();
+		Values.ClearSelected();
+	}
+
+	void OnValidSelection(DbUser Usr) {
+		SelectedUserPermissions = Usr.Permissions;
+		InputsDisabled = false;
+	}
+
+	async Task OnKeyChanged(ChangeEventArgs E) {
+		Keys.Selected = E.Value as string;
+		Values.ClearSelected();
+
+		ValueDisabled = true;
+		ButtonDisabled = true;
+
+		if (Keys.SelectedValue != DbPermission.PermissionNames.INVALID) {
+			ValueDisabled = false;
+			ButtonDisabled = false;
+
+			FillValueDropdown(Keys.SelectedValue);
+		}
+	}
+
+	void FillValueDropdown(DbPermission.PermissionNames Key) {
+		Type ValidType = DbPermission.GetValidTableType(Key);
+		Values.Clear();
+
+		if (ValidType == null)
+			return;
+
+		KeyValuePair<string, object>[] AllItems = DbCtx.GetAllNamesIDsForType(ValidType);
+
+		foreach (var KV in AllItems) {
+			Values.Add(string.Format("[{0}] - {1}", KV.Key, KV.Value), (string)KV.Value);
+		}
+	}
+
+	async Task OnAddPermission() {
+		DbPermission.PermissionNames Key = Keys.SelectedValue;
+		string Val = Values.SelectedValue;
+
+		if (Key == DbPermission.PermissionNames.INVALID)
+			return;
+
+		Console.WriteLine("Key: {0}; Value: {1};", Keys.SelectedValue, Values.SelectedValue);
+	}
+
+	Dictionary<string, object> HandleAttributes(bool Disabled) {
+		var dict = new Dictionary<string, object>();
+
+		if (InputsDisabled)
+			Disabled = true;
+
+		if (Disabled)
+			dict.Add("disabled", true);
+
+		return dict;
 	}
 }

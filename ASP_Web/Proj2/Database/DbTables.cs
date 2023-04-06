@@ -4,15 +4,20 @@ using Proj2.Code;
 
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
+using System.Xml.Linq;
 
 namespace Proj2.Database {
-	public class DbTable {
+	public abstract class DbTable {
 		public virtual void InitializeNew() {
 		}
 
 		public virtual string GetPermissionID() {
 			throw new NotImplementedException();
 		}
+
+		public abstract object GetID();
+
+		public abstract string GetName();
 	}
 
 	[PrimaryKey(nameof(ID))]
@@ -39,6 +44,14 @@ namespace Proj2.Database {
 		}
 
 		public virtual List<DbPermission> Permissions { get; set; } = new();
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return Username;
+		}
 
 		public void SetUsernamePassword(string Username, string Password) {
 			this.Username = Username;
@@ -69,7 +82,6 @@ namespace Proj2.Database {
 
 			VIEW_ADMINISTRATION, // ID of administration
 			EDIT_ADMINISTRATION_DETAILS, // ID of administration, edit details of administration
-
 			ADD_REMOVE_ADMINISTRATION_VEHICLE, // ID of administration, add/remove administration vehicles
 
 			EDIT_VEHICLE_DETAILS, // ID of vehicle, edit details of vehicle
@@ -91,6 +103,52 @@ namespace Proj2.Database {
 			get; set;
 		}
 
+		public static KeyValuePair<string, PermissionNames>[] GetPermissions() {
+			List<KeyValuePair<string, PermissionNames>> Ret = new List<KeyValuePair<string, PermissionNames>>();
+
+			string[] Names = Enum.GetNames<PermissionNames>();
+
+			for (int i = 0; i < Names.Length; i++) {
+				string Name = Names[i];
+				PermissionNames Val = Enum.Parse<PermissionNames>(Name);
+
+				Ret.Add(new KeyValuePair<string, PermissionNames>(Name, Val));
+			}
+
+			return Ret.ToArray();
+		}
+
+		public static Type GetValidTableType(PermissionNames Perm) {
+			switch (Perm) {
+				case PermissionNames.INVALID:
+					throw new InvalidOperationException();
+
+				case PermissionNames.ADMIN:
+					return null;
+
+				case PermissionNames.VIEW_ADMINISTRATION:
+				case PermissionNames.EDIT_ADMINISTRATION_DETAILS:
+				case PermissionNames.ADD_REMOVE_ADMINISTRATION_VEHICLE:
+					return typeof(DbAdministration);
+
+				case PermissionNames.EDIT_VEHICLE_DETAILS:
+				case PermissionNames.ADD_REMOVE_VEHICLE_EQUIPMENT:
+				case PermissionNames.GENERATE_API_KEY:
+				case PermissionNames.DELETE_ADMINISTRATION:
+					return typeof(DbVehicle);
+
+				default:
+					throw new NotImplementedException();
+			}
+		}
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return GetType().Name;
+		}
 	}
 
 	public class DbItemData : DbTable {
@@ -113,6 +171,14 @@ namespace Proj2.Database {
 
 		public override string ToString() {
 			return string.Format("{0} - {1}", Name, Description);
+		}
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return Name;
 		}
 	}
 
@@ -160,6 +226,14 @@ namespace Proj2.Database {
 			Description = "Empty Description";
 			Enabled = true;
 		}
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return GetType().Name;
+		}
 	}
 
 	[PrimaryKey(nameof(ID))]
@@ -200,6 +274,14 @@ namespace Proj2.Database {
 
             return Address;
         }*/
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return GetType().Name;
+		}
 	}
 
 	[PrimaryKey(nameof(ID))]
@@ -248,6 +330,14 @@ namespace Proj2.Database {
 		public bool HasWarnings() {
 			return false;
 		}
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return Name;
+		}
 	}
 
 	[PrimaryKey(nameof(ID))]
@@ -287,6 +377,14 @@ namespace Proj2.Database {
 		public override string GetPermissionID() {
 			return ID;
 		}
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return Name;
+		}
 	}
 
 	[PrimaryKey(nameof(ID))]
@@ -316,6 +414,14 @@ namespace Proj2.Database {
 
 		public override void InitializeNew() {
 			ID = Utils.GenerateShortID();
+		}
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return Name;
 		}
 	}
 
@@ -347,6 +453,14 @@ namespace Proj2.Database {
 		public override void InitializeNew() {
 			CreatedOn = DateTime.Now.ToUniversalTime();
 		}
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return GetType().Name;
+		}
 	}
 
 	[PrimaryKey(nameof(ID))]
@@ -373,6 +487,14 @@ namespace Proj2.Database {
 
 		public override void InitializeNew() {
 			CreatedOn = DateTime.Now.ToUniversalTime();
+		}
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return GetType().Name;
 		}
 	}
 
