@@ -219,7 +219,7 @@
 				return;
 			}
 
-			DbCtx.CreateNew<DbVehicle>((NewVehicle) => {
+			DbCtx.CreateNew<DbVehicle>(AuthStateProvider.GetDbUser(DbCtx), (NewVehicle) => {
 				NewVehicle.Name = EditFields[0].Value;
 				NewVehicle.LicensePlate = EditFields[1].Value;
 

@@ -325,7 +325,7 @@
 		if (Result.Confirmed) {
 			DbCtx.InvalidateAllAPIKeysForVehicle(Veh);
 
-			DbDeviceAPIKey APIKey = DbCtx.CreateNew<DbDeviceAPIKey>();
+			DbDeviceAPIKey APIKey = DbCtx.CreateNew<DbDeviceAPIKey>(null);
 			APIKey.Vehicles.Add(Veh);
 
 			DbCtx.Commit();
@@ -355,7 +355,7 @@
 				return;
 			}
 
-			DbVehicleEquipment NewEquipment = DbCtx.CreateNew<DbVehicleEquipment>(E => {
+			DbVehicleEquipment NewEquipment = DbCtx.CreateNew<DbVehicleEquipment>(null, E => {
 				E.Name = EditFields[0].Value;
 				E.EquipmentType = Enum.Parse<DbEquipmentType>(EditFields[1].Value);
 			});

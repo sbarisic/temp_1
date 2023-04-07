@@ -93,7 +93,8 @@
 						<tr>
 							<th scope="col">Key</th>
 							<th scope="col">Value</th>
-							<th scope="col">Akcije</th>
+							<th scope="col">Description</th>
+							<th scope="col"></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -103,11 +104,12 @@
 								<tr class="">
 									<td>@Perm.Permission</td>
 									<td>@Perm.Value</td>
+									<td>@Perm.Description</td>
 
 									<td>
 										<div class="float-end">
 											<button class="btn btn-sm btn-outline-primary">Pregled</button>
-											<button class="btn btn-sm btn-outline-danger">Obriši</button>
+											<button class="btn btn-sm btn-outline-danger" @onclick="@(e=> OnRemovePermission(Perm))">Obriši</button>
 										</div>
 									</td>
 								</tr>
@@ -147,6 +149,8 @@
 	}
 
 	List<DbUser> AllUsers;
+
+	DbUser SelectedUser;
 	List<DbPermission> SelectedUserPermissions;
 
 	NameValueCollection Query = null;
@@ -154,6 +158,8 @@
 
 	KeyValueOptions<DbPermission.PermissionNames> Keys = new();
 	KeyValueOptions<string> Values = new();
+	Type ValuesDropdownType;
+	DbTable ValuesDropdownTypeValue;
 
 	protected override void OnInitialized() {
 		Query = Query ?? Utils.ParseQuery(Navigation.Uri);
@@ -214,6 +220,8 @@
 	void OnNoSelection() {
 		InputsDisabled = true;
 		SelectedUserPermissions = null;
+		SelectedUser = null;
+		ValuesDropdownType = null;
 
 		Keys.ClearSelected();
 		Values.ClearSelected();
@@ -221,6 +229,7 @@
 
 	void OnValidSelection(DbUser Usr) {
 		SelectedUserPermissions = Usr.Permissions;
+		SelectedUser = Usr;
 		InputsDisabled = false;
 	}
 
@@ -241,11 +250,13 @@
 
 	void FillValueDropdown(DbPermission.PermissionNames Key) {
 		Type ValidType = DbPermission.GetValidTableType(Key);
+		ValuesDropdownType = null;
 		Values.Clear();
 
 		if (ValidType == null)
 			return;
 
+		ValuesDropdownType = ValidType;
 		KeyValuePair<string, object>[] AllItems = DbCtx.GetAllNamesIDsForType(ValidType);
 
 		foreach (var KV in AllItems) {
@@ -260,7 +271,11 @@
 		if (Key == DbPermission.PermissionNames.INVALID)
 			return;
 
-		Console.WriteLine("Key: {0}; Value: {1};", Keys.SelectedValue, Values.SelectedValue);
+		string TypeName = ValuesDropdownType.Name;
+		DbTable Item = DbCtx.GetAllDbTableItemsForType(ValuesDropdownType).Where(DbTbl => (string)DbTbl.GetID() == Val).SingleOrDefault();
+		string Desc = string.Format("[{0}] {1}", TypeName, Item.GetName());
+
+		DbCtx.AddPermission(SelectedUser, Key, Val, Desc);
 	}
 
 	Dictionary<string, object> HandleAttributes(bool Disabled) {
@@ -273,5 +288,14 @@
 			dict.Add("disabled", true);
 
 		return dict;
+	}
+
+	async Task OnRemovePermission(DbPermission Perm) {
+		string Title = string.Join("\n", Perm.Permission, Perm.Value, Perm.Description);
+		ModalResult Result = await QueryModal.Show(Modal, "Obriši", "Jeste li sigurni da želite obrisati\n" + Title);
+
+		if (Result.Confirmed) {
+			DbCtx.RemovePermission(SelectedUser, Perm);
+		}
 	}
 }

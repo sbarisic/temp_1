@@ -12,9 +12,87 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Net.NetworkInformation;
 using System.Security.Cryptography;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Proj2.Database {
 	public class DatabaseContext : DbContext {
+		public static void CreateDb() {
+			using (DatabaseContext DbCtx = new DatabaseContext()) {
+				Console.Write("Recreating test database ...");
+				DbCtx.Database.EnsureDeleted();
+				DbCtx.Database.EnsureCreated();
+
+
+				DbUser Usr_Admin = DbCtx.CreateNew<DbUser>(null, Usr => {
+					Usr.SetUsernamePassword("admin", "admin");
+				});
+
+				DbCtx.AddPermission(Usr_Admin, DbPermission.PermissionNames.ADMIN, "", "");
+
+				DbUser Usr_User = DbCtx.CreateNew<DbUser>(null, Usr => {
+					Usr.SetUsernamePassword("user", "user");
+				});
+
+				DbAddress Addr1 = DbCtx.CreateNew<DbAddress>(null, Addr => {
+					Addr.Street = "Ante Trumbica 1B";
+					Addr.City = "Bjelovar";
+					Addr.Region = "Bjelovarsko Bilogorska";
+					Addr.PostalCode = "43000";
+					Addr.PhoneNumber = "095 545 1181";
+				});
+
+				DbAdministration Test1 = DbCtx.CreateNew<DbAdministration>(Usr_Admin, Admin => {
+					Admin.Name = "Glavna Uprava";
+					Admin.Address = Addr1;
+				});
+
+				DbAddress Addr2 = DbCtx.CreateNew<DbAddress>(null, Addr => {
+					Addr.Street = "Antuna Radica 52";
+					Addr.City = "Bjelovar";
+					Addr.Region = "Bjelovarsko Bilogorska";
+					Addr.PostalCode = "43000";
+					Addr.PhoneNumber = "091 816 0014";
+				});
+
+				DbAdministration Test2 = DbCtx.CreateNew<DbAdministration>(Usr_User, Admin => {
+					Admin.Name = "Test 2";
+					Admin.Address = Addr2;
+				});
+
+
+				DbVehicleEquipment Eq1 = DbCtx.CreateNew<DbVehicleEquipment>(null, Eq => {
+					Eq.Name = "Akumulatori";
+					Eq.EquipmentType = DbEquipmentType.BATTERY;
+				});
+
+				DbVehicle Veh1 = DbCtx.CreateNew<DbVehicle>(Usr_Admin, Veh => {
+					Veh.Name = "Test Vozilo";
+					Veh.LicensePlate = "BJ000AA";
+				});
+
+				Veh1.Equipment.Add(Eq1);
+				Test1.Vehicles.Add(Veh1);
+
+				Test2.Vehicles.Add(DbCtx.CreateNew<DbVehicle>(Usr_User, Veh => {
+					Veh.Name = "Vozilo 2";
+					Veh.LicensePlate = "BJ001AB";
+				}));
+
+				Test2.Vehicles.Add(DbCtx.CreateNew<DbVehicle>(Usr_User, Veh => {
+					Veh.Name = "Vozilo 3";
+					Veh.LicensePlate = "ZG1234HA";
+				}));
+				DbCtx.Commit();
+
+
+				//DbCtx.AddPermission(Usr_User, DbPermission.PermissionNames.VIEW_ADMINISTRATION, Test1.ID, "");
+				//DbCtx.AddPermission(Usr_User, DbPermission.PermissionNames.EDIT_ADMINISTRATION_DETAILS, Test1.ID, "");
+				DbCtx.Commit();
+
+				Console.WriteLine("OK");
+			}
+		}
+
 		public void CreateMissingTables() {
 			RelationalDatabaseCreator DbCreator = (Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator);
 			//DbCreator.CreateTables();
@@ -104,7 +182,7 @@ namespace Proj2.Database {
 
 		bool RecursionCheck = false;
 
-		public T CreateNew<T>(Action<T> Act = null) where T : DbTable, new() {
+		public T CreateNew<T>(DbUser PermissionsOwner, Action<T> Act = null) where T : DbTable, new() {
 			if (RecursionCheck) {
 				throw new Exception("Cannot call DbContext.CreateNew recursively");
 			}
@@ -124,7 +202,25 @@ namespace Proj2.Database {
 			SaveChanges();
 			Reload(NewObject);
 
+			if (PermissionsOwner != null)
+				SetupDefaultPermissions(PermissionsOwner, NewObject);
+
 			return NewObject;
+		}
+
+		public void SetupDefaultPermissions(DbUser Owner, DbTable Item) {
+			if (Item is DbAdministration Admin) {
+				AddPermission(Owner, DbPermission.PermissionNames.VIEW_ADMINISTRATION, Admin.ID, Admin.ToString());
+				AddPermission(Owner, DbPermission.PermissionNames.EDIT_ADMINISTRATION_DETAILS, Admin.ID, Admin.ToString());
+				AddPermission(Owner, DbPermission.PermissionNames.EDIT_ADMINISTRATION_DETAILS, Admin.ID, Admin.ToString());
+			} else if (Item is DbVehicle Veh) {
+				AddPermission(Owner, DbPermission.PermissionNames.EDIT_VEHICLE_DETAILS, Veh.ID, Veh.ToString());
+				AddPermission(Owner, DbPermission.PermissionNames.ADD_REMOVE_VEHICLE_EQUIPMENT, Veh.ID, Veh.ToString());
+				AddPermission(Owner, DbPermission.PermissionNames.GENERATE_API_KEY, Veh.ID, Veh.ToString());
+				AddPermission(Owner, DbPermission.PermissionNames.DELETE_ADMINISTRATION, Veh.ID, Veh.ToString());
+			} else {
+				throw new Exception("Cannot setup default permissions for DbTable item " + Item.GetType().Name);
+			}
 		}
 
 		public void DeleteEntity<T>(T Ent) where T : DbTable {
@@ -244,16 +340,46 @@ namespace Proj2.Database {
 			return false;
 		}
 
-		public void AddPermission(DbUser User, DbPermission.PermissionNames Permission, string Value) {
+		public void AddPermission(DbUser User, DbPermission.PermissionNames Permission, string Value, string Description) {
 			if (HasPermission(User, Permission, Value))
 				return;
 
-			DbPermission NewPerm = CreateNew<DbPermission>(P => {
+			DbPermission NewPerm = CreateNew<DbPermission>(null, P => {
 				P.Permission = Permission;
 				P.Value = Value;
+				P.Description = Description;
 			});
 
 			User.Permissions.Add(NewPerm);
+			Commit();
+		}
+
+		public void RemovePermission(DbUser User, DbPermission.PermissionNames Permission, string Value) {
+			if (User == null)
+				return;
+
+			List<DbPermission> Permissions = User.Permissions;
+
+			if (Permissions == null || Permissions.Count == 0)
+				return;
+
+			bool HasChanges = false;
+
+			for (int i = 0; i < Permissions.Count; i++) {
+				if (Permissions[i].Permission == Permission && Permissions[i].Value == Value) {
+					Permissions[i] = null;
+					HasChanges = true;
+				}
+			}
+
+			if (HasChanges) {
+				User.Permissions = Permissions.Where(P => P != null).ToList();
+				Commit();
+			}
+		}
+
+		public void RemovePermission(DbUser Usr, DbPermission Perm) {
+			Usr.Permissions.Remove(Perm);
 			Commit();
 		}
 
@@ -268,6 +394,20 @@ namespace Proj2.Database {
 			MethodInfo GetAllValuesMethod = GetType().GetMethod(nameof(GetAllNamesIDs), BindingFlags.Instance | BindingFlags.NonPublic);
 
 			KeyValuePair<string, object>[] Result = (KeyValuePair<string, object>[])GetAllValuesMethod.MakeGenericMethod(T).Invoke(this, null);
+			return Result;
+		}
+
+		DbTable[] GetAllDbTableItems<T>() where T : DbTable {
+			return GetDbSet<T>().AsNoTracking().ToArray();
+		}
+
+		public DbTable[] GetAllDbTableItemsForType(Type T) {
+			if (!T.IsSubclassOf(typeof(DbTable)))
+				throw new Exception(string.Format("{0} is not a DbTable", T.FullName));
+
+			MethodInfo GetAllDbTableItemsMethod = GetType().GetMethod(nameof(GetAllDbTableItems), BindingFlags.Instance | BindingFlags.NonPublic);
+
+			DbTable[] Result = (DbTable[])GetAllDbTableItemsMethod.MakeGenericMethod(T).Invoke(this, null);
 			return Result;
 		}
 	}

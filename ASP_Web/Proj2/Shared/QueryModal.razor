@@ -12,8 +12,13 @@
 		</div>
 
 		<div class="modal-body">
-
-			@Message
+			<div class="container p-0">
+				@foreach (var Line in MessageLines) {
+					<div class="row">
+						<div class="col">@Line</div>
+					</div>
+				}
+			</div>
 
 			@*@foreach (Field F in Fields) {
 			<div class="input-group mb-1">
@@ -48,6 +53,12 @@
 	[Parameter]
 	public string Message {
 		get; set;
+	}
+
+	string[] MessageLines {
+		get {
+			return Message.Split(new[] { '\n' });
+		}
 	}
 
 	protected override void OnInitialized() {

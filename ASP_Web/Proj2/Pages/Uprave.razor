@@ -252,12 +252,13 @@
 				return;
 			}
 
-			DbAddress EmptyAddr = DbCtx.CreateNew<DbAddress>();
-
-			DbCtx.CreateNew<DbAdministration>(Admin => {
+			DbAddress EmptyAddr = DbCtx.CreateNew<DbAddress>(null);
+			DbCtx.CreateNew<DbAdministration>(AuthStateProvider.GetDbUser(DbCtx), Admin => {
 				Admin.Name = EditFields[0].Value;
 				Admin.Address = EmptyAddr;
 			});
+
+
 
 
 			/*DbCtx.CreateNew<DbVehicle>((NewVehicle) => {

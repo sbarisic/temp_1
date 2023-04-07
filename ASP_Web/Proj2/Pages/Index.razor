@@ -33,11 +33,15 @@
 		</div>
 		</div>*@
 
-		<button class="btn btn-primary" @onclick="@(e=>CreateDb())">Create Database</button>
+		<button class="btn btn-primary" @onclick="@(e => CreateDb())">Create Database</button>
 	</Authorized>
 </AuthorizeView>
 
 @code {
+	void CreateDb() {
+		DatabaseContext.CreateDb();
+	}
+
 	/*private HubConnection HubCon;
 
 	string itemInput;
@@ -60,105 +64,22 @@
 	await HubCon.StartAsync();
 	}*/
 
-	private void CreateDb() {
-		using (DatabaseContext DbCtx = new DatabaseContext()) {
-			Console.Write("Recreating test database ...");
-			DbCtx.Database.EnsureDeleted();
-			DbCtx.Database.EnsureCreated();
+	//if (!IsConnected)
+	//	return;
 
+	/*using (DatabaseContext DbCtx = new DatabaseContext()) {
+		DbItemData Item = DbCtx.GetItem(itemInput);
 
-			DbUser Usr_Admin = DbCtx.CreateNew<DbUser>(Usr => {
-				Usr.SetUsernamePassword("admin", "admin");
-			});
+			if (Item == null)
+		return;
 
-			DbUser Usr_User = DbCtx.CreateNew<DbUser>(Usr => {
-				Usr.SetUsernamePassword("user", "user");
-			});
-
-
-
-			DbAddress Addr1 = DbCtx.CreateNew<DbAddress>(Addr => {
-				Addr.Street = "Ante Trumbica 1B";
-				Addr.City = "Bjelovar";
-				Addr.Region = "Bjelovarsko Bilogorska";
-				Addr.PostalCode = "43000";
-				Addr.PhoneNumber = "095 545 1181";
-			});
-
-			DbAdministration Test1 = DbCtx.CreateNew<DbAdministration>(Admin => {
-				Admin.Name = "Glavna Uprava";
-				Admin.Address = Addr1;
-			});
-
-			DbAddress Addr2 = DbCtx.CreateNew<DbAddress>(Addr => {
-				Addr.Street = "Antuna Radica 52";
-				Addr.City = "Bjelovar";
-				Addr.Region = "Bjelovarsko Bilogorska";
-				Addr.PostalCode = "43000";
-				Addr.PhoneNumber = "091 816 0014";
-			});
-
-			DbAdministration Test2 = DbCtx.CreateNew<DbAdministration>(Admin => {
-				Admin.Name = "Test 2";
-				Admin.Address = Addr2;
-			});
-
-
-			DbVehicleEquipment Eq1 = DbCtx.CreateNew<DbVehicleEquipment>(Eq => {
-				Eq.Name = "Akumulatori";
-				Eq.EquipmentType = DbEquipmentType.BATTERY;
-			});
-
-			DbVehicle Veh1 = DbCtx.CreateNew<DbVehicle>(Veh => {
-				Veh.Name = "Test Vozilo";
-				Veh.LicensePlate = "BJ000AA";
-			});
-
-			Veh1.Equipment.Add(Eq1);
-			Test1.Vehicles.Add(Veh1);
-
-			Test2.Vehicles.Add(DbCtx.CreateNew<DbVehicle>(Veh => {
-				Veh.Name = "Vozilo 2";
-				Veh.LicensePlate = "BJ001AB";
-			}));
-
-			Test2.Vehicles.Add(DbCtx.CreateNew<DbVehicle>(Veh => {
-				Veh.Name = "Vozilo 3";
-				Veh.LicensePlate = "ZG1234HA";
-			}));
-			DbCtx.Commit();
-
-			DbCtx.AddPermission(Usr_Admin, DbPermission.PermissionNames.ADMIN, "");
-			DbCtx.AddPermission(Usr_User, DbPermission.PermissionNames.VIEW_ADMINISTRATION, Test1.ID);
-			DbCtx.AddPermission(Usr_User, DbPermission.PermissionNames.EDIT_ADMINISTRATION_DETAILS, Test1.ID);
-			DbCtx.Commit();
-
-			Console.WriteLine("OK");
+		if (float.TryParse(itemVoltage, out float Voltage)) {
+			//Item.TimeStamp = DateTime.Now;
+			Item.Voltage = Voltage;
 		}
 
-		//if (!IsConnected)
-		//	return;
-
-		/*using (DatabaseContext DbCtx = new DatabaseContext()) {
-			DbItemData Item = DbCtx.GetItem(itemInput);
-
-				if (Item == null)
-			return;
-
-			if (float.TryParse(itemVoltage, out float Voltage)) {
-				//Item.TimeStamp = DateTime.Now;
-				Item.Voltage = Voltage;
-			}
-
-			DbCtx.UpdateItem(Item);
-		}*/
-
-		//await HubCon.SendAsync("SendStateHasChanged");
-	}
-
-	/* public async ValueTask DisposeAsync() {
-			if (HubCon != null) {
-				await HubCon.DisposeAsync();
-	}
+		DbCtx.UpdateItem(Item);
 	}*/
+
+	//await HubCon.SendAsync("SendStateHasChanged");
 }

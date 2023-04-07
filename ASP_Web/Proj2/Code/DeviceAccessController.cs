@@ -81,7 +81,7 @@ namespace Proj2.Code {
                 foreach (DbVehicle V in Vehicles) {
                     DbVehicleEquipment Eq = V.Equipment.Where(E => E.ID == API.EquipmentKey).SingleOrDefault();
 
-                    DbEquipmentValues Val = DbCtx.CreateNew<DbEquipmentValues>(V => {
+                    DbEquipmentValues Val = DbCtx.CreateNew<DbEquipmentValues>(null,V => {
                         V.CreatedByKey = DbAPIKey;
                         V.FloatValue = float.Parse(API.Value, System.Globalization.CultureInfo.InvariantCulture);
                     });
