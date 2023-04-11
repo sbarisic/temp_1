@@ -393,8 +393,12 @@
 		return APIKey.APIKey;
 	}
 
+	DbEquipmentValues GetLastEqipmentValue(DbVehicleEquipment Eq) {
+		return Eq.Values.OrderByDescending(V => V.ID).FirstOrDefault(); 
+	}
+
 	string GetLastValue(DbVehicleEquipment Eq) {
-		DbEquipmentValues Val = Eq.Values.OrderByDescending(V => V.ID).FirstOrDefault();
+		DbEquipmentValues Val = GetLastEqipmentValue(Eq);
 
 		if (Val == null)
 			return "NONE";
@@ -418,12 +422,12 @@
 	}
 
 	string GetLastUpdate(DbVehicleEquipment Eq) {
-		DbEquipmentValues EqValue = Eq.Values.OrderBy(V => V.CreatedOn).FirstOrDefault();
+		DbEquipmentValues EqValue = GetLastEqipmentValue(Eq);
 
 		if (EqValue == null)
 			return "";
 
-		return EqValue.ToString();
+		return EqValue.CreatedOn.ToString();
 	}
 
 	public async ValueTask DisposeAsync() {

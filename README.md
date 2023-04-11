@@ -50,11 +50,21 @@ sudo systemctl restart postgresql
 Device API
 
 ```
+// Postavi vrijednosti
 {
 	"APIVersion": 1,
-	"APIKey": "ZJC8cR4XXJyNYh9MKzDkowszMkKqqfxw6fmn5TErkaE=",
-	"EquipmentKey": "5xQfOnd__Ea75WWZJ3r2YA",
-	"Value": "12.5"
+	"APIKey": "/MqOxum5CvTBXGiVDusEPF4CploFZy0Sp0xq56WSsrE=",
+    "Action": 1,
+	"EquipmentKey": "gNp_drlsa0am-1LIS8Cp3Q",
+	"Value": "12.0"
+}
+
+
+// Dohvati svu opremu za API key
+{
+	"APIVersion": 1,
+	"APIKey": "/MqOxum5CvTBXGiVDusEPF4CploFZy0Sp0xq56WSsrE=",
+    "Action": 2
 }
 ```
 
