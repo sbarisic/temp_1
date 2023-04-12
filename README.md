@@ -86,3 +86,6 @@ TODO:
 	"Action": 2
 }
 ```
+
+Definicija ``Action`` polja
+https://github.com/sbarisic/temp_1/blob/main/ASP_Web/Proj2/Code/DeviceAccessController.cs#L16
