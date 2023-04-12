@@ -47,26 +47,6 @@ sudo micro /etc/postgresql/*/main/postgresql.conf
 sudo systemctl restart postgresql
 ```
 
-Device API
-
-```
-// Postavi vrijednosti
-{
-	"APIVersion": 1,
-	"APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=",
-    "Action": 1,
-	"EquipmentKey": "7D-K0CG9rEW2iEwViKHqAg",
-	"Value": "12.0"
-}
-
-
-// Dohvati svu opremu za API key
-{
-	"APIVersion": 1,
-	"APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=",
-    "Action": 2
-}
-```
 
 ```
 TODO:
@@ -83,4 +63,26 @@ TODO:
 			* Akumulator 1
 			* Akumulator 2
 			* Stanje pritiska 1 npr...
+```
+
+
+#### Device API
+
+```json
+// Postavi vrijednosti
+{
+	"APIVersion": 1,
+	"APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=",
+	"Action": 1,
+	"EquipmentKey": "7D-K0CG9rEW2iEwViKHqAg",
+	"Value": "12.0"
+}
+
+
+// Dohvati svu opremu za API key
+{
+	"APIVersion": 1,
+	"APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=",
+	"Action": 2
+}
 ```
