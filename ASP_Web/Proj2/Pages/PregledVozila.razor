@@ -150,9 +150,9 @@
 										<div class="row">
 											<div class="col">
 												<div class="float-end">
-													@*<button class="btn btn-sm btn-outline-secondary mx-1" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button>
+													@*<button class="btn btn-sm btn-outline-secondary mx-1" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button>*@
 
-										<button class="btn btn-sm btn-outline-danger mx-1">Obriši</button>*@
+													<button class="btn btn-sm btn-outline-danger mx-1" @onclick="@(e=> OnDeleteEquipment(Op))">Obriši</button>
 												</div>
 											</div>
 										</div>
@@ -337,6 +337,10 @@
 		if (!OnAddEquipmentEnabled)
 			return;
 
+		if (CurrentVehicle == null)
+			return;
+
+
 		EditModal.Field[] EditFields = new[] {
 				new EditModal.Field("Naziv", "Nova Oprema"),
 				new EditModal.Field("Tip Opreme", new[]{
@@ -360,9 +364,11 @@
 				E.EquipmentType = Enum.Parse<DbEquipmentType>(EditFields[1].Value);
 			});
 
-			CurrentVehicle.Equipment.Add(NewEquipment);
-
+			DbVehicle Veh = DbCtx.GetVehicle(CurrentVehicle.ID, false);
+			Veh.Equipment.Add(NewEquipment);
 			DbCtx.Commit();
+
+			ReloadData();
 			StateHasChanged();
 		}
 	}
@@ -394,7 +400,7 @@
 	}
 
 	DbEquipmentValues GetLastEqipmentValue(DbVehicleEquipment Eq) {
-		return Eq.Values.OrderByDescending(V => V.ID).FirstOrDefault(); 
+		return Eq.Values.OrderByDescending(V => V.ID).FirstOrDefault();
 	}
 
 	string GetLastValue(DbVehicleEquipment Eq) {
@@ -427,7 +433,7 @@
 		if (EqValue == null)
 			return "";
 
-		return EqValue.CreatedOn.ToString();
+		return Utils.FormatDateTime(EqValue.Local_CreatedOn);
 	}
 
 	public async ValueTask DisposeAsync() {
@@ -435,6 +441,20 @@
 
 		if (HubCon != null) {
 			await HubCon.DisposeAsync();
+		}
+	}
+
+	async Task OnDeleteEquipment(DbVehicleEquipment Eq) {
+		if (!OnAddEquipmentEnabled)
+			return;
+
+		ModalResult Result = await QueryModal.Show(Modal, "Obriši Opremu", string.Format("Jeste li sigurni da želite obrisati \"{0}\"", Eq.Name));
+
+		if (Result.Confirmed) {
+			DbCtx.DeleteEntity(Eq);
+
+			ReloadData();
+			StateHasChanged();
 		}
 	}
 }

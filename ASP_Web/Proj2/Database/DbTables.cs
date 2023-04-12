@@ -483,6 +483,12 @@ namespace Proj2.Database {
 			get; set;
 		}
 
+		public DateTime Local_CreatedOn {
+			get {
+				return CreatedOn.ToLocalTime();
+			}
+		}
+
 		[Required]
 		public virtual DbDeviceAPIKey CreatedByKey {
 			get; set;

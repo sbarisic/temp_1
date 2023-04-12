@@ -410,5 +410,10 @@ namespace Proj2.Database {
 			DbTable[] Result = (DbTable[])GetAllDbTableItemsMethod.MakeGenericMethod(T).Invoke(this, null);
 			return Result;
 		}
+
+		public T Untrack<T>(T Object) where T : DbTable {
+			Entry(Object).State = EntityState.Detached;
+			return Object;
+		}
 	}
 }

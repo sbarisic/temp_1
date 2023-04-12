@@ -6,6 +6,7 @@ using Proj2.Code;
 using Proj2.Database;
 using Proj2.Hubs;
 using Blazored.Modal;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", false);
@@ -38,7 +39,10 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => {
 });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(opts => {
+	opts.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
+
 builder.Services.AddBlazoredModal();
 builder.Services.AddAuthentication("Cookies").AddCookie();
 

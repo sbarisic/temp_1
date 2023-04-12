@@ -53,9 +53,9 @@ Device API
 // Postavi vrijednosti
 {
 	"APIVersion": 1,
-	"APIKey": "/MqOxum5CvTBXGiVDusEPF4CploFZy0Sp0xq56WSsrE=",
+	"APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=",
     "Action": 1,
-	"EquipmentKey": "gNp_drlsa0am-1LIS8Cp3Q",
+	"EquipmentKey": "7D-K0CG9rEW2iEwViKHqAg",
 	"Value": "12.0"
 }
 
@@ -63,7 +63,7 @@ Device API
 // Dohvati svu opremu za API key
 {
 	"APIVersion": 1,
-	"APIKey": "/MqOxum5CvTBXGiVDusEPF4CploFZy0Sp0xq56WSsrE=",
+	"APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=",
     "Action": 2
 }
 ```

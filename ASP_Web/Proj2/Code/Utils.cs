@@ -43,6 +43,16 @@ namespace Proj2.Code {
 			return HttpUtility.ParseQueryString(Query);
 		}
 
+		public static string FormatDateTime(DateTime Dt, bool LongFormat = true) {
+			string Fmt = "MM.yyyy HH:mm";
+
+			if (LongFormat) {
+				Fmt = "dd.MM.yyyy HH:mm:ss";
+			}
+
+			return Dt.ToString(Fmt);
+		}
+
 		/*public static string GenerateID() {
 			return "id_" + Guid.NewGuid().ToString("N");
 		}*/
