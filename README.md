@@ -128,3 +128,6 @@ Response
 
 Definicija ``Action`` polja
 https://github.com/sbarisic/temp_1/blob/main/ASP_Web/Proj2/Code/DeviceAccessController.cs#L16
+
+Definicija ``equipmentType`` polja
+https://github.com/sbarisic/temp_1/blob/main/ASP_Web/Proj2/Database/DbTables.cs#L515
