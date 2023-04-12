@@ -66,24 +66,63 @@ TODO:
 ```
 
 
-#### Device API
+## Device API
 
+![alt text](https://raw.githubusercontent.com/sbarisic/temp_1/master/screenshots/a.png "A")
+
+REST POST na ``/deviceaccess`` sa JSON podacima u bodyju
+
+Postavljanje vrijednosti opreme
+
+Request
 ```json
-// Postavi vrijednosti
 {
 	"APIVersion": 1,
 	"APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=",
 	"Action": 1,
 	"EquipmentKey": "7D-K0CG9rEW2iEwViKHqAg",
-	"Value": "12.0"
+	"Value": "12.4"
 }
+```
 
+Response
+```json
+{
+	"title": "DeviceAccessResponseAPI",
+	"status": 200,
+	"statusString": "OK"
+}
+```
 
-// Dohvati svu opremu za API key
+Dohvat sve opreme za APIKey
+
+Request
+```json
 {
 	"APIVersion": 1,
 	"APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=",
 	"Action": 2
+}
+```
+
+Response
+```json
+{
+	"title": "DeviceAccessResponseAPI",
+	"status": 200,
+	"statusString": "OK",
+	"equipment": [
+		{
+			"id": "7D-K0CG9rEW2iEwViKHqAg",
+			"name": "Akumulator 1",
+			"equipmentType": 1
+		},
+		{
+			"id": "Qhdk1g4PP0m7T4DKz3anGQ",
+			"name": "Akumulator 2",
+			"equipmentType": 1
+		}
+	]
 }
 ```
 
