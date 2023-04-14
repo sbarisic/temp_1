@@ -49,6 +49,7 @@ sudo systemctl restart postgresql
 
 
 ```
+ESP32 https://platformio.org/
 TODO:
 - JSON API za pristup mikrokontroleru
 
@@ -63,6 +64,20 @@ TODO:
 			* Akumulator 1
 			* Akumulator 2
 			* Stanje pritiska 1 npr...
+
+TODO: Izvor greske na web ekranu
+
+Podaci:
+Vozilo - broj vozila
+Timestamp - 
+Napon 1
+Napon 2
+Temperatura
+Tlak
+Voltage Drop - Najvise izmjereni pad napona na akumulatoru
+Error message -
+
+Spremanje JSON podataka u tablicu
 ```
 
 
