@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "freertos.h": "c",
+        "data_io.h": "c",
+        "esp_log.h": "c"
+    }
+}
