@@ -39,7 +39,9 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => {
 });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddControllers().AddJsonOptions(opts => {
+builder.Services.AddControllers((opts) => {
+	opts.InputFormatters.Insert(0, new RawJsonBodyInputFormatter());
+}).AddJsonOptions(opts => {
 	opts.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 

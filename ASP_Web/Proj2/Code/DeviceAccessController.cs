@@ -4,6 +4,9 @@ using Proj2.Database;
 using Microsoft.AspNetCore.SignalR;
 using Proj2.Hubs;
 using System.Threading.Tasks;
+using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace Proj2.Code {
 	public enum DeviceAccessStatus : int {
@@ -86,6 +89,17 @@ namespace Proj2.Code {
 
 		JsonResult Forbidden() {
 			return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
+		}
+
+		[HttpPost("/dev")]
+		public JsonResult Dev([FromBody] string API) {
+			Console.WriteLine("FromBody({0})", API);
+
+			JsonNode? Node = JsonNode.Parse(API);
+
+			return new JsonResult(new {
+				result = "Okay"
+			});
 		}
 
 		[HttpPost("/deviceaccess")]
