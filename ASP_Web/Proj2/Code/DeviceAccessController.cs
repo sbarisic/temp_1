@@ -92,10 +92,37 @@ namespace Proj2.Code {
 		}
 
 		[HttpPost("/dev")]
-		public JsonResult Dev([FromBody] string API) {
-			Console.WriteLine("FromBody({0})", API);
+		public JsonResult Dev([FromBody] string JsonString) {
+			JsonNode Node = null;
 
-			JsonNode? Node = JsonNode.Parse(API);
+			using (DatabaseContext DbCtx = new DatabaseContext()) {
+				DbJsonLog JsonLog = DbCtx.CreateNew<DbJsonLog>(null, (JsonLog) => {
+					JsonLog.JsonString = JsonString;
+				});
+
+				try {
+					Node = JsonNode.Parse(JsonString);
+
+					JsonNode APIKeyNode = Node["APIKey"];
+					string APIKeyString = APIKeyNode.GetValue<string>();
+
+					DbDeviceAPIKey APIKey = DbCtx.GetDeviceAPIKey(APIKeyString);
+					JsonLog.CreatedByKey = APIKey;
+
+				} catch (Exception E) {
+					JsonLog.ParseException = true;
+					JsonLog.ParseExcMessage = E.Message;
+					JsonLog.ParseExcSource = E.Source;
+					JsonLog.ParseExcStackTrace = E.StackTrace;
+
+					throw;
+				}
+
+				DbCtx.Commit();
+			}
+
+
+
 
 			return new JsonResult(new {
 				result = "Okay"

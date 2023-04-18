@@ -512,6 +512,57 @@ namespace Proj2.Database {
 		}
 	}
 
+	[PrimaryKey(nameof(ID))]
+	public class DbJsonLog : DbTable {
+		[Key]
+		public int ID {
+			get; set;
+		}
+
+		[Required]
+		public DateTime CreatedOn {
+			get; set;
+		}
+
+		[Required]
+		public string JsonString {
+			get; set;
+		}
+
+		public virtual DbDeviceAPIKey CreatedByKey {
+			get; set;
+		}
+
+		public string ParseExcMessage {
+			get; set;
+		}
+
+		public string ParseExcSource {
+			get; set;
+		}
+
+		public string ParseExcStackTrace {
+			get; set;
+		}
+
+		public bool ParseException {
+			get; set;
+		}
+
+		public override void InitializeNew() {
+			CreatedOn = DateTime.Now.ToUniversalTime();
+			ParseException = false;
+		}
+
+		public override object GetID() {
+			return ID;
+		}
+
+		public override string GetName() {
+			return GetType().Name;
+		}
+	}
+
 	public enum DbEquipmentType : int {
 		NONE = 0,
 		BATTERY = 1,

@@ -20,6 +20,7 @@ builder.Services.AddSingleton<ConfigurationService>();
 
 builder.Services.AddDbContext<DatabaseContext>();
 
+
 builder.Services.AddResponseCompression(opts => {
 	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
 		new[] { "application/octet-stream" });
@@ -85,5 +86,12 @@ app.UseEndpoints(Endpoints => {
 });
 
 //app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?})");
+
+#if DEBUG
+using (DatabaseContext DbCtx = new DatabaseContext()) {
+	string CreateScript = DbCtx.GenerateCreateScript();
+}
+#endif
+
 
 app.Run();

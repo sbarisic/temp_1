@@ -93,11 +93,10 @@ namespace Proj2.Database {
 			}
 		}
 
-		public void CreateMissingTables() {
+		public string GenerateCreateScript() {
 			RelationalDatabaseCreator DbCreator = (Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator);
-			//DbCreator.CreateTables();
 
-			string CreateScript = DbCreator.GenerateCreateScript();
+			return DbCreator.GenerateCreateScript();
 		}
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
@@ -138,6 +137,10 @@ namespace Proj2.Database {
 		}
 
 		public DbSet<DbEquipmentNotifications> EquipmentNotifications {
+			get; set;
+		}
+
+		public DbSet<DbJsonLog> JsonLog {
 			get; set;
 		}
 
