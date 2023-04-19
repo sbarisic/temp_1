@@ -146,3 +146,17 @@ https://github.com/sbarisic/temp_1/blob/main/ASP_Web/Proj2/Code/DeviceAccessCont
 
 Definicija ``equipmentType`` polja
 https://github.com/sbarisic/temp_1/blob/main/ASP_Web/Proj2/Database/DbTables.cs#L515
+
+
+
+```json
+{
+    "APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=_",
+    "A": "string",
+    "B": 123,
+    "C": { "Value": "testval" },
+    "D": [ 1, 2, 3, 4, 5 ],
+    "E": true,
+    "F": null
+}
+```

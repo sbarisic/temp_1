@@ -9,212 +9,203 @@ using System.Text.Json.Nodes;
 using System.Text.Json;
 
 namespace Proj2.Code {
-	public enum DeviceAccessStatus : int {
-		Invalid = 0,
-		OK = 200,
-		Forbidden = 403,
-		NotFound = 404,
-	}
+    public enum DeviceAccessStatus : int {
+        Invalid = 0,
+        OK = 200,
+        Forbidden = 403,
+        NotFound = 404,
+    }
 
-	public enum DeviceAction : int {
-		Invalid = 0,
+    public enum DeviceAction : int {
+        Invalid = 0,
 
-		// Set equipment data value
-		Data = 1,
+        // Set equipment data value
+        Data = 1,
 
-		// Get all equipment assigned to API key
-		GetEquipment = 2
-	}
+        // Get all equipment assigned to API key
+        GetEquipment = 2
+    }
 
-	public class DeviceAccessAPI {
-		public int APIVersion {
-			get; set;
-		}
+    public class DeviceAccessAPI {
+        public int APIVersion {
+            get; set;
+        }
 
-		public string APIKey {
-			get; set;
-		}
+        public string APIKey {
+            get; set;
+        }
 
-		public DeviceAction Action {
-			get; set;
-		}
+        public DeviceAction Action {
+            get; set;
+        }
 
-		public string EquipmentKey {
-			get; set;
-		}
+        public string EquipmentKey {
+            get; set;
+        }
 
-		public string Value {
-			get; set;
-		}
-	}
+        public string Value {
+            get; set;
+        }
+    }
 
-	public class DeviceAccessResponseAPI {
-		public string Title {
-			get; set;
-		}
+    public class DeviceAccessResponseAPI {
+        public string Title {
+            get; set;
+        }
 
-		public DeviceAccessStatus Status {
-			get; set;
-		}
+        public DeviceAccessStatus Status {
+            get; set;
+        }
 
-		public string StatusString {
-			get; set;
-		}
+        public string StatusString {
+            get; set;
+        }
 
-		public DbVehicleEquipment[] Equipment {
-			get; set;
-		}
+        public DbVehicleEquipment[] Equipment {
+            get; set;
+        }
 
-		public DeviceAccessResponseAPI(DeviceAccessStatus Status) {
-			Title = nameof(DeviceAccessResponseAPI);
+        public DeviceAccessResponseAPI(DeviceAccessStatus Status) {
+            Title = nameof(DeviceAccessResponseAPI);
 
-			this.Status = Status;
-			StatusString = Status.ToString();
-			Equipment = null;
-		}
-	}
+            this.Status = Status;
+            StatusString = Status.ToString();
+            Equipment = null;
+        }
+    }
 
-	[ApiController]
-	[RequireHttps]
-	public class DeviceAccessController : ControllerBase {
-		IHubContext<ComHub> HubContext;
+    [ApiController]
+    [RequireHttps]
+    public class DeviceAccessController : ControllerBase {
+        IHubContext<ComHub> HubContext;
 
-		public DeviceAccessController(IHubContext<ComHub> HubContext) {
-			this.HubContext = HubContext;
-		}
+        public DeviceAccessController(IHubContext<ComHub> HubContext) {
+            this.HubContext = HubContext;
+        }
 
-		JsonResult Invalid() {
-			return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Invalid));
-		}
+        JsonResult Invalid() {
+            return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Invalid));
+        }
 
-		JsonResult Forbidden() {
-			return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
-		}
+        JsonResult Forbidden() {
+            return new JsonResult(new DeviceAccessResponseAPI(DeviceAccessStatus.Forbidden));
+        }
 
-		[HttpPost("/dev")]
-		public JsonResult Dev([FromBody] string JsonString) {
-			JsonNode Node = null;
+        [HttpPost("/deviceaccess")]
+        public JsonResult Dev([FromBody] string JsonString) {
+            using (DatabaseContext DbCtx = new DatabaseContext()) {
+                ParseJsonBody(DbCtx, JsonString);
+                DeviceAccessAPI API = JsonUtils.Parse<DeviceAccessAPI>(JsonString);
 
-			using (DatabaseContext DbCtx = new DatabaseContext()) {
-				DbJsonLog JsonLog = DbCtx.CreateNew<DbJsonLog>(null, (JsonLog) => {
-					JsonLog.JsonString = JsonString;
-				});
+                // Return invalid API calls
+                if (API == null || API.APIVersion == 0 || API.Action == 0)
+                    return Invalid();
 
-				try {
-					Node = JsonNode.Parse(JsonString);
+                if (string.IsNullOrEmpty(API.APIKey))
+                    return Forbidden();
 
-					JsonNode APIKeyNode = Node["APIKey"];
-					string APIKeyString = APIKeyNode.GetValue<string>();
+                bool DispatchChanges = false;
+                DbVehicleEquipment[] Equipment = null;
+                DbDeviceAPIKey DbAPIKey = DbCtx.GetDeviceAPIKey(API.APIKey);
 
-					DbDeviceAPIKey APIKey = DbCtx.GetDeviceAPIKey(APIKeyString);
-					JsonLog.CreatedByKey = APIKey;
+                // If no API key, forbidden
+                if (DbAPIKey == null || DbAPIKey.APIKey != API.APIKey)
+                    return Forbidden();
 
-				} catch (Exception E) {
-					JsonLog.ParseException = true;
-					JsonLog.ParseExcMessage = E.Message;
-					JsonLog.ParseExcSource = E.Source;
-					JsonLog.ParseExcStackTrace = E.StackTrace;
+                switch (API.Action) {
+                    // Post data to vehicle equipment
+                    case DeviceAction.Data: {
+                        DispatchChanges = SetEquipmentData(DbCtx, API, DbAPIKey);
+                        break;
+                    }
 
-					throw;
-				}
+                    // Get all vehicle equipment by key
+                    case DeviceAction.GetEquipment: {
+                        Equipment = GetAllEquipmentForKey(DbCtx, API, DbAPIKey).ToArray();
+                        break;
+                    }
 
-				DbCtx.Commit();
-			}
+                    default:
+                        return Forbidden();
+                }
 
+                // Dispatch state changed event to all clients
 
+                // TODO: Displatch only to vehicle
+                if (DispatchChanges) {
+                    HubContext.Clients.All.SendAsync("OnStateHasChanged").Wait();
+                }
 
+                DeviceAccessResponseAPI ResponseAPI = new DeviceAccessResponseAPI(DeviceAccessStatus.OK);
+                //ResponseAPI.AllEquipment = AllEquipment;
+                //ResponseAPI.AllEquipmentTypes = AllEquipmentTypes;
+                //ResponseAPI.AllEquipmentNames = AllEquipmentNames;
 
-			return new JsonResult(new {
-				result = "Okay"
-			});
-		}
+                ResponseAPI.Equipment = Equipment;
+                return new JsonResult(ResponseAPI);
+            }
+        }
 
-		[HttpPost("/deviceaccess")]
-		public JsonResult Post([FromBody] DeviceAccessAPI API) {
-			// Return invalid API calls
-			if (API == null || API.APIVersion == 0 || API.Action == 0)
-				return Invalid();
+        void ParseJsonBody(DatabaseContext DbCtx, string JsonString) {
+            JsonDocument JsonDoc = null;
 
-			if (string.IsNullOrEmpty(API.APIKey))
-				return Forbidden();
+            DbJsonLog JsonLog = DbCtx.CreateNew<DbJsonLog>(null, (JsonLog) => {
+                JsonLog.JsonString = JsonString;
+            });
 
-			bool DispatchChanges = false;
-			DbVehicleEquipment[] Equipment = null;
+            try {
+                JsonDoc = JsonDocument.Parse(JsonString);
+                JsonElement APIKeyNode = JsonDoc.RootElement.GetProperty("APIKey");
 
-			using (DatabaseContext DbCtx = new DatabaseContext()) {
-				DbDeviceAPIKey DbAPIKey = DbCtx.GetDeviceAPIKey(API.APIKey);
+                if (JsonDoc.RootElement.TryGetProperty("APIKey", out JsonElement APIKeyElement)) {
+                    string APIKeyString = APIKeyElement.GetString();
 
-				// If no API key, forbidden
-				if (DbAPIKey == null || DbAPIKey.APIKey != API.APIKey)
-					return Forbidden();
+                    DbDeviceAPIKey APIKey = DbCtx.GetDeviceAPIKey(APIKeyString);
+                    JsonLog.CreatedByKey = APIKey;
+                }
+            } catch (Exception E) {
+                JsonLog.ParseException = true;
+                JsonLog.ParseExcMessage = E.Message;
+                JsonLog.ParseExcSource = E.Source;
+                JsonLog.ParseExcStackTrace = E.StackTrace;
+            }
 
-				switch (API.Action) {
-					// Post data to vehicle equipment
-					case DeviceAction.Data: {
-							DispatchChanges = SetEquipmentData(DbCtx, API, DbAPIKey);
-							break;
-						}
+            DbCtx.Commit();
+        }
 
-					// Get all vehicle equipment by key
-					case DeviceAction.GetEquipment: {
-							Equipment = GetAllEquipmentForKey(DbCtx, API, DbAPIKey).ToArray();
-							break;
-						}
+        bool SetEquipmentData(DatabaseContext DbCtx, DeviceAccessAPI API, DbDeviceAPIKey DbAPIKey) {
+            List<DbVehicle> Vehicles = DbCtx.GetVehiclesByAPIKey(DbAPIKey);
+            bool Dirty = false;
 
-					default:
-						return Forbidden();
-				}
+            foreach (DbVehicle V in Vehicles) {
+                DbVehicleEquipment Eq = V.Equipment.Where(E => E.ID == API.EquipmentKey).SingleOrDefault();
 
-				// Dispatch state changed event to all clients
+                DbEquipmentValues Val = DbCtx.CreateNew<DbEquipmentValues>(null, V => {
+                    V.CreatedByKey = DbAPIKey;
+                    V.FloatValue = float.Parse(API.Value, CultureInfo.InvariantCulture);
+                });
 
-			}
+                Eq.Values.Add(Val);
+                DbCtx.Commit();
+                Dirty = true;
+            }
 
-			if (DispatchChanges) {
-				HubContext.Clients.All.SendAsync("OnStateHasChanged").Wait();
-			}
+            return Dirty;
+        }
 
-			DeviceAccessResponseAPI ResponseAPI = new DeviceAccessResponseAPI(DeviceAccessStatus.OK);
-			//ResponseAPI.AllEquipment = AllEquipment;
-			//ResponseAPI.AllEquipmentTypes = AllEquipmentTypes;
-			//ResponseAPI.AllEquipmentNames = AllEquipmentNames;
+        IEnumerable<DbVehicleEquipment> GetAllEquipmentForKey(DatabaseContext DbCtx, DeviceAccessAPI API, DbDeviceAPIKey DbAPIKey) {
+            List<DbVehicle> Vehicles = DbCtx.GetVehiclesByAPIKey(DbAPIKey);
 
-			ResponseAPI.Equipment = Equipment;
-			return new JsonResult(ResponseAPI);
-		}
+            foreach (DbVehicle V in Vehicles) {
+                foreach (DbVehicleEquipment Eq in V.Equipment) {
+                    DbVehicleEquipment EqUntracked = DbCtx.Untrack(Eq);
 
-		bool SetEquipmentData(DatabaseContext DbCtx, DeviceAccessAPI API, DbDeviceAPIKey DbAPIKey) {
-			List<DbVehicle> Vehicles = DbCtx.GetVehiclesByAPIKey(DbAPIKey);
-			bool Dirty = false;
+                    EqUntracked.Notifications = null;
+                    EqUntracked.Values = null;
 
-			foreach (DbVehicle V in Vehicles) {
-				DbVehicleEquipment Eq = V.Equipment.Where(E => E.ID == API.EquipmentKey).SingleOrDefault();
-
-				DbEquipmentValues Val = DbCtx.CreateNew<DbEquipmentValues>(null, V => {
-					V.CreatedByKey = DbAPIKey;
-					V.FloatValue = float.Parse(API.Value, CultureInfo.InvariantCulture);
-				});
-
-				Eq.Values.Add(Val);
-				DbCtx.Commit();
-				Dirty = true;
-			}
-
-			return Dirty;
-		}
-
-		IEnumerable<DbVehicleEquipment> GetAllEquipmentForKey(DatabaseContext DbCtx, DeviceAccessAPI API, DbDeviceAPIKey DbAPIKey) {
-			List<DbVehicle> Vehicles = DbCtx.GetVehiclesByAPIKey(DbAPIKey);
-
-			foreach (DbVehicle V in Vehicles) {
-				foreach (DbVehicleEquipment Eq in V.Equipment) {
-					DbVehicleEquipment EqUntracked = DbCtx.Untrack(Eq);
-
-					EqUntracked.Notifications = null;
-					EqUntracked.Values = null;
-
-					yield return EqUntracked;
-				}
-			}
-		}
-	}
+                    yield return EqUntracked;
+                }
+            }
+        }
+    }
 }
