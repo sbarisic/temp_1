@@ -5,8 +5,13 @@
 #include "esp_flash.h"
 #include "nvs_flash.h"
 
+#include "esp32/rtc.h"
+
 #include <core_io.h>
 #include <core_wifi.h>
+
+// MCP3201 - AD conv 
+// ABP2 - honeywell senzor za temp
 
 void app_main()
 {
@@ -56,5 +61,8 @@ void app_main()
     while (1)
     {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+        uint time = (uint)esp_rtc_get_time_us();
+        printf("Time: %u\n", time);
     }
 }
