@@ -159,4 +159,14 @@ https://github.com/sbarisic/temp_1/blob/main/ASP_Web/Proj2/Database/DbTables.cs#
     "E": true,
     "F": null
 }
+
+
+{
+    "APIKey": "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=",
+    "Action": 1,
+    "Napon1": 12.7,
+    "Napon2": 12.5,
+    "Temperatura": 32,
+    "Tlak": 0.6
+}
 ```

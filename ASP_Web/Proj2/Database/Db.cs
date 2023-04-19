@@ -61,11 +61,17 @@ namespace Proj2.Database {
 
 
                 DbVehicleEquipment Eq1 = DbCtx.CreateNew<DbVehicleEquipment>(null, Eq => {
-                    Eq.Name = "Akumulatori";
-                    Eq.EquipmentType = DbEquipmentType.BATTERY;
+                    Eq.Name = "Akumulator 1";
+                    Eq.Field = "Napon1";
+
+
+                    Eq.ValidationEnabled = true;
+                    Eq.Min = 8;
+                    Eq.Max = 15;
                 });
 
                 DbVehicle Veh1 = DbCtx.CreateNew<DbVehicle>(Usr_Admin, Veh => {
+                    Veh.ID = "1aSOGKzGckKd7TlkcdLPyw";
                     Veh.Name = "Test Vozilo";
                     Veh.LicensePlate = "BJ000AA";
                 });
@@ -84,10 +90,14 @@ namespace Proj2.Database {
                 }));
                 DbCtx.Commit();
 
+				DbDeviceAPIKey APIKey = DbCtx.CreateNew<DbDeviceAPIKey>(null);
+                APIKey.APIKey = "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=";
+				APIKey.Vehicles.Add(Veh1);
 
-                //DbCtx.AddPermission(Usr_User, DbPermission.PermissionNames.VIEW_ADMINISTRATION, Test1.ID, "");
-                //DbCtx.AddPermission(Usr_User, DbPermission.PermissionNames.EDIT_ADMINISTRATION_DETAILS, Test1.ID, "");
-                DbCtx.Commit();
+
+				//DbCtx.AddPermission(Usr_User, DbPermission.PermissionNames.VIEW_ADMINISTRATION, Test1.ID, "");
+				//DbCtx.AddPermission(Usr_User, DbPermission.PermissionNames.EDIT_ADMINISTRATION_DETAILS, Test1.ID, "");
+				DbCtx.Commit();
 
                 Console.WriteLine("OK");
             }
