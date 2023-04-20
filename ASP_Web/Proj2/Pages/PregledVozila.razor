@@ -11,7 +11,7 @@
 @inject AuthStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 
-@implements IAsyncDisposable
+@implements IDisposable
 
 
 <PageTitle>Pregled Vozila</PageTitle>
@@ -263,11 +263,13 @@
 	bool HasError = false;
 	bool HasWarning = false;
 
+	GarbageCollector Garbage = new GarbageCollector();
+
 	protected override void OnInitialized() {
 		Query = Query ?? Utils.ParseQuery(Navigation.Uri);
 		ViewID = Query.Get("i") ?? "";
 
-		DbCtx = new DatabaseContext();
+		DbCtx = Garbage.Add(new DatabaseContext());
 
 		ReloadData();
 		Layout?.SetNaviText("Pregled Vozila");
@@ -276,12 +278,18 @@
 
 	protected override async Task OnInitializedAsync() {
 		HubCon = new HubConnectionBuilder().WithUrl(Navigation.ToAbsoluteUri("/comhub")).Build();
+		Garbage.Add(HubCon);
 
-		HubCon.On("OnStateHasChanged", () => {
-			Console.WriteLine("State has changed!");
+		Garbage.Add(HubCon.On("OnStateHasChanged", () => {
+			if (CurrentVehicle == null)
+				return;
+
+
+
 			ReloadData();
 			InvokeAsync(StateHasChanged);
-		});
+		}));
+
 
 		await HubCon.StartAsync();
 	}
@@ -479,14 +487,6 @@
 		return Utils.FormatDateTime(EqValue.Local_CreatedOn);
 	}
 
-	public async ValueTask DisposeAsync() {
-		DbCtx.Dispose();
-
-		if (HubCon != null) {
-			await HubCon.DisposeAsync();
-		}
-	}
-
 	async Task OnDeleteEquipment(DbVehicleEquipment Eq) {
 		if (!OnAddEquipmentEnabled)
 			return;
@@ -499,5 +499,9 @@
 			ReloadData();
 			StateHasChanged();
 		}
+	}
+
+	public void Dispose() {
+		Garbage.DisposeAll();
 	}
 }

@@ -17,6 +17,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 builder.Services.AddSingleton<ConfigurationService>();
+builder.Services.AddSingleton<ComHubService>();
 
 builder.Services.AddDbContext<DatabaseContext>();
 
@@ -51,6 +52,7 @@ builder.Services.AddAuthentication("Cookies").AddCookie();
 
 var app = builder.Build();
 app.Services.GetService<ConfigurationService>();
+app.Services.GetService<ComHubService>();
 app.UseResponseCompression();
 
 

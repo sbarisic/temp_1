@@ -148,12 +148,12 @@ namespace Proj2.Code {
 						return Forbidden();
 				}
 
-				// Dispatch state changed event to all clients
 
+				// Dispatch state changed event to all clients
 				// TODO: Displatch only to vehicle
-				if (DispatchChanges) {
-					HubContext.Clients.All.SendAsync("OnStateHasChanged").Wait();
-				}
+				//if (DispatchChanges) {
+					ComHubService.Instance.OnStateHasChanged(DbAPIKey);
+				//}
 
 				DeviceAccessResponseAPI ResponseAPI = new DeviceAccessResponseAPI(DeviceAccessStatus.OK);
 				//ResponseAPI.AllEquipment = AllEquipment;
@@ -190,6 +190,8 @@ namespace Proj2.Code {
 			}
 
 			DbCtx.Commit();
+
+			ComHubService.Instance.JsonDataReceived(JsonLog);
 			return JsonLog;
 		}
 
