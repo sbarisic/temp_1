@@ -2,7 +2,6 @@
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <freertos/FreeRTOS.h>
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -12,7 +11,7 @@
 #define FONT_W 5
 #define FONT_H 8
 
-const uint8_t digital_font5x7[] PROGMEM = {
+static const uint8_t digital_font5x7[] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0x00, // char ' ' (0x20/32)
     0x00, 0x00, 0x2E, 0x00, 0x00, // char '!' (0x21/33)
     0x06, 0x00, 0x06, 0x00, 0x00, // char '"' (0x22/34)
@@ -21,8 +20,8 @@ const uint8_t digital_font5x7[] PROGMEM = {
     0x24, 0x10, 0x08, 0x24, 0x00, // char '%' (0x25/37)
     0x36, 0x49, 0x36, 0x50, 0x00, // char '&' (0x26/38)
     0x00, 0x00, 0x00, 0x06, 0x00, // char ''' (0x27/39)
-    0x00, 0x41, 0x36, 0x00, 0x00, // char '(' (0x28/40)
-    0x00, 0x36, 0x41, 0x00, 0x00, // char ')' (0x29/41)
+    0x00, 0x36, 0x41, 0x00, 0x00, // char ')' (0x29/40)
+    0x00, 0x41, 0x36, 0x00, 0x00, // char '(' (0x28/41)
     0x00, 0x08, 0x00, 0x00, 0x00, // char '*' (0x2A/42)
     0x00, 0x08, 0x1C, 0x08, 0x00, // char '+' (0x2B/43)
     0x40, 0x20, 0x00, 0x00, 0x00, // char ',' (0x2C/44)
@@ -108,16 +107,10 @@ const uint8_t digital_font5x7[] PROGMEM = {
     0x00, 0x36, 0x00, 0x00, 0x00, // char '|' (0x7C/124)
     0x00, 0x41, 0x36, 0x08, 0x00, // char '}' (0x7D/125)
     0x08, 0x08, 0x10, 0x10, 0x00, // char '~' (0x7E/126)
-    0x36, 0x41, 0x36, 0x00, 0x00, // char '' (0x7F/127)
 };
 
 uint8_t *disp_mem;
 Adafruit_SSD1306 *display;
-
-int cursor_x;
-int cursor_y;
-int cursor_w;
-int cursor_h;
 
 void c2_disp_convert_xy(int X, int Y, int *Byte, int *Bit)
 {
@@ -192,36 +185,13 @@ void c2_scroll(int pixels)
     }
 }
 
-void c2_printxy(int dst_x, int dst_y, char *str)
+void c2_printxy(int dst_x, int dst_y, const char *str)
 {
     size_t len = strlen(str);
     for (size_t i = 0; i < len; i++)
     {
         c2_blit_char(dst_x + i * 5, dst_y, str[i]);
     }
-
-    cursor_x += len;
-
-    if (cursor_x >= cursor_w)
-    {
-        cursor_x = 0;
-        cursor_y++;
-    }
-
-    if (cursor_y >= cursor_h)
-    {
-        cursor_y = cursor_h - 1;
-        c2_scroll(FONT_H);
-    }
-}
-
-void c2_print(char *str)
-{
-    c2_scroll(FONT_H);
-    c2_printxy(cursor_x * FONT_W, cursor_y * FONT_H, str);
-
-    cursor_x = 0;
-    cursor_y++;
 }
 
 void c2_clear()
@@ -235,18 +205,29 @@ void c2_display(uint16_t color)
     display->display();
 }
 
+void core2_oled_print(const char *txt)
+{
+    dprintf("core2_oled_print: %s\n", txt);
+
+    c2_scroll(FONT_H);
+    c2_printxy(0, 7 * FONT_H, txt);
+
+    c2_clear();
+    c2_display(1);
+}
+
 bool core2_oled_init()
 {
+    dprintf("core2_oled_init() BEGIN\n");
+
     display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
     Wire.begin(5, 4); // Start I2C Communication SDA = 5 and SCL = 4 on Wemos Lolin32 ESP32 with built-in SSD1306 OLED
 
     if (!display->begin(SSD1306_SWITCHCAPVCC, 0x3C, false, false))
+    {
+        dprintf("display->begin FAILED\n");
         return false;
-
-    cursor_x = 0;
-    cursor_y = 0;
-    cursor_w = SCREEN_WIDTH / FONT_W;
-    cursor_h = SCREEN_HEIGHT / FONT_H;
+    }
 
     disp_mem = (uint8_t *)malloc(DISP_MEM_LEN);
     memset(disp_mem, 0, DISP_MEM_LEN);
@@ -259,17 +240,6 @@ bool core2_oled_init()
         c2_disp_mem_set(20, i, 1);
     }*/
 
-    c2_print("Hello Dear World! 1234567");
-    c2_print("564782");
-    c2_print("000");
-
-    c2_clear();
-    c2_display(1);
-
-    display->print("Ay");
+    dprintf("core2_oled_init() END\n");
     return true;
-}
-
-void core2_oled_print(const char *txt, bool newline)
-{
 }
