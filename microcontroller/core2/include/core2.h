@@ -24,6 +24,7 @@ void core2_oled_print(const char *txt);
 bool core2_wifi_init();
 bool core2_wifi_isconnected();
 IPAddress core2_wifi_getip();
+void core2_wifi_yield_until_connected();
 
 int32_t core2_clock_bootseconds();
 int32_t core2_clock_seconds_since(int32_t lastTime);

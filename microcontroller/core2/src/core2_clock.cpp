@@ -15,17 +15,26 @@ int32_t core2_clock_seconds_since(int32_t lastTime)
 
 void core2_clock_time_now()
 {
+    dprintf("core2_clock_time_now()\n");
+
     time_t now;
     char strftime_buf[64];
     struct tm timeinfo;
 
+    dprintf("time()\n");
     time(&now);
-    // Set timezone to China Standard Time
+    
+    dprintf("setenv()\n");
     setenv("TZ", "GMT+1", 1);
+
+    dprintf("tzset()\n");
     tzset();
 
+    dprintf("localtime_r()\n");
     localtime_r(&now, &timeinfo);
+
+    dprintf("strftime()\n");
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
 
-    printf("Current date/time is: %s", strftime_buf);
+    dprintf("Current date/time is: %s\n", strftime_buf);
 }

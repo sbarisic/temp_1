@@ -1,6 +1,6 @@
 #include <core2.h>
 
-#ifdef CORE2_DEBUG_WIFI
+#ifndef CORE2_DEBUG_WIFI
 #undef dprintf
 #define dprintf(...)
 #endif
@@ -13,9 +13,9 @@ bool ConnectionValid;
 int32_t LastBeginConnect;
 int32_t NextConnectWaitTime;
 
-int ConDataIdx;
-const char *SSIDs[] = {"Serengeti", "TEST"};
-const char *PASSs[] = {"srgt#2018", "123456789"};
+int ConDataIdx = 2;
+const char *SSIDs[] = {"Serengeti", "TEST", "Barisic"};
+const char *PASSs[] = {"srgt#2018", "123456789", "123456789"};
 
 void GetConnectData(const char **SSID, const char **PASS)
 {
@@ -148,7 +148,6 @@ void c2_wifi_task(void *params)
 bool core2_wifi_init()
 {
     dprintf("core2_wifi_init() BEGIN\n");
-    ConDataIdx = 0;
     ConnectionValid = false;
     LastBeginConnect = core2_clock_bootseconds();
     NextConnectWaitTime = 0;
@@ -167,4 +166,12 @@ bool core2_wifi_isconnected()
 IPAddress core2_wifi_getip()
 {
     return IP;
+}
+
+void core2_wifi_yield_until_connected()
+{
+    while (!core2_wifi_isconnected())
+    {
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
 }

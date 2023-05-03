@@ -5,6 +5,10 @@
 #include <esp_chip_info.h>
 #include <esp_flash.h>
 #include <nvs_flash.h>
+#include <rtc.h>
+
+#include <esp_netif.h>
+#include <esp_sntp.h>
 
 void core2_init()
 {
@@ -18,6 +22,7 @@ void core2_init()
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
+    
 }
 
 void core2_print_status()
