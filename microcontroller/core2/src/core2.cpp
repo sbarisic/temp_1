@@ -22,7 +22,6 @@ void core2_init()
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
-    
 }
 
 void core2_print_status()
@@ -68,4 +67,33 @@ void core2_lock_begin(SemaphoreHandle_t lock)
 void core2_lock_end(SemaphoreHandle_t lock)
 {
     xSemaphoreGive(lock);
+}
+
+xQueueHandle core2_queue_create(int count, int elementSize)
+{
+    return xQueueCreate(count, elementSize);
+}
+
+BaseType_t core2_queue_send(xQueueHandle q, const void *item)
+{
+    if (xPortInIsrContext())
+    {
+        return xQueueSendFromISR(q, item, NULL);
+    }
+    else
+    {
+        return xQueueSend(q, item, portMAX_DELAY);
+    }
+}
+
+BaseType_t core2_queue_receive(xQueueHandle q, void *buffer)
+{
+    if (xPortInIsrContext())
+    {
+        return xQueueReceiveFromISR(q, buffer, NULL);
+    }
+    else
+    {
+        return xQueueReceive(q, buffer, portMAX_DELAY);
+    }
 }

@@ -13,7 +13,7 @@ bool ConnectionValid;
 int32_t LastBeginConnect;
 int32_t NextConnectWaitTime;
 
-int ConDataIdx = 2;
+int ConDataIdx = 0;
 const char *SSIDs[] = {"Serengeti", "TEST", "Barisic"};
 const char *PASSs[] = {"srgt#2018", "123456789", "123456789"};
 
@@ -62,6 +62,7 @@ void c2_wifi_task(void *params)
             if (WiFiStatus != LastWiFiStatus)
                 dprintf(PRF_STAT " WL_IDLE_STATUS \n");
 
+            continue;
             break;
 
             // SSID not found
@@ -78,6 +79,7 @@ void c2_wifi_task(void *params)
             if (WiFiStatus != LastWiFiStatus)
                 dprintf(PRF_STAT " WL_SCAN_COMPLETED \n");
 
+            continue;
             break;
 
         case WL_CONNECTED:
@@ -147,14 +149,12 @@ void c2_wifi_task(void *params)
 
 bool core2_wifi_init()
 {
-    dprintf("core2_wifi_init() BEGIN\n");
+    dprintf("core2_wifi_init()\n");
     ConnectionValid = false;
     LastBeginConnect = core2_clock_bootseconds();
     NextConnectWaitTime = 0;
 
     xTaskCreate(c2_wifi_task, "c2_wifi_task", 4096, NULL, 1, NULL);
-
-    dprintf("core2_wifi_init() END\n");
     return true;
 }
 
@@ -168,10 +168,11 @@ IPAddress core2_wifi_getip()
     return IP;
 }
 
+// @brief Yields task, continues execution as soon as wifi is available
 void core2_wifi_yield_until_connected()
 {
     while (!core2_wifi_isconnected())
     {
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }

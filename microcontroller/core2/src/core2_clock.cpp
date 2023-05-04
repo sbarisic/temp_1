@@ -1,6 +1,8 @@
 #include <core2.h>
 #include <rtc.h>
 
+#define _tzset tzset
+
 // @brief Get seconds since boot
 int32_t core2_clock_bootseconds()
 {
@@ -13,28 +15,41 @@ int32_t core2_clock_seconds_since(int32_t lastTime)
     return core2_clock_bootseconds() - lastTime;
 }
 
-void core2_clock_time_now()
+// @brief Formats time to DD.MM.YYYY. HH:MM:SS, buffer requires 20 chars
+void core2_clock_time_now(char *strftime_buf)
 {
-    dprintf("core2_clock_time_now()\n");
+    // dprintf("core2_clock_time_now()\n");
+    time_t now = time(NULL);
 
-    time_t now;
-    char strftime_buf[64];
+    struct tm *timeinfo = localtime(&now);
+    strftime(strftime_buf, 21, "%d.%m.%Y. %H:%M:%S", timeinfo);
+    //dprintf("%s\n", strftime_buf);
+}
+
+void core2_clock_update_from_ntp()
+{
+    const char *ntpServer = "pool.ntp.org";
+    const long gmtOffset_sec = 3600;
+    const int daylightOffset_sec = 3600;
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
+    vTaskDelay(pdMS_TO_TICKS(10));
+
     struct tm timeinfo;
+    while (!getLocalTime(&timeinfo))
+    {
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
 
-    dprintf("time()\n");
-    time(&now);
-    
-    dprintf("setenv()\n");
-    setenv("TZ", "GMT+1", 1);
+    setenv("TZ", "UTC-2", 1);
+    _tzset();
+}
 
-    dprintf("tzset()\n");
-    tzset();
+bool core2_clock_init()
+{
+    dprintf("core2_clock_init()\n");
 
-    dprintf("localtime_r()\n");
-    localtime_r(&now, &timeinfo);
-
-    dprintf("strftime()\n");
-    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-
-    dprintf("Current date/time is: %s\n", strftime_buf);
+    core2_wifi_yield_until_connected();
+    core2_clock_update_from_ntp();
+    return true;
 }
