@@ -9,6 +9,7 @@
 
 #include <esp_netif.h>
 #include <esp_sntp.h>
+#include <string.h>
 
 void core2_init()
 {
@@ -95,5 +96,43 @@ BaseType_t core2_queue_receive(xQueueHandle q, void *buffer)
     else
     {
         return xQueueReceive(q, buffer, portMAX_DELAY);
+    }
+}
+
+// @brief Expects 30 byte buffer
+void core2_err_tostr(esp_err_t err, char *buffer)
+{
+#define MAKE_CASE(err)        \
+    case err:                 \
+        strcpy(buffer, #err); \
+        break
+
+    switch (err)
+    {
+        MAKE_CASE(ESP_OK);
+        MAKE_CASE(ESP_FAIL);
+        MAKE_CASE(ESP_ERR_NO_MEM);
+        MAKE_CASE(ESP_ERR_INVALID_ARG);
+        MAKE_CASE(ESP_ERR_INVALID_STATE);
+        MAKE_CASE(ESP_ERR_INVALID_SIZE);
+        MAKE_CASE(ESP_ERR_NOT_FOUND);
+        MAKE_CASE(ESP_ERR_NOT_SUPPORTED);
+        MAKE_CASE(ESP_ERR_TIMEOUT);
+
+        MAKE_CASE(ESP_ERR_INVALID_RESPONSE);
+        MAKE_CASE(ESP_ERR_INVALID_CRC);
+        MAKE_CASE(ESP_ERR_INVALID_VERSION);
+        MAKE_CASE(ESP_ERR_INVALID_MAC);
+        MAKE_CASE(ESP_ERR_NOT_FINISHED);
+
+        MAKE_CASE(ESP_ERR_WIFI_BASE);
+        MAKE_CASE(ESP_ERR_MESH_BASE);
+        MAKE_CASE(ESP_ERR_FLASH_BASE);
+        MAKE_CASE(ESP_ERR_HW_CRYPTO_BASE);
+        MAKE_CASE(ESP_ERR_MEMPROT_BASE);
+
+    default:
+        strcpy(buffer, "UNKNOWN");
+        break;
     }
 }
