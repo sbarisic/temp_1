@@ -13,7 +13,7 @@ bool ConnectionValid;
 int32_t LastBeginConnect;
 int32_t NextConnectWaitTime;
 
-int ConDataIdx = 0;
+int ConDataIdx = 1;
 const char *SSIDs[] = {"Serengeti", "TEST", "Barisic"};
 const char *PASSs[] = {"srgt#2018", "123456789", "123456789"};
 

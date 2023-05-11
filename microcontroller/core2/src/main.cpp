@@ -11,16 +11,20 @@ void main_logic(void *params)
         if (core2_gpio_get_interrupt0())
         {
             counter++;
-
-            for (size_t i = 0; i < 10; i++)
-            {
-                printf("NOW: %lld\n", esp_timer_get_time());
-                vTaskDelay(pdMS_TO_TICKS(10));
-            }
-
-            char buffer[32];
+            char buffer[64];
             sprintf(buffer, "Button %d", counter);
             core2_oled_print(buffer);
+
+            for (size_t i = 0; i < 7; i++)
+            {
+                int64_t uS = esp_timer_get_time();
+                sprintf(buffer, "NOW: %lld uS, %lld ms, %f s\n", uS, uS / 1000, ((float)uS) / 1000000.0f);
+
+                printf(buffer);
+                //core2_oled_print(buffer);
+
+                vTaskDelay(pdMS_TO_TICKS(10));
+            }
         }
     }
 
