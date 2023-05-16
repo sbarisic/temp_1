@@ -15,18 +15,22 @@
 
 <CascadingValue Value="this">
 	<div class="page">
-		<div class="sidebar flex-column flex-shrink-0 p-3 text-white bg-dark">
-			<a href="/" class="d-flex justify-content-center align-items-center text-white text-decoration-none">
-				<span class="fs-4">Proj2</span>
-			</a>
-			<hr>
+		<AuthorizeView>
+			<NotAuthorized>
 
-			<NavMenu />
+			</NotAuthorized>
 
-			<hr>
+			<Authorized>
+				<div class="sidebar flex-column flex-shrink-0 p-3 text-white bg-dark">
+					<a href="/" class="d-flex justify-content-center align-items-center text-white text-decoration-none">
+						<span class="fs-4">Proj2</span>
+					</a>
+					<hr>
 
-			<AuthorizeView>
-				<Authorized>
+					<NavMenu />
+
+					<hr>
+
 					<div class="dropdown">
 						<a href="" class="align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
 							<img src="https://github.com/sbarisic.png" alt="" class="rounded-circle me-2 avatar-circle">
@@ -40,9 +44,9 @@
 							<li><a class="dropdown-item" href="cookie/logout">Logout</a></li>
 						</ul>
 					</div>
-				</Authorized>
-			</AuthorizeView>
-		</div>
+				</div>
+			</Authorized>
+		</AuthorizeView>
 
 		<main>
 			<div class="top-row px-4">
@@ -86,9 +90,9 @@
 				Database.DbUser Usr = AuthStateProvider.GetDbUser(DbCtx);
 
 				if (Usr == null)
-				return "[NULL]";
+					return "[NULL]";
 
-			return Usr.Username;
+				return Usr.Username;
 			}
 		}
 	}
