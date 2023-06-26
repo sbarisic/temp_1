@@ -57,7 +57,7 @@ const int gotTempPress = BIT1;
 const int gotLCD = BIT2;
 const int gotVoltageDrop = BIT3;
 
-static void IRAM_ATTR gpio_isr_handler(void *args)  // definicija ISR
+static void gpio_isr_handler(void *args)  // definicija ISR
 {
   int pinNumber = (int)args;
   xQueueSendFromISR(interruptQueue, &pinNumber,NULL);
@@ -245,8 +245,8 @@ void task4(void *pvparameter)
     if (certificate_valid) {
       Serial.println("Fingerprint valid");
     } else {
-      Serial.println("Fingerprint invalid");
-      return;
+      Serial.println("Fingerprint invalid, testing");
+      //return;
     }
     
     digitalWrite(13, HIGH);
