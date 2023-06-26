@@ -15,6 +15,11 @@ const char *password = "OPTIMA2701002212";
 const char *host = "demo.sbarisic.com";
 const int httpsPort = 443;
 
+
+#define PIN_SWITCH (gpio_num_t)15  // !!!
+QueueHandle_t interruptQueue;
+
+
 // define for MCP3201
 // #define SPI_CS      4        // SPI slave select
 // #define SPI_CS1     5
@@ -50,6 +55,52 @@ EventGroupHandle_t eventGroup;
 const int gotVoltage = BIT0;
 const int gotTempPress = BIT1;
 const int gotLCD = BIT2;
+const int gotVoltageDrop = BIT3;
+
+static void IRAM_ATTR gpio_isr_handler(void *args)  // definicija ISR
+{
+  int pinNumber = (int)args;
+  xQueueSendFromISR(interruptQueue, &pinNumber,NULL);
+
+}
+
+void buttonPushedTask (void *params)   // task koji se pokreće nakon aktivacije ISR
+{
+  int pinNumber,count = 0;
+  while(true)
+  {
+    if(xQueueReceive(interruptQueue, &pinNumber,portMAX_DELAY))
+    {
+      gpio_num_t gpinNumber = (gpio_num_t)pinNumber;
+
+      //disable the interrupt
+      gpio_isr_handler_remove(gpinNumber);
+
+      //wait some time while we check for the pin to be released
+      do
+      {
+        vTaskDelay(5 / portTICK_PERIOD_MS);
+      } while (gpio_get_level(gpinNumber) == (gpio_num_t)0);
+
+
+
+      printf ("GPIO %d was pressed %d times. The state is %d \n", pinNumber,count++,gpio_get_level(gpinNumber));
+
+       digitalWrite(14,HIGH);
+               
+       delay(3000); // vTaskDelay(3000 / portTICK_PERIOD_MS);
+
+       digitalWrite(14,LOW);
+
+       gpio_isr_handler_add(gpinNumber,gpio_isr_handler,(void *)pinNumber);
+
+       xEventGroupSetBits(eventGroup, gotVoltageDrop); // javljamo da su padovi napona očitani
+
+    }
+
+  }
+
+}
 
 void task1(void *parameters)
 {
@@ -148,7 +199,7 @@ void task4(void *pvparameter)
   {
     printf("Task4\n");
 
-    xEventGroupWaitBits(eventGroup, gotVoltage | gotTempPress | gotLCD, true, true, portMAX_DELAY);
+    xEventGroupWaitBits(eventGroup, gotVoltage | gotTempPress | gotLCD , true, true, portMAX_DELAY);
 
     DynamicJsonDocument doc(512);
 
@@ -170,7 +221,7 @@ void task4(void *pvparameter)
       Serial.println("Connection Failed");
       return;
     }
-    /*
+    
     uint8_t valid_fingerprint[32] = {0x90, 0xC4, 0x9F, 0xE3, 0xD4, 0x82, 0x78, 0xEE, 0x7E, 0x3, 0xD7, 0xE9, 0x1, 0x2C, 0x2D, 0x10, 0xCF, 0x8D, 0x27, 0x88, 0xF0, 0x20, 0x31, 0x4D, 0xF9, 0x51, 0xF8, 0xF8, 0xA4, 0x15, 0xBF, 0xC7 };
     uint8_t fingerprint[32];
     client.getFingerprintSHA256(fingerprint);
@@ -197,7 +248,7 @@ void task4(void *pvparameter)
       Serial.println("Fingerprint invalid");
       return;
     }
-    */
+    
     digitalWrite(13, HIGH);
     String url = "/deviceaccess"; // "/deviceaccess_dev";
 
@@ -246,6 +297,21 @@ void task4(void *pvparameter)
 
 void setup()
 {
+ // definicija GPIO kao ISR
+  gpio_set_direction(PIN_SWITCH, GPIO_MODE_INPUT);
+  gpio_pulldown_en(PIN_SWITCH);
+  gpio_pullup_dis(PIN_SWITCH);
+  gpio_set_intr_type(PIN_SWITCH,GPIO_INTR_NEGEDGE);
+
+  pinMode(13,OUTPUT);
+
+  interruptQueue = xQueueCreate(1,sizeof(int));  // postavljen queue za interrupt
+  xTaskCreate(buttonPushedTask,"button pushed",2048,NULL,1,NULL);  // task koji se izvršava po interruptu 
+
+  gpio_install_isr_service(0);  // instalacija ISR-a
+  gpio_isr_handler_add(PIN_SWITCH,gpio_isr_handler,(void *)PIN_SWITCH);  // dodjela ISR
+ 
+  
   Serial.begin(115200);
 
   eventGroup = xEventGroupCreate();
@@ -318,99 +384,28 @@ void setup()
   xTaskCreatePinnedToCore(
       task4,
       "Task 4",
-      16384,
+      4096,
       NULL, // task parameters
       1,    // task priority
       NULL, // task handle
       1     // core 2
   );
-}
 
+  xTaskCreatePinnedToCore(
+      buttonPushedTask,
+      "Task 5",
+      4096,
+      NULL, // task parameters
+      1,    // task priority
+      NULL, // task handle
+      0     // core 1
+  );
+   
+}
+  
 void loop()
 {
   // if( count1 > 3 && task1_handler != NULL)
   // vTaskSuspend(task1_handler);
 }
 
-// #include <freertos/freeRTOS.h>
-// #include <freertos/task.h>
-// include <WiFi.h>
-// #include <WiFiClientSecure.h>
-// #include <ArduinoJson.h>
-
-// #ifndef STASSID
-// #define STASSID "Optima-34d393"
-// #define STAPSK  "OPTIMA2701002212"
-// #endif
-
-/*
-const char* ssid = STAS SID;
-const char* password = STAPSK;
-
-const char* host = "demo.sbarisic.com";
-const int httpsPort = 443;
-
-// Use web browser to view and copy
-// SHA1 fingerprint of the certificate
-const char fingerprint[] PROGMEM = "90 C4 9F E3 D4 82 78 EE 7E 03 D7 E9 01 2C 2D 10 CF 8D 27 88 F0 20 31 4D F9 51 F8 F8 A4 15 BF C7";
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.print("connecting to ");
-  Serial.println(ssid);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  // Use WiFiClientSecure class to create TLS connection
-  WiFiClientSecure client;
-  Serial.print("connecting to ");
-  Serial.println(host);
-
-  Serial.printf("Using fingerprint '%s'\n", fingerprint);
-  //client.getFingerprintSHA256(fingerprint);
-
-  if (!client.connect(host, httpsPort)) {
-    Serial.println("connection failed");
-    return;
-  }
-
-  String url = "/deviceaccess";
-  Serial.print("requesting URL: ");
-  Serial.println(url);
-
-  client.print(String("POST ") + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "Content-Type: application/json\r\n" +
-               "Content-Length: 148\r\n" +
-               "User-Agent: TestESP32\r\n" +
-               "Connection: close\r\n\r\n");
-
-  client.print("{ \"APIVersion\": 1, \"APIKey\": \"OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=\", \"Action\": 1, \"EquipmentKey\": \"7D-K0CG9rEW2iEwViKHqAg\", \"Value\": \"100.0\" }\r\n");
-
-  Serial.println("request sent");
-  while (client.connected()) {
-    String line = client.readStringUntil('\n');
-    if (line == "\r") {
-      Serial.println("headers received");
-      break;
-    }
-  }
-
-  String line = client.readStringUntil('\n');
-  Serial.println(line);
-}
-
-void loop() {
-}
-*/
