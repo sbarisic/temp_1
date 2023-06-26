@@ -86,6 +86,7 @@ void buttonPushedTask (void *params)   // task koji se pokreće nakon aktivacije
 
       printf ("GPIO %d was pressed %d times. The state is %d \n", pinNumber,count++,gpio_get_level(gpinNumber));
 
+      // TODO: spremiti u memoriju
        digitalWrite(14,HIGH);
                
        delay(3000); // vTaskDelay(3000 / portTICK_PERIOD_MS);
