@@ -23,6 +23,8 @@ void core2_init()
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
+
+
 }
 
 void core2_print_status()

@@ -47,3 +47,6 @@ void core2_clock_update_from_ntp();
 bool core2_gpio_init();
 bool core2_gpio_get_interrupt0();
 bool core2_gpio_set_interrupt0();
+
+// Flash
+bool core2_flash_init();

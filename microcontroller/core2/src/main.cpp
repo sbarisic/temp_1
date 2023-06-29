@@ -36,6 +36,7 @@ void setup()
     core2_init();
     core2_print_status();
 
+    core2_flash_init();
     core2_gpio_init();
     core2_oled_init();
     core2_wifi_init();
