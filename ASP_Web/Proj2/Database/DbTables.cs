@@ -337,7 +337,7 @@ namespace Proj2.Database {
 					return true;
 			}
 
-			return false;		
+			return false;
 		}
 
 		public bool HasWarnings() {
@@ -419,6 +419,14 @@ namespace Proj2.Database {
 
 	[PrimaryKey(nameof(ID))]
 	public class DbVehicleEquipment : DbTable {
+		public enum FieldType : int {
+			INVALID = 0,
+
+			FLOAT = 1,
+			FLOAT_FIELD = 2,
+			STRING = 3
+		}
+
 		[Key]
 		public string ID {
 			get; set;
@@ -515,6 +523,14 @@ namespace Proj2.Database {
 
 	[PrimaryKey(nameof(ID))]
 	public class DbEquipmentValues : DbTable {
+		public enum ValueType : int {
+			INVALID = 0,
+
+			FLOAT = 1,
+			FLOAT_ARRAY = 2,
+			STRING = 3
+		}
+
 		[Key]
 		public int ID {
 			get; set;

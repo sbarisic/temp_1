@@ -135,7 +135,21 @@
 								<td>@Op.Name</td>
 								<td>@Op.Field</td>
 								<td>@GetMinMaxValue(Op)</td>
-								<td>@GetLastValue(Op)</td>
+
+								<td>
+									@{
+										var LastValueType = GetLastValueType(Op);
+
+										if (LastValueType == DbEquipmentValues.ValueType.FLOAT) {
+											@GetLastValue(Op)
+
+										} else if (LastValueType == DbEquipmentValues.ValueType.FLOAT_ARRAY) {
+
+											<button class="btn btn-sm btn-outline-success mx-1" @onclick="@(e=> OnShowFloatArray(Op))">Prikaz</button>
+
+										}
+									}
+								</td>
 
 								<td>
 									@if (HasError) {
@@ -212,32 +226,39 @@
 @code {
 	[CascadingParameter]
 	public IModalService Modal {
-		get; set;
+		get;
+		set;
 	}
 
 	[CascadingParameter]
 	public MainLayout Layout {
-		get; set;
+		get;
+		set;
 	}
 
 	bool OnEditDescriptionEnabled {
-		get; set;
+		get;
+		set;
 	}
 
 	bool OnAssignVehicleToAdministrationEnabled {
-		get; set;
+		get;
+		set;
 	}
 
 	bool OnAddEquipmentEnabled {
-		get; set;
+		get;
+		set;
 	}
 
 	bool OnGenerateAPIKeyEnabled {
-		get; set;
+		get;
+		set;
 	}
 
 	bool OnViewAdministrationEnabled {
-		get; set;
+		get;
+		set;
 	}
 
 	HubConnection HubCon;
@@ -462,6 +483,14 @@
 		return Eq.Values.OrderByDescending(V => V.ID).FirstOrDefault();
 	}*/
 
+	// TODO:
+	DbEquipmentValues.ValueType GetLastValueType(DbVehicleEquipment Eq) {
+		if (Eq.Field == "ACCvoltage1")
+			return DbEquipmentValues.ValueType.FLOAT_ARRAY;
+
+		return DbEquipmentValues.ValueType.FLOAT;
+	}
+
 	string GetLastValue(DbVehicleEquipment Eq) {
 		DbEquipmentValues Val = Eq.GetLastEquipmentValue();
 
@@ -497,6 +526,22 @@
 			DbCtx.DeleteEntity(Eq);
 
 			ReloadData();
+			StateHasChanged();
+		}
+	}
+
+	async Task OnShowFloatArray(DbVehicleEquipment Eq) {
+		float[] Labels = new float[] { 1, 2, 3, 4, 5 };
+		float[] Values = new float[] { 12, 13, 14, 15, 16 };
+
+		ModalResult Result = await Modal.Show<ChartModal>(Eq.Field, new ModalParameters().Add("Labels", Labels).Add("Values", Values), new ModalOptions() { Size = ModalSize.ExtraLarge }).Result;
+
+		if (Result.Confirmed) {
+
+			//CurrentVehicle.Name = EditFields[0].Value;
+			//CurrentVehicle.LicensePlate = EditFields[1].Value;
+
+			//DbCtx.Commit();
 			StateHasChanged();
 		}
 	}
