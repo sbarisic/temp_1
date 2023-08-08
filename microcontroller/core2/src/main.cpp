@@ -41,6 +41,7 @@ void setup()
     core2_oled_init();
     core2_wifi_init();
     core2_clock_init();
+    // TODO: Buzzer and LED indicator subroutine
 
     core2_wifi_yield_until_connected();
     dprintf("init() done\n");

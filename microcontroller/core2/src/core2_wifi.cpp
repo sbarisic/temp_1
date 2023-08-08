@@ -14,7 +14,7 @@ int32_t LastBeginConnect;
 int32_t NextConnectWaitTime;
 
 int ConDataIdx = 1;
-const char *SSIDs[] = {"Serengeti", "TEST", "Barisic"};
+const char *SSIDs[] = {"Serengeti", "TEST69", "Barisic"};
 const char *PASSs[] = {"srgt#2018", "123456789", "123456789"};
 
 void GetConnectData(const char **SSID, const char **PASS)
