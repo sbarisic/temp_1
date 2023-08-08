@@ -485,17 +485,24 @@
 
 	// TODO:
 	DbEquipmentValues.ValueType GetLastValueType(DbVehicleEquipment Eq) {
-		if (Eq.Field == "ACCvoltage1")
+		DbEquipmentValues LastVal = Eq.GetLastEquipmentValue();
+
+		if (LastVal == null)
+			return DbEquipmentValues.ValueType.FLOAT;
+
+		return LastVal.ValType;
+
+		/*if (Eq.Field == "ACCvoltage1")
 			return DbEquipmentValues.ValueType.FLOAT_ARRAY;
 
-		return DbEquipmentValues.ValueType.FLOAT;
+		return DbEquipmentValues.ValueType.FLOAT;*/
 	}
 
 	string GetLastValue(DbVehicleEquipment Eq) {
 		DbEquipmentValues Val = Eq.GetLastEquipmentValue();
 
 		if (Val == null)
-			return "NONE";
+			return "NULL";
 
 		return Val.FloatValue.ToString();
 	}
@@ -531,8 +538,16 @@
 	}
 
 	async Task OnShowFloatArray(DbVehicleEquipment Eq) {
-		float[] Labels = new float[] { 1, 2, 3, 4, 5 };
-		float[] Values = new float[] { 12, 13, 14, 15, 16 };
+		DbEquipmentValues Val = Eq.GetLastEquipmentValue();
+
+		if (Val.ValType != DbEquipmentValues.ValueType.FLOAT_ARRAY) {
+			throw new Exception("Expected FLOAT_ARRAY for DbVehicleEquipment.Field = " + Eq.Field);
+		}
+
+		//float[] Labels = new float[] { 1, 2, 3, 4, 5 };
+
+		float[] Values = Val.FloatArrayValue;
+		float[] Labels = Enumerable.Range(1, Values.Length).Select(N => (float)N).ToArray();
 
 		ModalResult Result = await Modal.Show<ChartModal>(Eq.Field, new ModalParameters().Add("Labels", Labels).Add("Values", Values), new ModalOptions() { Size = ModalSize.ExtraLarge }).Result;
 

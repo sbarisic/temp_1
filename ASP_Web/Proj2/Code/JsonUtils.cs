@@ -25,9 +25,31 @@ namespace Proj2.Code {
 						Value = "(JsonObject)";
 						break;
 
-					case JsonValueKind.Array:
-						Value = "(JsonArray)";
-						break;
+					case JsonValueKind.Array: {
+							float[] ValueArray = new float[Prop.Value.GetArrayLength()];
+							int Idx = 0;
+
+							foreach (JsonElement Itm in Prop.Value.EnumerateArray()) {
+								//if (Itm.trygetsin
+
+								if (Itm.ValueKind == JsonValueKind.Number) {
+									ValueArray[Idx] = Itm.GetSingle();
+								} else if (Itm.ValueKind == JsonValueKind.String) {
+									if (Utils.TryParseFloat(Itm.GetString(), out float F)) {
+										ValueArray[Idx] = F;
+									} else
+										throw new Exception("Unable to parse number '" + Itm.GetString() + "'");
+
+								} else
+									throw new Exception("Unknown array element type " + Itm.ValueKind.ToString() + " = '" + Itm.GetRawText() + "'");
+
+
+								Idx++;
+							}
+
+							Value = ValueArray;
+							break;
+						}
 
 					case JsonValueKind.String:
 						Value = Prop.Value.GetString();

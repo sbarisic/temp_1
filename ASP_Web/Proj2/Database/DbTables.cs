@@ -527,8 +527,7 @@ namespace Proj2.Database {
 			INVALID = 0,
 
 			FLOAT = 1,
-			FLOAT_ARRAY = 2,
-			STRING = 3
+			FLOAT_ARRAY = 2
 		}
 
 		[Key]
@@ -553,7 +552,17 @@ namespace Proj2.Database {
 		}
 
 		[Required]
+		public ValueType ValType {
+			get; set;
+		}
+
+		[Required]
 		public float FloatValue {
+			get; set;
+		}
+
+		[Required]
+		public float[] FloatArrayValue {
 			get; set;
 		}
 

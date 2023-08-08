@@ -152,7 +152,7 @@ namespace Proj2.Code {
 				// Dispatch state changed event to all clients
 				// TODO: Displatch only to vehicle
 				//if (DispatchChanges) {
-					ComHubService.Instance.OnStateHasChanged(DbAPIKey);
+				ComHubService.Instance.OnStateHasChanged(DbAPIKey);
 				//}
 
 				DeviceAccessResponseAPI ResponseAPI = new DeviceAccessResponseAPI(DeviceAccessStatus.OK);
@@ -206,13 +206,33 @@ namespace Proj2.Code {
 					foreach ((string, object) KV in KVs) {
 						if (Eq.Field == KV.Item1) {
 
-							DbEquipmentValues EqVal = DbCtx.CreateNew<DbEquipmentValues>(null, V => {
-								V.CreatedByKey = DbAPIKey;
-								V.FloatValue = (float)KV.Item2;
-							});
+							if (KV.Item2 is float) {
 
-							Eq.Values.Add(EqVal);
-							Dirty = true;
+								DbEquipmentValues EqVal = DbCtx.CreateNew<DbEquipmentValues>(null, V => {
+									V.CreatedByKey = DbAPIKey;
+									V.FloatValue = (float)KV.Item2;
+									V.FloatArrayValue = new float[] { };
+									V.ValType = DbEquipmentValues.ValueType.FLOAT;
+								});
+
+								Eq.Values.Add(EqVal);
+								Dirty = true;
+
+							} else if (KV.Item2 is float[]) {
+
+								DbEquipmentValues EqVal = DbCtx.CreateNew<DbEquipmentValues>(null, V => {
+									V.CreatedByKey = DbAPIKey;
+									V.FloatValue = 0;
+									V.FloatArrayValue = (float[])KV.Item2;
+									V.ValType = DbEquipmentValues.ValueType.FLOAT_ARRAY;
+								});
+
+								Eq.Values.Add(EqVal);
+								Dirty = true;
+
+							} else {
+								throw new Exception("Unknown JSON item value type: " + (KV.Item2?.GetType().Name ?? "NULL"));
+							}
 						}
 					}
 				}
