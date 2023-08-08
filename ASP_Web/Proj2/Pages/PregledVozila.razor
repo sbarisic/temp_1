@@ -17,551 +17,560 @@
 <PageTitle>Pregled Vozila</PageTitle>
 
 <AuthorizeView>
-	<Authorized>
-		@if (CurrentVehicle != null) {
-			@* Uprava i informacije o uopravi *@
+    <Authorized>
+        @if (CurrentVehicle != null) {
+            @* Uprava i informacije o uopravi *@
 
-			<div class="card">
-				<div class="card-body">
-					<div class="container-fluid">
-						<div class="row">
-							<div class="col">
-								<h4 class="card-title">@CurrentVehicle.Name</h4>
-							</div>
-						</div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col">
+                                <h4 class="card-title">@CurrentVehicle.Name</h4>
+                            </div>
+                        </div>
 
-						@if (HasError || HasWarning) {
-							<div class="row my-1">
-								<div class="col">
-									@if (HasError) {
-										<span class="badge bg-danger mx-1">ERROR</span>
-									}
+                        @if (HasError || HasWarning) {
+                            <div class="row my-1">
+                                <div class="col">
+                                    @if (HasError) {
+                                        <span class="badge bg-danger mx-1">ERROR</span>
+                                    }
 
-									@if (HasWarning) {
-										<span class="badge bg-warning mx-1">WARNING</span>
-									}
-								</div>
-							</div>
-						}
+                                    @if (HasWarning) {
+                                        <span class="badge bg-warning mx-1">WARNING</span>
+                                    }
+                                </div>
+                            </div>
+                        }
 
 
-						<div class="row mb-2 my-2">
-							<div class="col">
-								@{
-									var ButtonPaddingX = "mx-1";
-								}
+                        <div class="row mb-2 my-2">
+                            <div class="col">
+                                @{
+                                    var ButtonPaddingX = "mx-1";
+                                }
 
-								@if (OnEditDescriptionEnabled) {
-									<button class="btn btn-sm btn-outline-primary @ButtonPaddingX" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
-								}
+                                @if (OnEditDescriptionEnabled) {
+                                    <button class="btn btn-sm btn-outline-primary @ButtonPaddingX" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
+                                }
 
-								@if (OnAssignVehicleToAdministrationEnabled) {
-									<button class="btn btn-sm btn-outline-success @ButtonPaddingX" @onclick="@OnAssignVehicleToAdministration">Pridruži vozilo upravi</button>
-								}
+                                @if (OnAssignVehicleToAdministrationEnabled) {
+                                    <button class="btn btn-sm btn-outline-success @ButtonPaddingX" @onclick="@OnAssignVehicleToAdministration">Pridruži vozilo upravi</button>
+                                }
 
-								@if (OnAddEquipmentEnabled) {
-									<button class="btn btn-sm btn-outline-success @ButtonPaddingX" @onclick="@OnAddEquipment">Dodaj Opremu</button>
-								}
+                                @if (OnAddEquipmentEnabled) {
+                                    <button class="btn btn-sm btn-outline-success @ButtonPaddingX" @onclick="@OnAddEquipment">Dodaj Opremu</button>
+                                }
 
-								@if (OnGenerateAPIKeyEnabled) {
-									<button class="btn btn-sm btn-outline-dark @ButtonPaddingX" @onclick="@OnGenerateAPIKey">Generiraj APIKey</button>
-								}
+                                @if (OnGenerateAPIKeyEnabled) {
+                                    <button class="btn btn-sm btn-outline-dark @ButtonPaddingX" @onclick="@OnGenerateAPIKey">Generiraj APIKey</button>
+                                }
 
-								@if (OnViewAdministrationEnabled) {
-									<button class="btn btn-sm btn-outline-primary @ButtonPaddingX" @onclick="@(e=> OnViewAdministration(CurrentVehicleAdmin))">Pregled Uprave</button>
-								}
-							</div>
-						</div>
+                                @if (OnViewAdministrationEnabled) {
+                                    <button class="btn btn-sm btn-outline-primary @ButtonPaddingX" @onclick="@(e=> OnViewAdministration(CurrentVehicleAdmin))">Pregled Uprave</button>
+                                }
+                            </div>
+                        </div>
 
-						<div class="row my-2">
-							<div class="col">
-								<div class="input-group">
-									<span class="input-group-text">API Key</span>
-									<input class="form-control" type="text" value="@(GetAPIKey() ?? "None")" readonly>
-								</div>
-							</div>
-						</div>
+                        <div class="row my-2">
+                            <div class="col">
+                                <div class="input-group">
+                                    <span class="input-group-text">API Key</span>
+                                    <input class="form-control" type="text" value="@(GetAPIKey() ?? "None")" readonly>
+                                </div>
+                            </div>
+                        </div>
 
-						<div class="row">
-							@if (CurrentVehicleAdmin != null) {
-								<div class="col">
-									<strong>Uprava: </strong>@CurrentVehicleAdmin.Name
-								</div>
+                        <div class="row">
+                            @if (CurrentVehicleAdmin != null) {
+                                <div class="col">
+                                    <strong>Uprava: </strong>@CurrentVehicleAdmin.Name
+                                </div>
 
-								@*<div class="col">
-						<button class="btn btn-sm btn-outline-primary" @onclick="@(e=> OnPregledUprave(CurrentVehicleAdmin))">Pregled Uprave</button>
-						</div>*@
-							} else {
-								<div class="col">
-									<string>
-										Vozilo nije pridruženo upravi
-									</string>
-								</div>
-							}
-						</div>
+                                @*<div class="col">
+                        <button class="btn btn-sm btn-outline-primary" @onclick="@(e=> OnPregledUprave(CurrentVehicleAdmin))">Pregled Uprave</button>
+                        </div>*@
+                            } else {
+                                <div class="col">
+                                    <string>
+                                        Vozilo nije pridruženo upravi
+                                    </string>
+                                </div>
+                            }
+                        </div>
 
-						<div class="row">
-							<div class="col">
-								@*<AddressView CurrentAddress="CurrentVehicle.Address" />*@
+                        <div class="row">
+                            <div class="col">
+                                @*<AddressView CurrentAddress="CurrentVehicle.Address" />*@
 
-								<strong>Tablica: </strong>@CurrentVehicle.LicensePlate
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+                                <strong>Tablica: </strong>@CurrentVehicle.LicensePlate
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-			@if (CurrentVehicle.Equipment.Count > 0) {
-				<table class="table table-striped table-hover mt-4">
-					<thead>
-						<tr>
-							<th scope="col">Last Update</th>
-							<th scope="col">Naziv</th>
-							<th scope="col">Polje</th>
-							<th scope="col">Min/Max</th>
-							<th scope="col">Pregled</th>
-							<th scope="col">Error / Warning</th>
-							<th scope="col">Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						@foreach (DbVehicleEquipment Op in CurrentVehicle.Equipment) {
-							var TableRowStyle = "";
+            @if (CurrentVehicle.Equipment.Count > 0) {
+                <table class="table table-striped table-hover mt-4">
+                    <thead>
+                        <tr>
+                            <th scope="col">Last Update</th>
+                            <th scope="col">Naziv</th>
+                            <th scope="col">Polje</th>
+                            <th scope="col">Min/Max</th>
+                            <th scope="col">Pregled</th>
+                            <th scope="col">Error / Warning</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (DbVehicleEquipment Op in CurrentVehicle.Equipment) {
+                            var TableRowStyle = "";
 
-							//GetVoziloTableRowStyle(V, out string TableRowStyle, out bool HasError, out bool HasWarning);
+                            //GetVoziloTableRowStyle(V, out string TableRowStyle, out bool HasError, out bool HasWarning);
 
-							<tr class="@TableRowStyle">
-								<td>@GetLastUpdate(Op)</td>
-								<td>@Op.Name</td>
-								<td>@Op.Field</td>
-								<td>@GetMinMaxValue(Op)</td>
+                            <tr class="@TableRowStyle">
+                                <td>@GetLastUpdate(Op)</td>
+                                <td>@Op.Name</td>
+                                <td>@Op.Field</td>
+                                <td>@GetMinMaxValue(Op)</td>
 
-								<td>
-									@{
-										var LastValueType = GetLastValueType(Op);
+                                <td>
+                                    @{
+                                        var LastValueType = GetLastValueType(Op);
 
-										if (LastValueType == DbEquipmentValues.ValueType.FLOAT) {
-											@GetLastValue(Op)
+                                        if (LastValueType == DbEquipmentValues.ValueType.FLOAT) {
+                                            @GetLastValue(Op)
 
-										} else if (LastValueType == DbEquipmentValues.ValueType.FLOAT_ARRAY) {
+                                        } else if (LastValueType == DbEquipmentValues.ValueType.FLOAT_ARRAY) {
 
-											<button class="btn btn-sm btn-outline-success mx-1" @onclick="@(e=> OnShowFloatArray(Op))">Prikaz</button>
+                                            <button class="btn btn-sm btn-outline-success mx-1" @onclick="@(e=> OnShowFloatArray(Op))">Prikaz</button>
 
-										}
-									}
-								</td>
+                                        }
+                                    }
+                                </td>
 
-								<td>
-									@if (HasError) {
-										<span class="badge bg-danger mx-1">ERROR</span>
-									}
+                                <td>
+                                    @if (HasError) {
+                                        <span class="badge bg-danger mx-1">ERROR</span>
+                                    }
 
-									@if (HasWarning) {
-										<span class="badge bg-warning mx-1">WARNING</span>
-									}
-								</td>
+                                    @if (HasWarning) {
+                                        <span class="badge bg-warning mx-1">WARNING</span>
+                                    }
+                                </td>
 
-								<td>
-									<div class="container-fluid">
-										<div class="row">
-											<div class="col">
-												<div class="float-end">
-													@*<button class="btn btn-sm btn-outline-secondary mx-1" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button>*@
+                                <td>
+                                    <div class="container-fluid">
+                                        <div class="row">
+                                            <div class="col">
+                                                <div class="float-end">
+                                                    @*<button class="btn btn-sm btn-outline-secondary mx-1" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button>*@
 
-													<button class="btn btn-sm btn-outline-danger mx-1" @onclick="@(e=> OnDeleteEquipment(Op))">Obriši</button>
-												</div>
-											</div>
-										</div>
-									</div>
+                                                    <button class="btn btn-sm btn-outline-danger mx-1" @onclick="@(e=> OnDeleteEquipment(Op))">Obriši</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-								</td>
-							</tr>
-						}
-					</tbody>
-				</table>
-			}
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
 
-			@if (RawJson != null) {
-				<h5>JSON Data</h5>
+            @if (RawJson != null) {
+                <h5>JSON Data</h5>
 
-				@foreach (DbJsonLog JsonLog in RawJson) {
-					(string, object)[] KVs = JsonUtils.GetKeyValues(JsonLog).ToArray();
+                @foreach (DbJsonLog JsonLog in RawJson) {
+                    (string, object)[] KVs = JsonUtils.GetKeyValues(JsonLog).ToArray();
 
-					<table class="table table-borderless table-bordered table-sm my-0">
-						<thead>
-							<tr>
-								<th scope="col" class="col-1">(ID)</th>
+                    <table class="table table-borderless table-bordered table-sm my-0">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="col-1">(ID)</th>
 
-								@foreach (var KV in KVs) {
-									if (KV.Item1 == "APIKey")
-										continue;
+                                @foreach (var KV in KVs) {
+                                    if (KV.Item1 == "APIKey")
+                                        continue;
 
-									<th scope="col" class="col-1">@KV.Item1</th>
-								}
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>@(JsonLog.ID)</td>
+                                    <th scope="col" class="col-1">@KV.Item1</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@(JsonLog.ID)</td>
 
-								@foreach (var KV in KVs) {
-									if (KV.Item1 == "APIKey")
-										continue;
+                                @foreach (var KV in KVs) {
+                                    if (KV.Item1 == "APIKey")
+                                        continue;
 
-									<td>@(KV.Item2?.ToString() ?? "NULL")</td>
-								}
-							</tr>
-						</tbody>
-					</table>
-				}
-			}
+                                    if (KV.Item2 is float[] FArr) {
 
-		} else {
-			<p><em>Loading...</em></p>
-		}
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-success mx-1" @onclick="@(e=> OnShowFloatArrayRaw(string.Format("ID {0} - {1}", JsonLog.ID, KV.Item1), FArr))">Prikaz</button>
+                                        </td>
 
-	</Authorized>
+                                    } else {
+                                        <td>@(KV.Item2?.ToString() ?? "NULL")</td>
+                                    }
+                                }
+                            </tr>
+                        </tbody>
+                    </table>
+                }
+            }
+
+        } else {
+            <p><em>Loading...</em></p>
+        }
+
+    </Authorized>
 </AuthorizeView>
 
 @code {
-	[CascadingParameter]
-	public IModalService Modal {
-		get;
-		set;
-	}
+    [CascadingParameter]
+    public IModalService Modal {
+        get;
+        set;
+    }
 
-	[CascadingParameter]
-	public MainLayout Layout {
-		get;
-		set;
-	}
+    [CascadingParameter]
+    public MainLayout Layout {
+        get;
+        set;
+    }
 
-	bool OnEditDescriptionEnabled {
-		get;
-		set;
-	}
+    bool OnEditDescriptionEnabled {
+        get;
+        set;
+    }
 
-	bool OnAssignVehicleToAdministrationEnabled {
-		get;
-		set;
-	}
+    bool OnAssignVehicleToAdministrationEnabled {
+        get;
+        set;
+    }
 
-	bool OnAddEquipmentEnabled {
-		get;
-		set;
-	}
+    bool OnAddEquipmentEnabled {
+        get;
+        set;
+    }
 
-	bool OnGenerateAPIKeyEnabled {
-		get;
-		set;
-	}
+    bool OnGenerateAPIKeyEnabled {
+        get;
+        set;
+    }
 
-	bool OnViewAdministrationEnabled {
-		get;
-		set;
-	}
+    bool OnViewAdministrationEnabled {
+        get;
+        set;
+    }
 
-	HubConnection HubCon;
+    HubConnection HubCon;
 
-	public bool IsConnected {
-		get {
-			if (HubCon == null)
-				return false;
+    public bool IsConnected {
+        get {
+            if (HubCon == null)
+                return false;
 
-			return HubCon.State == HubConnectionState.Connected;
-		}
-	}
+            return HubCon.State == HubConnectionState.Connected;
+        }
+    }
 
-	NameValueCollection Query = null;
-	DatabaseContext DbCtx;
-	string ViewID;
+    NameValueCollection Query = null;
+    DatabaseContext DbCtx;
+    string ViewID;
 
-	DbVehicle CurrentVehicle = null;
-	DbAdministration CurrentVehicleAdmin = null;
+    DbVehicle CurrentVehicle = null;
+    DbAdministration CurrentVehicleAdmin = null;
 
-	DbJsonLog[] RawJson = null;
+    DbJsonLog[] RawJson = null;
 
-	bool HasError = false;
-	bool HasWarning = false;
+    bool HasError = false;
+    bool HasWarning = false;
 
-	GarbageCollector Garbage = new GarbageCollector();
+    GarbageCollector Garbage = new GarbageCollector();
 
-	protected override void OnInitialized() {
-		Query = Query ?? Utils.ParseQuery(Navigation.Uri);
-		ViewID = Query.Get("i") ?? "";
+    protected override void OnInitialized() {
+        Query = Query ?? Utils.ParseQuery(Navigation.Uri);
+        ViewID = Query.Get("i") ?? "";
 
-		DbCtx = Garbage.Add(new DatabaseContext());
+        DbCtx = Garbage.Add(new DatabaseContext());
 
-		ReloadData();
-		Layout?.SetNaviText("Pregled Vozila");
-	}
+        ReloadData();
+        Layout?.SetNaviText("Pregled Vozila");
+    }
 
 
-	protected override async Task OnInitializedAsync() {
-		HubCon = new HubConnectionBuilder().WithUrl(Navigation.ToAbsoluteUri("/comhub")).Build();
-		Garbage.Add(HubCon);
+    protected override async Task OnInitializedAsync() {
+        HubCon = new HubConnectionBuilder().WithUrl(Navigation.ToAbsoluteUri("/comhub")).Build();
+        Garbage.Add(HubCon);
 
-		Garbage.Add(HubCon.On("OnStateHasChanged", () => {
-			if (CurrentVehicle == null)
-				return;
+        Garbage.Add(HubCon.On("OnStateHasChanged", () => {
+            if (CurrentVehicle == null)
+                return;
 
 
 
-			ReloadData();
-			InvokeAsync(StateHasChanged);
-		}));
+            ReloadData();
+            InvokeAsync(StateHasChanged);
+        }));
 
 
-		await HubCon.StartAsync();
-	}
+        await HubCon.StartAsync();
+    }
 
-	void ReloadData() {
-		if (!string.IsNullOrEmpty(ViewID)) {
-			//CurrentVehicle = Structures.Uprave.Where(U => U.ID == ViewID).FirstOrDefault();
+    void ReloadData() {
+        if (!string.IsNullOrEmpty(ViewID)) {
+            //CurrentVehicle = Structures.Uprave.Where(U => U.ID == ViewID).FirstOrDefault();
 
-			CurrentVehicle = DbCtx.GetVehicle(ViewID, true);
+            CurrentVehicle = DbCtx.GetVehicle(ViewID, true);
 
-			//CurrentVehicle = new Vozilo("Test Vozilo", "BJ000SB");
-			//CurrentVehicle.Oprema.Add(new OpremaVozila("Battery 1"));
-			//CurrentVehicle.Oprema.Add(new OpremaVozila("Battery 2"));
+            //CurrentVehicle = new Vozilo("Test Vozilo", "BJ000SB");
+            //CurrentVehicle.Oprema.Add(new OpremaVozila("Battery 1"));
+            //CurrentVehicle.Oprema.Add(new OpremaVozila("Battery 2"));
 
 
-			if (CurrentVehicle != null) {
-				HasError = CurrentVehicle.HasErrors();
-				HasWarning = CurrentVehicle.HasWarnings();
+            if (CurrentVehicle != null) {
+                HasError = CurrentVehicle.HasErrors();
+                HasWarning = CurrentVehicle.HasWarnings();
 
-				CurrentVehicleAdmin = DbCtx.GetAdministrationForVehicle(CurrentVehicle);
+                CurrentVehicleAdmin = DbCtx.GetAdministrationForVehicle(CurrentVehicle);
 
 
-				OnEditDescriptionEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.EDIT_VEHICLE_DETAILS, CurrentVehicle);
-				OnAssignVehicleToAdministrationEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADMIN);
-				OnAddEquipmentEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADD_REMOVE_VEHICLE_EQUIPMENT, CurrentVehicle);
-				OnGenerateAPIKeyEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.GENERATE_API_KEY, CurrentVehicle);
+                OnEditDescriptionEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.EDIT_VEHICLE_DETAILS, CurrentVehicle);
+                OnAssignVehicleToAdministrationEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADMIN);
+                OnAddEquipmentEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADD_REMOVE_VEHICLE_EQUIPMENT, CurrentVehicle);
+                OnGenerateAPIKeyEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.GENERATE_API_KEY, CurrentVehicle);
 
-				//OnViewAdministrationEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.EDIT_VEHICLE_DETAILS, CurrentVehicle);
-				OnViewAdministrationEnabled = true;
+                //OnViewAdministrationEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.EDIT_VEHICLE_DETAILS, CurrentVehicle);
+                OnViewAdministrationEnabled = true;
 
-				RawJson = null;
-				if (DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADMIN)) {
-					RawJson = DbCtx.GetJsonLog(DbCtx.GetValidAPIKey(CurrentVehicle), 10);
-				}
-			}
-		}
-	}
+                RawJson = null;
+                if (DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADMIN)) {
+                    RawJson = DbCtx.GetJsonLog(DbCtx.GetValidAPIKey(CurrentVehicle), 10);
+                }
+            }
+        }
+    }
 
-	protected override void OnAfterRender(bool firstRender) {
-		if (!AuthStateProvider.IsAuthenticated())
-			Navigation.NavigateTo("/login");
-	}
+    protected override void OnAfterRender(bool firstRender) {
+        if (!AuthStateProvider.IsAuthenticated())
+            Navigation.NavigateTo("/login");
+    }
 
-	async void OnEditDescription() {
-		if (!OnEditDescriptionEnabled)
-			return;
+    async void OnEditDescription() {
+        if (!OnEditDescriptionEnabled)
+            return;
 
-		EditModal.Field[] EditFields = new[] {
-			new EditModal.Field("Naziv", CurrentVehicle.Name),
-			new EditModal.Field("Tablica", CurrentVehicle.LicensePlate)
-	};
+        EditModal.Field[] EditFields = new[] {
+            new EditModal.Field("Naziv", CurrentVehicle.Name),
+            new EditModal.Field("Tablica", CurrentVehicle.LicensePlate)
+    };
 
-		ModalResult Result = await Modal.Show<EditModal>("Opis Vozila", new ModalParameters().Add("Fields", EditFields)).Result;
+        ModalResult Result = await Modal.Show<EditModal>("Opis Vozila", new ModalParameters().Add("Fields", EditFields)).Result;
 
-		if (Result.Confirmed) {
-			if (string.IsNullOrEmpty(EditFields[0].Value) || string.IsNullOrEmpty(EditFields[1].Value)) {
-				return;
-			}
-
-			CurrentVehicle.Name = EditFields[0].Value;
-			CurrentVehicle.LicensePlate = EditFields[1].Value;
+        if (Result.Confirmed) {
+            if (string.IsNullOrEmpty(EditFields[0].Value) || string.IsNullOrEmpty(EditFields[1].Value)) {
+                return;
+            }
+
+            CurrentVehicle.Name = EditFields[0].Value;
+            CurrentVehicle.LicensePlate = EditFields[1].Value;
 
-			DbCtx.Commit();
-			StateHasChanged();
-		}
-	}
+            DbCtx.Commit();
+            StateHasChanged();
+        }
+    }
 
-	void OnViewAdministration(DbAdministration Up) {
-		if (!OnViewAdministrationEnabled)
-			return;
+    void OnViewAdministration(DbAdministration Up) {
+        if (!OnViewAdministrationEnabled)
+            return;
 
-		Navigation.NavigateTo("/pregled_uprave?i=" + Up.ID);
-	}
+        Navigation.NavigateTo("/pregled_uprave?i=" + Up.ID);
+    }
 
-	async Task OnGenerateAPIKey() {
-		if (!OnGenerateAPIKeyEnabled)
-			return;
+    async Task OnGenerateAPIKey() {
+        if (!OnGenerateAPIKeyEnabled)
+            return;
 
-		if (CurrentVehicle == null)
-			return;
+        if (CurrentVehicle == null)
+            return;
 
-		DbVehicle Veh = DbCtx.GetVehicle(CurrentVehicle.ID, false);
-		ModalResult Result = await QueryModal.Show(Modal, "API Key", "Jeste li sigurni da želite generirati novi API Key?");
+        DbVehicle Veh = DbCtx.GetVehicle(CurrentVehicle.ID, false);
+        ModalResult Result = await QueryModal.Show(Modal, "API Key", "Jeste li sigurni da želite generirati novi API Key?");
 
-		if (Result.Confirmed) {
-			DbCtx.InvalidateAllAPIKeysForVehicle(Veh);
+        if (Result.Confirmed) {
+            DbCtx.InvalidateAllAPIKeysForVehicle(Veh);
 
-			DbDeviceAPIKey APIKey = DbCtx.CreateNew<DbDeviceAPIKey>(null);
-			APIKey.Vehicles.Add(Veh);
+            DbDeviceAPIKey APIKey = DbCtx.CreateNew<DbDeviceAPIKey>(null);
+            APIKey.Vehicles.Add(Veh);
 
-			DbCtx.Commit();
-			StateHasChanged();
-		}
-	}
+            DbCtx.Commit();
+            StateHasChanged();
+        }
+    }
 
-	async Task OnAddEquipment() {
-		if (!OnAddEquipmentEnabled)
-			return;
+    async Task OnAddEquipment() {
+        if (!OnAddEquipmentEnabled)
+            return;
 
-		if (CurrentVehicle == null)
-			return;
+        if (CurrentVehicle == null)
+            return;
 
 
-		EditModal.Field[] EditFields = new[] {
-				new EditModal.Field("Naziv", "Nova Oprema"),
-				new EditModal.Field("Polje", "JSON Polje"),
-				new EditModal.Field("Min", "-"),
-				new EditModal.Field("Max", "-")
-	};
+        EditModal.Field[] EditFields = new[] {
+                new EditModal.Field("Naziv", "Nova Oprema"),
+                new EditModal.Field("Polje", "JSON Polje"),
+                new EditModal.Field("Min", "-"),
+                new EditModal.Field("Max", "-")
+    };
 
-		ModalResult Result = await Modal.Show<EditModal>("Dodaj Opremu", new ModalParameters().Add("Fields", EditFields)).Result;
-		if (Result.Confirmed) {
-			if (string.IsNullOrEmpty(EditFields[0].Value)) {
-				return;
-			}
+        ModalResult Result = await Modal.Show<EditModal>("Dodaj Opremu", new ModalParameters().Add("Fields", EditFields)).Result;
+        if (Result.Confirmed) {
+            if (string.IsNullOrEmpty(EditFields[0].Value)) {
+                return;
+            }
 
-			if (string.IsNullOrEmpty(EditFields[1].Value)) {
-				return;
-			}
+            if (string.IsNullOrEmpty(EditFields[1].Value)) {
+                return;
+            }
 
-			DbVehicleEquipment NewEquipment = DbCtx.CreateNew<DbVehicleEquipment>(null, E => {
-				E.Name = EditFields[0].Value;
-				E.Field = EditFields[1].Value;
+            DbVehicleEquipment NewEquipment = DbCtx.CreateNew<DbVehicleEquipment>(null, E => {
+                E.Name = EditFields[0].Value;
+                E.Field = EditFields[1].Value;
 
-				if (float.TryParse(EditFields[2].Value, out float MinVal) && float.TryParse(EditFields[3].Value, out float MaxVal)) {
-					E.ValidationEnabled = true;
-					E.Min = MinVal;
-					E.Max = MaxVal;
-				}
+                if (float.TryParse(EditFields[2].Value, out float MinVal) && float.TryParse(EditFields[3].Value, out float MaxVal)) {
+                    E.ValidationEnabled = true;
+                    E.Min = MinVal;
+                    E.Max = MaxVal;
+                }
 
-				//E.EquipmentType = Enum.Parse<DbEquipmentType>(EditFields[1].Value);
-			});
+                //E.EquipmentType = Enum.Parse<DbEquipmentType>(EditFields[1].Value);
+            });
 
-			DbVehicle Veh = DbCtx.GetVehicle(CurrentVehicle.ID, false);
-			Veh.Equipment.Add(NewEquipment);
-			DbCtx.Commit();
+            DbVehicle Veh = DbCtx.GetVehicle(CurrentVehicle.ID, false);
+            Veh.Equipment.Add(NewEquipment);
+            DbCtx.Commit();
 
-			ReloadData();
-			StateHasChanged();
-		}
-	}
+            ReloadData();
+            StateHasChanged();
+        }
+    }
 
-	async Task OnAssignVehicleToAdministration() {
-		if (!OnAssignVehicleToAdministrationEnabled)
-			return;
-	}
+    async Task OnAssignVehicleToAdministration() {
+        if (!OnAssignVehicleToAdministrationEnabled)
+            return;
+    }
 
-	void GetVoziloTableRowStyle(DbVehicle V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
-		TableRowStyle = "";
-		HasError = V.HasErrors();
-		HasWarning = V.HasWarnings();
+    void GetVoziloTableRowStyle(DbVehicle V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
+        TableRowStyle = "";
+        HasError = V.HasErrors();
+        HasWarning = V.HasWarnings();
 
-		if (HasError) {
-			TableRowStyle = "table-danger";
-		} else if (HasWarning) {
-			TableRowStyle = "table-warning";
-		}
-	}
+        if (HasError) {
+            TableRowStyle = "table-danger";
+        } else if (HasWarning) {
+            TableRowStyle = "table-warning";
+        }
+    }
 
-	string GetAPIKey() {
-		DbDeviceAPIKey APIKey = DbCtx.GetValidAPIKey(CurrentVehicle);
+    string GetAPIKey() {
+        DbDeviceAPIKey APIKey = DbCtx.GetValidAPIKey(CurrentVehicle);
 
-		if (APIKey == null)
-			return null;
+        if (APIKey == null)
+            return null;
 
-		return APIKey.APIKey;
-	}
+        return APIKey.APIKey;
+    }
 
-	/*DbEquipmentValues GetLastEqipmentValue(DbVehicleEquipment Eq) {
-		return Eq.Values.OrderByDescending(V => V.ID).FirstOrDefault();
-	}*/
+    /*DbEquipmentValues GetLastEqipmentValue(DbVehicleEquipment Eq) {
+        return Eq.Values.OrderByDescending(V => V.ID).FirstOrDefault();
+    }*/
 
-	// TODO:
-	DbEquipmentValues.ValueType GetLastValueType(DbVehicleEquipment Eq) {
-		DbEquipmentValues LastVal = Eq.GetLastEquipmentValue();
+    // TODO:
+    DbEquipmentValues.ValueType GetLastValueType(DbVehicleEquipment Eq) {
+        DbEquipmentValues LastVal = Eq.GetLastEquipmentValue();
 
-		if (LastVal == null)
-			return DbEquipmentValues.ValueType.FLOAT;
+        if (LastVal == null)
+            return DbEquipmentValues.ValueType.FLOAT;
 
-		return LastVal.ValType;
+        return LastVal.ValType;
 
-		/*if (Eq.Field == "ACCvoltage1")
-			return DbEquipmentValues.ValueType.FLOAT_ARRAY;
+        /*if (Eq.Field == "ACCvoltage1")
+            return DbEquipmentValues.ValueType.FLOAT_ARRAY;
 
-		return DbEquipmentValues.ValueType.FLOAT;*/
-	}
+        return DbEquipmentValues.ValueType.FLOAT;*/
+    }
 
-	string GetLastValue(DbVehicleEquipment Eq) {
-		DbEquipmentValues Val = Eq.GetLastEquipmentValue();
+    string GetLastValue(DbVehicleEquipment Eq) {
+        DbEquipmentValues Val = Eq.GetLastEquipmentValue();
 
-		if (Val == null)
-			return "NULL";
+        if (Val == null)
+            return "NULL";
 
-		return Val.FloatValue.ToString();
-	}
+        return Val.FloatValue.ToString();
+    }
 
-	string GetMinMaxValue(DbVehicleEquipment Eq) {
-		if (!Eq.ValidationEnabled)
-			return "-";
+    string GetMinMaxValue(DbVehicleEquipment Eq) {
+        if (!Eq.ValidationEnabled)
+            return "-";
 
-		return string.Format("{0} / {1}", Eq.Min, Eq.Max);
-	}
+        return string.Format("{0} / {1}", Eq.Min, Eq.Max);
+    }
 
-	string GetLastUpdate(DbVehicleEquipment Eq) {
-		DbEquipmentValues EqValue = Eq.GetLastEquipmentValue();
+    string GetLastUpdate(DbVehicleEquipment Eq) {
+        DbEquipmentValues EqValue = Eq.GetLastEquipmentValue();
 
-		if (EqValue == null)
-			return "";
+        if (EqValue == null)
+            return "";
 
-		return Utils.FormatDateTime(EqValue.Local_CreatedOn);
-	}
+        return Utils.FormatDateTime(EqValue.Local_CreatedOn);
+    }
 
-	async Task OnDeleteEquipment(DbVehicleEquipment Eq) {
-		if (!OnAddEquipmentEnabled)
-			return;
+    async Task OnDeleteEquipment(DbVehicleEquipment Eq) {
+        if (!OnAddEquipmentEnabled)
+            return;
 
-		ModalResult Result = await QueryModal.Show(Modal, "Obriši Opremu", string.Format("Jeste li sigurni da želite obrisati \"{0}\"", Eq.Name));
+        ModalResult Result = await QueryModal.Show(Modal, "Obriši Opremu", string.Format("Jeste li sigurni da želite obrisati \"{0}\"", Eq.Name));
 
-		if (Result.Confirmed) {
-			DbCtx.DeleteEntity(Eq);
+        if (Result.Confirmed) {
+            DbCtx.DeleteEntity(Eq);
 
-			ReloadData();
-			StateHasChanged();
-		}
-	}
+            ReloadData();
+            StateHasChanged();
+        }
+    }
 
-	async Task OnShowFloatArray(DbVehicleEquipment Eq) {
-		DbEquipmentValues Val = Eq.GetLastEquipmentValue();
+    async Task OnShowFloatArrayRaw(string Name, float[] Values) {
+        float[] Labels = Enumerable.Range(1, Values.Length).Select(N => (float)N).ToArray();
 
-		if (Val.ValType != DbEquipmentValues.ValueType.FLOAT_ARRAY) {
-			throw new Exception("Expected FLOAT_ARRAY for DbVehicleEquipment.Field = " + Eq.Field);
-		}
+        ModalResult Result = await Modal.Show<ChartModal>(Name, new ModalParameters().Add("Labels", Labels).Add("Values", Values), new ModalOptions() { Size = ModalSize.ExtraLarge }).Result;
 
-		//float[] Labels = new float[] { 1, 2, 3, 4, 5 };
+        if (Result.Confirmed) {
 
-		float[] Values = Val.FloatArrayValue;
-		float[] Labels = Enumerable.Range(1, Values.Length).Select(N => (float)N).ToArray();
+            //CurrentVehicle.Name = EditFields[0].Value;
+            //CurrentVehicle.LicensePlate = EditFields[1].Value;
 
-		ModalResult Result = await Modal.Show<ChartModal>(Eq.Field, new ModalParameters().Add("Labels", Labels).Add("Values", Values), new ModalOptions() { Size = ModalSize.ExtraLarge }).Result;
+            //DbCtx.Commit();
+            StateHasChanged();
+        }
+    }
 
-		if (Result.Confirmed) {
+    async Task OnShowFloatArray(DbVehicleEquipment Eq) {
+        DbEquipmentValues Val = Eq.GetLastEquipmentValue();
 
-			//CurrentVehicle.Name = EditFields[0].Value;
-			//CurrentVehicle.LicensePlate = EditFields[1].Value;
+        if (Val.ValType != DbEquipmentValues.ValueType.FLOAT_ARRAY) {
+            throw new Exception("Expected FLOAT_ARRAY for DbVehicleEquipment.Field = " + Eq.Field);
+        }
 
-			//DbCtx.Commit();
-			StateHasChanged();
-		}
-	}
+        await OnShowFloatArrayRaw(Eq.Field, Val.FloatArrayValue);
+    }
 
-	public void Dispose() {
-		Garbage.DisposeAll();
-	}
+    public void Dispose() {
+        Garbage.DisposeAll();
+    }
 }
