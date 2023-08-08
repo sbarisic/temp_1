@@ -159,8 +159,8 @@
 
 	void GetVoziloTableRowStyle(DbVehicle V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
 		TableRowStyle = "";
-		HasError = V.HasErrors();
-		HasWarning = V.HasWarnings();
+		HasError = V.HasAnyErrors();
+		HasWarning = V.HasAnyWarnings();
 
 		if (HasError) {
 			TableRowStyle = "table-danger";
@@ -181,8 +181,8 @@
 			CurrentAdministration = DbCtx.GetAdministration(ViewID);
 
 			if (CurrentAdministration != null) {
-				HasError = CurrentAdministration.HasErrors();
-				HasWarning = CurrentAdministration.HasWarnings();
+				HasError = CurrentAdministration.HasAnyErrors();
+				HasWarning = CurrentAdministration.HasAnyWarnings();
 
 
 			}

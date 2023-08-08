@@ -30,14 +30,14 @@
                             </div>
                         </div>
 
-                        @if (HasError || HasWarning) {
+                        @if (HasAnyError || HasAnyWarning) {
                             <div class="row my-1">
                                 <div class="col">
-                                    @if (HasError) {
+                                    @if (HasAnyError) {
                                         <span class="badge bg-danger mx-1">ERROR</span>
                                     }
 
-                                    @if (HasWarning) {
+                                    @if (HasAnyWarning) {
                                         <span class="badge bg-warning mx-1">WARNING</span>
                                     }
                                 </div>
@@ -152,11 +152,11 @@
                                 </td>
 
                                 <td>
-                                    @if (HasError) {
+                                    @if (CurrentVehicle.HasErrors(Op)) {
                                         <span class="badge bg-danger mx-1">ERROR</span>
                                     }
 
-                                    @if (HasWarning) {
+                                    @if (CurrentVehicle.HasWarnings(Op)) {
                                         <span class="badge bg-warning mx-1">WARNING</span>
                                     }
                                 </td>
@@ -289,8 +289,9 @@
 
     DbJsonLog[] RawJson = null;
 
-    bool HasError = false;
-    bool HasWarning = false;
+    bool HasAnyError = false;
+    bool HasAnyWarning = false;
+
 
     GarbageCollector Garbage = new GarbageCollector();
 
@@ -335,8 +336,8 @@
 
 
             if (CurrentVehicle != null) {
-                HasError = CurrentVehicle.HasErrors();
-                HasWarning = CurrentVehicle.HasWarnings();
+                HasAnyError = CurrentVehicle.HasAnyErrors();
+                HasAnyWarning = CurrentVehicle.HasAnyWarnings();
 
                 CurrentVehicleAdmin = DbCtx.GetAdministrationForVehicle(CurrentVehicle);
 
@@ -466,7 +467,7 @@
             return;
     }
 
-    void GetVoziloTableRowStyle(DbVehicle V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
+    /*void GetVoziloTableRowStyle(DbVehicle V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
         TableRowStyle = "";
         HasError = V.HasErrors();
         HasWarning = V.HasWarnings();
@@ -476,7 +477,7 @@
         } else if (HasWarning) {
             TableRowStyle = "table-warning";
         }
-    }
+    }*/
 
     string GetAPIKey() {
         DbDeviceAPIKey APIKey = DbCtx.GetValidAPIKey(CurrentVehicle);

@@ -35,22 +35,6 @@ namespace Proj2.Code {
 		public DeviceAction Action {
 			get; set;
 		}
-
-		public float Napon1 {
-			get; set;
-		}
-
-		public float Napon2 {
-			get; set;
-		}
-
-		public float Temperatura {
-			get; set;
-		}
-
-		public float Tlak {
-			get; set;
-		}
 	}
 
 	public class DeviceAccessResponseAPI {
