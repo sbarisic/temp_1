@@ -50,3 +50,6 @@ bool core2_gpio_set_interrupt0();
 
 // Flash
 bool core2_flash_init();
+
+// Filesystem
+bool core2_filesystem_init();
