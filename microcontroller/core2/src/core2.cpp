@@ -23,8 +23,6 @@ void core2_init()
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
-
-
 }
 
 void core2_print_status()
@@ -99,6 +97,11 @@ BaseType_t core2_queue_receive(xQueueHandle q, void *buffer)
     {
         return xQueueReceive(q, buffer, portMAX_DELAY);
     }
+}
+
+void core2_queue_reset(xQueueHandle q)
+{
+    xQueueReset(q);
 }
 
 // @brief Expects 30 byte buffer

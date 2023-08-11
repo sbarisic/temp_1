@@ -1,5 +1,6 @@
 #include <core2.h>
 
+#include <dirent.h>
 #include <string.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
@@ -42,10 +43,21 @@ FILE *core2_file_open(const char *filename, const char *type)
     return f;
 }
 
-void core2_file_close(FILE *f)
+bool core2_file_close(FILE *f)
 {
     dprintf("core2_file_close(%p)\n", (void *)f);
-    fclose(f);
+    if (!fclose(f))
+        return true;
+
+    return false;
+}
+
+bool core2_file_move(const char *oldf, const char *newf)
+{
+    if (rename(oldf, newf) == -1)
+        return false;
+
+    return true;
 }
 
 bool core2_file_write(const char *filename, const char *data, size_t len)
@@ -84,30 +96,37 @@ bool core2_file_append(const char *filename, const char *data, size_t len)
     return true;
 }
 
-static esp_err_t s_example_read_file(const char *path)
+bool core2_file_mkdir(const char *dirname, mode_t mode)
 {
-    dprintf("Reading file %s\n", path);
+    if (mode == 0)
+        mode = 0777;
 
-    FILE *f = fopen(path, "r");
-    if (f == NULL)
+    dprintf("core2_file_mkdir(\"%s\", %o) - ", dirname, mode);
+
+    if (mkdir(dirname, mode) == -1)
     {
-        dprintf("Failed to open file for reading\n");
-        return ESP_FAIL;
+        dprintf("FAIL\n");
+        return false;
     }
 
-    char line[256];
-    fgets(line, sizeof(line), f);
-    fclose(f);
+    dprintf("OK\n");
+    return true;
+}
 
-    // strip newline
-    char *pos = strchr(line, '\n');
-    if (pos)
+void core2_file_list(const char *dirname)
+{
+    struct dirent *dir;
+    DIR *d = opendir(dirname);
+
+    if (d)
     {
-        *pos = '\0';
-    }
+        while ((dir = readdir(d)) != NULL)
+        {
+            dprintf("FOUND: %s\n", dir->d_name);
+        }
 
-    dprintf("Read from file: '%s'\n", line);
-    return ESP_OK;
+        closedir(d);
+    }
 }
 
 bool core2_filesystem_init()
@@ -162,7 +181,8 @@ bool core2_filesystem_init()
     sdmmc_card_print_info(stdout, card);
 
     dprintf("core2_filesystem_init() - Creating folders\n");
-    mkdir("/sd/logs", 0777);
+    core2_file_mkdir("/sd/logs");       // Log directory
+    core2_file_mkdir("/sd/processing"); // Temporary processing directory, files which have not been uploaded?
 
     return true;
 }

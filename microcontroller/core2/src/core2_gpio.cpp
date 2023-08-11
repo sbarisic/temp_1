@@ -21,6 +21,11 @@ bool core2_gpio_set_interrupt0()
     return true;
 }
 
+void core2_gpio_clear_interrupt0()
+{
+    core2_queue_reset(q_gpio0);
+}
+
 static void IRAM_ATTR gpio_interrupt_handler(void *args)
 {
     gpio_num_t INT_PIN = (gpio_num_t)(int)args;

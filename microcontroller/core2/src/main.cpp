@@ -1,17 +1,12 @@
 #include <Arduino.h>
 #include <core2.h>
 
-float naponi[200];
-bool naponi_available;
+float scope_volts[200];
+bool scope_in_progress;
 
 void read_battery_scope()
 {
-    for (int i = 0; i < 200; i++)
-    {
-        naponi[i] = 0;
-    }
-
-    
+    memset(scope_volts, 0, sizeof(scope_volts));
 
     for (int i = 0; i < 200; i++)
     {
@@ -31,7 +26,7 @@ void read_battery_scope()
                 minnapon = naponj;
         }
 
-        naponi[i] = minnapon;
+        scope_volts[i] = minnapon;
     }
 }
 
@@ -39,38 +34,47 @@ void main_logic(void *params)
 {
     dprintf("main_logic()\n");
     int counter = 0;
+    scope_in_progress = false;
+
+    char temp_buffer[64];
 
     while (true)
     {
         if (core2_gpio_get_interrupt0())
         {
-            if (naponi_available)
+            if (scope_in_progress)
                 continue;
-            naponi_available = true;
 
-            counter++;
-            char buffer[64];
-            sprintf(buffer, "Button %d", counter);
-            core2_oled_print(buffer);
+            scope_in_progress = true;
+
+            // TODO: Maybe slow?
+            if (true)
+            {
+                counter++;
+                sprintf(temp_buffer, "Button %d", counter);
+                core2_oled_print(temp_buffer);
+            }
 
             // Read scope
-            dprintf("Reading scope ... ");
+            dprintf("Reading scope ...\n");
             read_battery_scope();
-            dprintf("OK\n");
+            dprintf("Reading scope ... OK\n");
 
             // Drop file to SD card
             dprintf("Saving to file\n");
-            char filename[40];
-            core2_clock_time_fmt(filename, sizeof(filename), "/sd/logs/scope_%d%m%Y_%H%M%S.txt");
+            core2_clock_time_fmt(temp_buffer, sizeof(temp_buffer), "/sd/processing/scope_%d%m%Y_%H%M%S.txt");
 
-            FILE *f = core2_file_open(filename);
+            FILE *f = core2_file_open(temp_buffer);
 
-            for (size_t i = 0; i < (sizeof(naponi) / sizeof(*naponi)); i++)
+            for (size_t i = 0; i < (sizeof(scope_volts) / sizeof(*scope_volts)); i++)
             {
-                fprintf(f, "%.2f\n", naponi[i]);
+                fprintf(f, "%.2f\n", scope_volts[i]);
             }
 
             core2_file_close(f);
+
+            core2_gpio_clear_interrupt0();
+            scope_in_progress = false;
 
             /*for (size_t i = 0; i < 7; i++)
             {
@@ -88,10 +92,30 @@ void main_logic(void *params)
     vTaskDelete(NULL);
 }
 
+void network_logic(void *params)
+{
+    dprintf("network_logic()\n");
+
+    while (true)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000 * 20));
+
+        // Busy, skip
+        if (scope_in_progress)
+            continue;
+
+        if (core2_wifi_isconnected())
+        {
+            dprintf("network_logic() !!\n");
+            core2_file_list("/sd/processing");
+        }
+    }
+
+    vTaskDelete(NULL);
+}
+
 void setup()
 {
-    naponi_available = false;
-
     core2_init();
     core2_print_status();
 
@@ -117,6 +141,7 @@ void setup()
     core2_file_write(filename, Text, strlen(Text));
 
     xTaskCreate(main_logic, "main_logic", 1024 * 16, NULL, 1, NULL);
+    xTaskCreate(network_logic, "network_logic", 1024 * 16, NULL, 1, NULL);
 
     // Stop arduino task, job done
     vTaskDelete(NULL);
