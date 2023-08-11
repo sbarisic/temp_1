@@ -9,6 +9,20 @@ MCP3201 adc1(ADC_VREF, 5);
 
 void core2_adc_read(float *Volt1, float *Volt2)
 {
+    // configure PIN mode
+    pinMode(4, OUTPUT);
+    pinMode(5, OUTPUT);
+
+    // set initial PIN state
+    digitalWrite(4, HIGH);
+    digitalWrite(5, HIGH);
+
+    // initialize SPI interface for MCP3208 & LCD
+    SPISettings settings(ADC_CLK, MSBFIRST, SPI_MODE0);
+    SPI.begin();
+    SPI.beginTransaction(settings);
+
+    //---------------------------------------------------------
     uint16_t raw = adc.read(MCP3201::Channel::SINGLE_0);
     uint16_t raw1 = adc1.read(MCP3201::Channel::SINGLE_0);
 
@@ -16,18 +30,32 @@ void core2_adc_read(float *Volt1, float *Volt2)
     uint16_t val = adc.toAnalog(raw);
     uint16_t val1 = adc1.toAnalog(raw1);
 
-    *Volt1 = val * 4.795 / 1000;
-    *Volt2 = val1 * 9.215 / 1000 - val * 4.795 / 1000;
+    float voltage1 = val * 4.795 / 1000;
+    float voltage2 = val1 * 9.215 / 1000 - val * 4.795 / 1000;
+
+    *Volt1 = voltage1;
+    *Volt2 = voltage2;
+
+    //-------------
+    SPI.end();
 }
 
 bool core2_mcp320x_init()
 {
-    dprintf("core2_mcp320x_init()\n");
+    /*dprintf("core2_mcp320x_init()\n");
+
+    // configure PIN mode
+    pinMode(4, OUTPUT);
+    pinMode(5, OUTPUT);
+
+    // set initial PIN state
+    digitalWrite(4, HIGH);
+    digitalWrite(5, HIGH);
 
     // initialize SPI interface for MCP3208 & LCD
     SPISettings settings(ADC_CLK, MSBFIRST, SPI_MODE0);
     SPI.begin();
-    SPI.beginTransaction(settings);
+    SPI.beginTransaction(settings);*/
 
     return true;
 }

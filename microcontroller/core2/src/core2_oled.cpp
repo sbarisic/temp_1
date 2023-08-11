@@ -114,6 +114,9 @@ Adafruit_SSD1306 *display;
 
 void c2_disp_convert_xy(int X, int Y, int *Byte, int *Bit)
 {
+    if (display == NULL)
+        return;
+
     uint16_t Idx = Y * SCREEN_WIDTH + X;
     *Byte = Idx / 8;
     *Bit = 7 - (Idx % 8);
@@ -121,6 +124,9 @@ void c2_disp_convert_xy(int X, int Y, int *Byte, int *Bit)
 
 int c2_disp_mem_get_from(int X, int Y, const uint8_t *src)
 {
+    if (display == NULL)
+        return 0;
+
     int Byte = 0;
     int Bit = 0;
     c2_disp_convert_xy(X, Y, &Byte, &Bit);
@@ -133,6 +139,9 @@ int c2_disp_mem_get_from(int X, int Y, const uint8_t *src)
 
 void c2_disp_mem_set(int X, int Y, int V)
 {
+    if (display == NULL)
+        return;
+
     int Byte = 0;
     int Bit = 0;
     c2_disp_convert_xy(X, Y, &Byte, &Bit);
@@ -150,6 +159,9 @@ void c2_disp_mem_set(int X, int Y, int V)
 
 void c2_copy_bits(const uint8_t *src, int src_offset_bits, int count, int dst_x, int dst_y)
 {
+    if (display == NULL)
+        return;
+
     for (size_t i = 0; i < count; i++)
     {
         int Bit = c2_disp_mem_get_from(src_offset_bits + (count - i), 0, src);
@@ -160,6 +172,9 @@ void c2_copy_bits(const uint8_t *src, int src_offset_bits, int count, int dst_x,
 
 void c2_blit_char(int dst_x, int dst_y, char chr)
 {
+    if (display == NULL)
+        return;
+
     int CharOffset = (chr - 32) * 5;
     int FontW = 5;
     int FontH = 8;
@@ -172,6 +187,9 @@ void c2_blit_char(int dst_x, int dst_y, char chr)
 
 void c2_scroll(int pixels)
 {
+    if (display == NULL)
+        return;
+
     int shift_bytes = 16 * pixels;
 
     for (size_t i = shift_bytes; i < DISP_MEM_LEN; i++)
@@ -187,6 +205,9 @@ void c2_scroll(int pixels)
 
 void c2_printxy(int dst_x, int dst_y, const char *str)
 {
+    if (display == NULL)
+        return;
+
     size_t len = strlen(str);
     for (size_t i = 0; i < len; i++)
     {
@@ -196,11 +217,17 @@ void c2_printxy(int dst_x, int dst_y, const char *str)
 
 void c2_clear()
 {
+    if (display == NULL)
+        return;
+
     display->clearDisplay();
 }
 
 void c2_display(uint16_t color)
 {
+    if (display == NULL)
+        return;
+
     display->drawBitmap(0, 0, disp_mem, SCREEN_WIDTH, SCREEN_HEIGHT, color);
     display->display();
 }

@@ -12,9 +12,9 @@
 
 // Pin assignments can be set in menuconfig, see "SD SPI Example Configuration" menu.
 // You can also change the pin assignments here by changing the following 4 lines.
-#define PIN_NUM_MISO GPIO_NUM_19 // GPIO_NUM_2
+#define PIN_NUM_MISO GPIO_NUM_35 // GPIO_NUM_2
 #define PIN_NUM_MOSI GPIO_NUM_23 // GPIO_NUM_15
-#define PIN_NUM_CLK  GPIO_NUM_18 // GPIO_NUM_14
+#define PIN_NUM_CLK  GPIO_NUM_32 // GPIO_NUM_14
 #define PIN_NUM_CS   GPIO_NUM_25 // GPIO_NUM_13
 
 #undef ESP_LOGI

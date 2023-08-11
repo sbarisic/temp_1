@@ -99,12 +99,12 @@ void network_logic(void *params)
     while (true)
     {
         vTaskDelay(pdMS_TO_TICKS(1000 * 5));
+        dprintf("Reading voltage!\n");
 
         float a, b;
         core2_adc_read(&a, &b);
 
-        dprintf("V1 = %f\n", a);
-        dprintf("V2 = %f\n", b);
+        dprintf("V1 = %f, V2 = %f\n", a, b);
 
         /*vTaskDelay(pdMS_TO_TICKS(1000 * 20));
 
