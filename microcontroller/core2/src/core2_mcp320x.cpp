@@ -35,10 +35,12 @@ void core2_adc_read(float *Volt1, float *Volt2)
     *Volt1 = voltage1;
     *Volt2 = voltage2;
 
+    dprintf("Volt1 = %f, Volt2 = %f\n", voltage1, voltage2);
     dprintf("SPI.end\n");
 
     //-------------
     SPI.end();
+    dprintf("returning\n");
 }
 
 bool core2_mcp320x_init()

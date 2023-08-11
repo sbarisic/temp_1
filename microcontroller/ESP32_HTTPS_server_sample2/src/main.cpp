@@ -416,7 +416,7 @@ void setup()
   }
   Serial.println(WiFi.localIP());
 
-  core2_filesystem_init();
+  // core2_filesystem_init();
 
   xTaskCreatePinnedToCore(
       task1,
