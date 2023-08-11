@@ -20,10 +20,16 @@ void core2_clock_time_now(char *strftime_buf)
 {
     // dprintf("core2_clock_time_now()\n");
     time_t now = time(NULL);
-
     struct tm *timeinfo = localtime(&now);
     strftime(strftime_buf, 21, "%d.%m.%Y. %H:%M:%S", timeinfo);
-    //dprintf("%s\n", strftime_buf);
+    // dprintf("%s\n", strftime_buf);
+}
+
+void core2_clock_time_fmt(char *strftime_buf, size_t max_size, const char* fmt)
+{
+    time_t now = time(NULL);
+    struct tm *timeinfo = localtime(&now);
+    strftime(strftime_buf, max_size, fmt, timeinfo);
 }
 
 void core2_clock_update_from_ntp()

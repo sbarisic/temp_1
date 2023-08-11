@@ -41,6 +41,7 @@ bool core2_clock_init();
 int32_t core2_clock_bootseconds();
 int32_t core2_clock_seconds_since(int32_t lastTime);
 void core2_clock_time_now(char *strftime_buf);
+void core2_clock_time_fmt(char *strftime_buf, size_t max_size, const char* fmt);
 void core2_clock_update_from_ntp();
 
 // GPIO
@@ -53,3 +54,9 @@ bool core2_flash_init();
 
 // Filesystem
 bool core2_filesystem_init();
+FILE *core2_file_open(const char *filename, const char *type = NULL);
+void core2_file_close(FILE* f);
+bool core2_file_write(const char *filename, const char *data, size_t len);
+
+// MCP320X ADC
+bool core2_mcp320x_init();

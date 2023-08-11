@@ -9,7 +9,6 @@
 // #define SOC_SDMMC_USE_GPIO_MATRIX
 #include "driver/sdmmc_host.h"
 
-
 // Pin assignments can be set in menuconfig, see "SD SPI Example Configuration" menu.
 // You can also change the pin assignments here by changing the following 4 lines.
 #define PIN_NUM_MISO GPIO_NUM_2
@@ -25,15 +24,101 @@
         dprintf("\n");        \
     } while (0)
 
-void sd_test()
+FILE *core2_file_open(const char *filename, const char *type)
 {
-    esp_err_t ret;
+    FILE *f = NULL;
 
+    if (type == NULL)
+    {
+        dprintf("core2_file_open(\"%s\", \"w\")", filename);
+        f = fopen(filename, "w");
+    }
+    else
+    {
+        dprintf("core2_file_open(\"%s\", \"%s\")", filename, type);
+        f = fopen(filename, type);
+    }
+    dprintf(" - %p\n", (void *)f);
+    return f;
+}
+
+void core2_file_close(FILE *f)
+{
+    dprintf("core2_file_close(%p)\n", (void *)f);
+    fclose(f);
+}
+
+bool core2_file_write(const char *filename, const char *data, size_t len)
+{
+    dprintf("core2_write_file(\"%s\") - ", filename);
+
+    FILE *f = fopen(filename, "w");
+    if (f == NULL)
+    {
+        dprintf("FAIL\n");
+        return false;
+    }
+
+    fwrite(data, 1, len, f);
+    fclose(f);
+
+    dprintf("OK\n");
+    return true;
+}
+
+bool core2_file_append(const char *filename, const char *data, size_t len)
+{
+    dprintf("core2_write_append(\"%s\") - ", filename);
+
+    FILE *f = fopen(filename, "a");
+    if (f == NULL)
+    {
+        dprintf("FAIL\n");
+        return false;
+    }
+
+    fwrite(data, 1, len, f);
+    fclose(f);
+
+    dprintf("OK\n");
+    return true;
+}
+
+static esp_err_t s_example_read_file(const char *path)
+{
+    dprintf("Reading file %s\n", path);
+
+    FILE *f = fopen(path, "r");
+    if (f == NULL)
+    {
+        dprintf("Failed to open file for reading\n");
+        return ESP_FAIL;
+    }
+
+    char line[256];
+    fgets(line, sizeof(line), f);
+    fclose(f);
+
+    // strip newline
+    char *pos = strchr(line, '\n');
+    if (pos)
+    {
+        *pos = '\0';
+    }
+
+    dprintf("Read from file: '%s'\n", line);
+    return ESP_OK;
+}
+
+bool core2_filesystem_init()
+{
+    dprintf("core2_filesystem_init() - Initializing SD card, using SPI\n");
+
+    esp_err_t ret;
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
     sdmmc_card_t *card;
 
     const char mount_point[] = "/sd";
-    dprintf("Initializing SD card, using SPI\n");
 
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
@@ -50,8 +135,8 @@ void sd_test()
 
     if (ret != ESP_OK)
     {
-        dprintf("Failed to initialize bus\n");
-        return;
+        dprintf("core2_filesystem_init() - Failed to initialize bus\n");
+        return false;
     }
 
     // This initializes the slot without card detect (CD) and write protect (WP) signals.
@@ -60,33 +145,24 @@ void sd_test()
     slot_config.gpio_cs = PIN_NUM_CS;
     slot_config.host_id = (spi_host_device_t)host.slot;
 
-    dprintf("Mounting filesystem\n");
+    dprintf("core2_filesystem_init() - Mounting filesystem\n");
     ret = esp_vfs_fat_sdspi_mount(mount_point, &host, &slot_config, &mount_config, &card);
 
     if (ret != ESP_OK)
     {
         if (ret == ESP_FAIL)
-        {
             dprintf("Failed to mount filesystem. If you want the card to be formatted, set the CONFIG_EXAMPLE_FORMAT_IF_MOUNT_FAILED menuconfig option\n");
-        }
         else
-        {
             dprintf("Failed to initialize the card (%s). Make sure SD card lines have pull-up resistors in place\n", esp_err_to_name(ret));
-        }
-        return;
+
+        return false;
     }
-    ESP_LOGI(TAG, "Filesystem mounted");
 
-    // Card has been initialized, print its properties
+    dprintf("core2_filesystem_init() - Filesystem mounted @ \"%s\"\n", mount_point);
     sdmmc_card_print_info(stdout, card);
-}
 
-bool core2_filesystem_init()
-{
-    dprintf("core2_filesystem_init()\n");
+    dprintf("core2_filesystem_init() - Creating folders\n");
+    mkdir("/sd/logs", 0777);
 
-    sd_test();
-
-    dprintf("SD Success\n");
     return true;
 }

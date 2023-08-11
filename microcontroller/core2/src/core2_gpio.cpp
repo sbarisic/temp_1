@@ -1,6 +1,5 @@
 #include <core2.h>
 #include <driver/gpio.h>
-
 xQueueHandle q_gpio0;
 
 bool core2_gpio_get_interrupt0()
@@ -26,17 +25,20 @@ static void IRAM_ATTR gpio_interrupt_handler(void *args)
 {
     gpio_num_t INT_PIN = (gpio_num_t)(int)args;
 
-    if (INT_PIN == GPIO_NUM_0) {
+    if (INT_PIN == GPIO_NUM_0)
+    {
         core2_gpio_set_interrupt0();
     }
 }
 
-QueueHandle_t CreateInterruptQueue() {
+QueueHandle_t CreateInterruptQueue()
+{
     QueueHandle_t q = core2_queue_create(10, sizeof(int));
     return q;
 }
 
-void CreateInterrupt(gpio_num_t INPUT_PIN) {
+void CreateInterrupt(gpio_num_t INPUT_PIN)
+{
     gpio_pad_select_gpio(INPUT_PIN);
     gpio_set_direction(INPUT_PIN, GPIO_MODE_INPUT);
     gpio_pulldown_en(INPUT_PIN);
