@@ -65,3 +65,4 @@ void core2_file_list(const char *dirname);
 
 // MCP320X ADC
 bool core2_mcp320x_init();
+void core2_adc_read(float* Volt1, float* Volt2);
