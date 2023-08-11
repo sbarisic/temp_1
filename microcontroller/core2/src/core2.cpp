@@ -99,6 +99,11 @@ BaseType_t core2_queue_receive(xQueueHandle q, void *buffer)
     }
 }
 
+void core2_queue_reset(xQueueHandle q)
+{
+    xQueueReset(q);
+}
+
 // @brief Expects 30 byte buffer
 void core2_err_tostr(esp_err_t err, char *buffer)
 {

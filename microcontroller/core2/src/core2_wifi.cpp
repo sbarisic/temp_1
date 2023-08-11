@@ -14,16 +14,23 @@ int32_t LastBeginConnect;
 int32_t NextConnectWaitTime;
 
 int ConDataIdx = 1;
-const char *SSIDs[] = {"Serengeti", "TEST", "Barisic"};
-const char *PASSs[] = {"srgt#2018", "123456789", "123456789"};
+const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti"};
+const char *PASSs[] = {"123456789", "123456789", "srgt#2018"};
 
-void GetConnectData(const char **SSID, const char **PASS)
+bool ConnectionContains(const char *SSID, const char **PASS)
 {
-    if (ConDataIdx < 0 || ConDataIdx >= (sizeof(SSIDs) / sizeof(*SSIDs)))
-        ConDataIdx = 0;
+    *PASS = NULL;
 
-    *SSID = SSIDs[ConDataIdx];
-    *PASS = PASSs[ConDataIdx];
+    for (size_t i = 0; i < (sizeof(SSIDs) / sizeof(*SSIDs)); i++)
+    {
+        if (strcmp(SSID, SSIDs[i]) == 0)
+        {
+            *PASS = PASSs[i];
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool c2_wifi_begin_connect(int32_t NextConnectWaitTime)
@@ -33,15 +40,25 @@ bool c2_wifi_begin_connect(int32_t NextConnectWaitTime)
 
     LastBeginConnect = core2_clock_bootseconds();
 
-    const char *SSID;
-    const char *PASS;
-    GetConnectData(&SSID, &PASS);
+    int found = WiFi.scanNetworks();
+    for (int i = 0; i < found; i++)
+    {
+        String ssid = WiFi.SSID(i);
+        const char *SSID = ssid.c_str();
+        const char *PASS;
 
-    dprintf("c2_wifi_begin_connect(%d) SSID: %s\n", NextConnectWaitTime, SSID);
+        dprintf("c2_wifi_begin_connect - found '%s'\n", SSID);
 
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(SSID, PASS);
-    return true;
+        if (ConnectionContains(SSID, &PASS))
+        {
+            dprintf("c2_wifi_begin_connect(%d) SSID: %s\n", NextConnectWaitTime, SSID);
+            WiFi.mode(WIFI_STA);
+            WiFi.begin(SSID, PASS);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void c2_wifi_task(void *params)
@@ -108,7 +125,7 @@ void c2_wifi_task(void *params)
             dprintf(PRF_STAT " WL_CONNECTION_LOST \n");
 
             ConnectionValid = false;
-            NextConnectWaitTime = 10;
+            NextConnectWaitTime = 30;
             break;
 
         // TODO: Handle disconnect
@@ -117,7 +134,7 @@ void c2_wifi_task(void *params)
                 dprintf(PRF_STAT " WL_DISCONNECTED \n");
 
             ConnectionValid = false;
-            NextConnectWaitTime = 10;
+            NextConnectWaitTime = 15;
             break;
 
         case WL_NO_SHIELD:
@@ -125,7 +142,7 @@ void c2_wifi_task(void *params)
                 dprintf(PRF_STAT " WL_NO_SHIELD \n");
 
             ConnectionValid = false;
-            NextConnectWaitTime = 1;
+            NextConnectWaitTime = 3;
             break;
 
         default:
@@ -133,7 +150,7 @@ void c2_wifi_task(void *params)
                 dprintf(PRF_STAT " DEFAULT(%d) \n", WiFiStatus);
 
             ConnectionValid = false;
-            NextConnectWaitTime = 20;
+            NextConnectWaitTime = 30;
             break;
         }
 
@@ -173,6 +190,6 @@ void core2_wifi_yield_until_connected()
 {
     while (!core2_wifi_isconnected())
     {
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }

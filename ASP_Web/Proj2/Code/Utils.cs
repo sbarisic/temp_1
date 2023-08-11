@@ -1,5 +1,6 @@
 ﻿using System.Web;
 using System.Collections.Specialized;
+using System.Globalization;
 
 namespace Proj2.Code {
 	public static class Utils {
@@ -51,6 +52,13 @@ namespace Proj2.Code {
 			}
 
 			return Dt.ToString(Fmt);
+		}
+
+		public static bool TryParseFloat(string Str, out float F) {
+			if (float.TryParse(Str, NumberStyles.Any, CultureInfo.InvariantCulture, out F))
+				return true;
+
+			return false;
 		}
 
 		/*public static string GenerateID() {

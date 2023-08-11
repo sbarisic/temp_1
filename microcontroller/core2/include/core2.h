@@ -23,6 +23,7 @@ void core2_lock_end(SemaphoreHandle_t lock);
 xQueueHandle core2_queue_create(int count, int elementSize);
 BaseType_t core2_queue_send(xQueueHandle q, const void* item);
 BaseType_t core2_queue_receive(xQueueHandle q, void* buffer);
+void core2_queue_reset(xQueueHandle q);
 
 void core2_err_tostr(esp_err_t err, char *buffer);
 
@@ -41,9 +42,26 @@ bool core2_clock_init();
 int32_t core2_clock_bootseconds();
 int32_t core2_clock_seconds_since(int32_t lastTime);
 void core2_clock_time_now(char *strftime_buf);
+void core2_clock_time_fmt(char *strftime_buf, size_t max_size, const char* fmt);
 void core2_clock_update_from_ntp();
 
 // GPIO
 bool core2_gpio_init();
 bool core2_gpio_get_interrupt0();
 bool core2_gpio_set_interrupt0();
+void core2_gpio_clear_interrupt0();
+
+// Flash
+bool core2_flash_init();
+
+// Filesystem
+bool core2_filesystem_init();
+FILE *core2_file_open(const char *filename, const char *type = NULL);
+bool core2_file_close(FILE* f);
+bool core2_file_move(const char *oldf, const char *newf);
+bool core2_file_write(const char *filename, const char *data, size_t len);
+bool core2_file_mkdir(const char *dirname, mode_t mode = 0);
+void core2_file_list(const char *dirname);
+
+// MCP320X ADC
+bool core2_mcp320x_init();

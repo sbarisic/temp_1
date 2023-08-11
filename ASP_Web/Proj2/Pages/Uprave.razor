@@ -187,8 +187,8 @@
 	void GetUpravaStyle(DbAdministration Administration, out string UpravaButtonStyle, out bool HasError, out bool HasWarning) {
 		UpravaButtonStyle = "";
 
-		HasWarning = Administration.HasWarnings();
-		HasError = Administration.HasErrors();
+		HasWarning = Administration.HasAnyWarnings();
+		HasError = Administration.HasAnyErrors();
 
 		if (HasError) {
 			UpravaButtonStyle = "list-group-item-danger";
@@ -201,8 +201,8 @@
 		ListGroupItemStyle = "";
 		ButtonStyle = "btn-outline-secondary";
 
-		HasWarning = V.HasWarnings();
-		HasError = V.HasErrors();
+		HasWarning = V.HasAnyWarnings();
+		HasError = V.HasAnyErrors();
 
 
 		if (HasError) {

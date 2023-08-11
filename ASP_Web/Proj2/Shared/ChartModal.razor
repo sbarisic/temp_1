@@ -1,0 +1,59 @@
+﻿@using Proj2.Code
+@using System.Reflection
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+@inject AuthStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
+
+<div class="modal-dialog modal-xl">
+	<div class="modal-content">
+		<div class="modal-header">
+			<h5 class="modal-title" id="editAdminModalLabel">@BlazoredModal.Title</h5>
+		</div>
+
+		<div class="modal-body">
+			<canvas id="myChart"></canvas>
+		</div>
+
+		<div class="modal-footer">
+			<button type="button" class="btn btn-secondary" @onclick="@(e => Close())">Close</button>
+			@*<button type="button" class="btn btn-primary" @onclick="@(e => SaveChanges())">Save Changes</button>*@
+		</div>
+	</div>
+</div>
+
+
+
+@code {
+	[CascadingParameter]
+	BlazoredModalInstance BlazoredModal {
+		get; set;
+	}
+
+	[Parameter]
+	public float[] Labels {
+		get; set;
+	}
+
+	[Parameter]
+	public float[] Values {
+		get; set;
+	}
+
+	//protected override async Task On
+	protected override async Task OnAfterRenderAsync(bool firstRender) {
+		if (!firstRender)
+			return;
+
+		await JSRuntime.InvokeVoidAsync("draw_chart", Labels, Values);
+	}
+
+	void Close() {
+		BlazoredModal.CancelAsync();
+	}
+
+	void SaveChanges() {
+		BlazoredModal.CloseAsync();
+	}
+}
