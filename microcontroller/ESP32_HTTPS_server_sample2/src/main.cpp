@@ -48,6 +48,8 @@ float voltage2;
 float gpressure;
 float gtemperature;
 char string[8];
+float naponi[200]; // marica za zapis padova napona u interruptu
+volatile int naponi_ready;
 
 EventGroupHandle_t eventGroup;
 const int gotVoltage = BIT0;
@@ -61,7 +63,6 @@ static void gpio_isr_handler(void *args) // definicija ISR
   xQueueSendFromISR(interruptQueue, &pinNumber, NULL);
 }
 
-float naponi[200]; // marica za zapis padova napona u interruptu
 
 void buttonPushedTask(void *params) // task koji se pokreće nakon aktivacije ISR
 {
@@ -102,6 +103,8 @@ void buttonPushedTask(void *params) // task koji se pokreće nakon aktivacije IS
         }
         naponi[i] = int(minnapon * 100);
       }
+
+      naponi_ready = 1;
 
       // vTaskDelay(1000 / portTICK_PERIOD_MS);
 
@@ -220,7 +223,7 @@ void task4(void *pvparameter)
 
     xEventGroupWaitBits(eventGroup, gotVoltage | gotTempPress | gotLCD, true, true, portMAX_DELAY);
 
-    DynamicJsonDocument doc(512);
+    DynamicJsonDocument doc(1024 * 3);
 
     doc["APIKey"] = "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw="; //    /vyDA/OWuDLOHMrbN+Dso7tONCfjiNRKnnNd4FqTEQA=";
     doc["Action"] = 1;
@@ -228,6 +231,18 @@ void task4(void *pvparameter)
     doc["ACCvoltage2"] = voltage2;
     doc["Tlak"] = gpressure;
     doc["Temperatura"] = gtemperature;
+    //doc["Test"] = naponi;
+
+    if (naponi_ready) {
+      Serial.println("Saljem napone!");
+
+      for (int i = 0; i < 200; i++) {
+        doc["Test"][i] = serialized(String(naponi[i] / 100, 2));
+      }
+
+      naponi_ready = 0;
+    }
+
 
     String sendBuff;
     serializeJson(doc, sendBuff);
@@ -322,6 +337,8 @@ void task4(void *pvparameter)
 
 void setup()
 {
+  naponi_ready = 0;
+
   // definicija GPIO kao ISR
   gpio_set_direction(PIN_SWITCH, GPIO_MODE_INPUT);
   gpio_pulldown_en(PIN_SWITCH);
@@ -408,7 +425,7 @@ void setup()
   xTaskCreatePinnedToCore(
       task4,
       "Task 4",
-      4096,
+      4096 * 2,
       NULL, // task parameters
       1,    // task priority
       NULL, // task handle
