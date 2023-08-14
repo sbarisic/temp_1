@@ -92,29 +92,12 @@ void main_logic(void *params)
     vTaskDelete(NULL);
 }
 
-void process_all_files()
-{
-    core2_file_list("/sd/processing", [](const char *full_name, const char *file_name)
-                    { core2_file_move(full_name, "/sd/logs/"); });
-}
-
 void network_logic(void *params)
 {
     dprintf("network_logic()\n");
 
     while (true)
     {
-        /*vTaskDelay(pdMS_TO_TICKS(1000 * 5));
-        dprintf("Reading voltage!\n");
-
-        float a, b;
-        core2_adc_read(&a, &b);
-
-        dprintf("V1 = %f, V2 = %f\n", a, b);
-
-        vTaskDelay(pdMS_TO_TICKS(1000 * 5));
-        core2_file_append("/sd/test.txt", "Hello!\n", 7);*/
-
         vTaskDelay(pdMS_TO_TICKS(1000 * 10));
 
         // Busy, skip
@@ -123,11 +106,42 @@ void network_logic(void *params)
 
         if (core2_wifi_isconnected())
         {
-            process_all_files();
+            core2_file_list("/sd/processing", [](const char *full_name, const char *file_name)
+                            { core2_file_move(full_name, "/sd/logs/"); });
         }
     }
 
     vTaskDelete(NULL);
+}
+
+void analog_voltage_test()
+{
+    dprintf("======================== analog_voltage_test()\n");
+
+    float a, b;
+    core2_adc_read(&a, &b);
+
+    dprintf("V1 = %f, V2 = %f\n", a, b);
+}
+
+void append_file_test()
+{
+    dprintf("======================== append_file_test()\n");
+    core2_file_append("/sd/test.txt", "Hello!\n", 7);
+}
+
+void run_tests()
+{
+    printf("Starting tests\n");
+
+    while (true)
+    {
+        vTaskDelay(pdMS_TO_TICKS(3000));
+        analog_voltage_test();
+
+        vTaskDelay(pdMS_TO_TICKS(3000));
+        append_file_test();
+    }
 }
 
 void setup()
@@ -142,9 +156,11 @@ void setup()
         core2_filesystem_init(&sdcard_host, SDCARD_PIN_CS);
     }
 
+    core2_mcp320x_init();
+    run_tests();
+
     core2_flash_init();
     core2_gpio_init();
-    core2_mcp320x_init();
     core2_oled_init();
     core2_wifi_init();
     core2_clock_init();
