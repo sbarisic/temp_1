@@ -60,14 +60,14 @@ SemaphoreHandle_t core2_lock_create()
     return lock;
 }
 
-void core2_lock_begin(SemaphoreHandle_t lock)
+bool core2_lock_begin(SemaphoreHandle_t lock)
 {
-    xSemaphoreTake(lock, portMAX_DELAY);
+    return xSemaphoreTake(lock, portMAX_DELAY);
 }
 
-void core2_lock_end(SemaphoreHandle_t lock)
+bool core2_lock_end(SemaphoreHandle_t lock)
 {
-    xSemaphoreGive(lock);
+    return xSemaphoreGive(lock);
 }
 
 xQueueHandle core2_queue_create(int count, int elementSize)
@@ -140,4 +140,50 @@ void core2_err_tostr(esp_err_t err, char *buffer)
         strcpy(buffer, "UNKNOWN");
         break;
     }
+}
+
+void *core2_malloc(size_t sz)
+{
+    void *ptr = malloc(sz);
+
+    if (ptr == NULL)
+    {
+        eprintf("malloc(%zu) failed", sz);
+    }
+
+    return ptr;
+}
+
+void core2_free(void *ptr)
+{
+    free(ptr);
+}
+
+char *core2_string_concat(const char *a, const char *b)
+{
+    size_t len = strlen(a) + strlen(b) + 1;
+    char *res = (char *)core2_malloc(len);
+
+    if (res == NULL)
+        return NULL;
+
+    memset(res, 0, len);
+    strcpy(res, a);
+    strcat(res, b);
+
+    return res;
+}
+
+bool core2_string_ends_with(const char *str, const char *end)
+{
+    if (str == NULL || end == NULL)
+        return false;
+
+    size_t lenstr = strlen(str);
+    size_t lensuffix = strlen(end);
+
+    if (lensuffix > lenstr)
+        return false;
+
+    return strncmp(str + lenstr - lensuffix, end, lensuffix) == 0;
 }

@@ -267,5 +267,6 @@ bool core2_oled_init()
         c2_disp_mem_set(20, i, 1);
     }*/
 
+    core2_oled_print("Hello World!");
     return true;
 }

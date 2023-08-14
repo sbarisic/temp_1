@@ -1,9 +1,13 @@
 #include <core2.h>
 #include <driver/gpio.h>
-xQueueHandle q_gpio0;
+
+xQueueHandle q_gpio0 = NULL;
 
 bool core2_gpio_get_interrupt0()
 {
+    if (q_gpio0 == NULL)
+        return false;
+
     int num;
 
     if (core2_queue_receive(q_gpio0, &num))
@@ -16,6 +20,9 @@ bool core2_gpio_get_interrupt0()
 
 bool core2_gpio_set_interrupt0()
 {
+    if (q_gpio0 == NULL)
+        return false;
+
     int num = 1;
     core2_queue_send(q_gpio0, &num);
     return true;
@@ -23,6 +30,9 @@ bool core2_gpio_set_interrupt0()
 
 void core2_gpio_clear_interrupt0()
 {
+    if (q_gpio0 == NULL)
+        return;
+
     core2_queue_reset(q_gpio0);
 }
 

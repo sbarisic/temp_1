@@ -92,13 +92,19 @@ void main_logic(void *params)
     vTaskDelete(NULL);
 }
 
+void process_all_files()
+{
+    core2_file_list("/sd/processing", [](const char *full_name, const char *file_name)
+                    { core2_file_move(full_name, "/sd/logs/"); });
+}
+
 void network_logic(void *params)
 {
     dprintf("network_logic()\n");
 
     while (true)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000 * 5));
+        /*vTaskDelay(pdMS_TO_TICKS(1000 * 5));
         dprintf("Reading voltage!\n");
 
         float a, b;
@@ -106,7 +112,10 @@ void network_logic(void *params)
 
         dprintf("V1 = %f, V2 = %f\n", a, b);
 
-        /*vTaskDelay(pdMS_TO_TICKS(1000 * 20));
+        vTaskDelay(pdMS_TO_TICKS(1000 * 5));
+        core2_file_append("/sd/test.txt", "Hello!\n", 7);*/
+
+        vTaskDelay(pdMS_TO_TICKS(1000 * 10));
 
         // Busy, skip
         if (scope_in_progress)
@@ -114,9 +123,8 @@ void network_logic(void *params)
 
         if (core2_wifi_isconnected())
         {
-            dprintf("network_logic() !!\n");
-            core2_file_list("/sd/processing");
-        }*/
+            process_all_files();
+        }
     }
 
     vTaskDelete(NULL);
@@ -127,17 +135,20 @@ void setup()
     core2_init();
     core2_print_status();
 
+    core2_spi_init();
     sdmmc_host_t sdcard_host;
-    if (core2_spi_create(&sdcard_host, SDCARD_PIN_MOSI, SDCARD_PIN_MISO, SDCARD_PIN_CLK)) {        
+    if (core2_spi_create(&sdcard_host, SDCARD_PIN_MOSI, SDCARD_PIN_MISO, SDCARD_PIN_CLK))
+    {
         core2_filesystem_init(&sdcard_host, SDCARD_PIN_CS);
     }
 
-    core2_flash_init();   
+    core2_flash_init();
     core2_gpio_init();
     core2_mcp320x_init();
     core2_oled_init();
     core2_wifi_init();
     core2_clock_init();
+    core2_json_init();
 
     core2_wifi_yield_until_connected();
     dprintf("init() done\n");

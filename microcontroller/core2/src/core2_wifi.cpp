@@ -14,8 +14,8 @@ int32_t LastBeginConnect;
 int32_t NextConnectWaitTime;
 
 int ConDataIdx = 1;
-const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti"};
-const char *PASSs[] = {"123456789", "123456789", "srgt#2018"};
+const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti", "TEST"};
+const char *PASSs[] = {"123456789", "123456789", "srgt#2018", "123456789"};
 
 bool ConnectionContains(const char *SSID, const char **PASS)
 {

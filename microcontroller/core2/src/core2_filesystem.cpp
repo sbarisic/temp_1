@@ -21,68 +21,122 @@ FILE *core2_file_open(const char *filename, const char *type)
 
     if (type == NULL)
     {
+#ifdef CORE2_FILESYSTEM_VERBOSE_OUTPUT
         dprintf("core2_file_open(\"%s\", \"w\")", filename);
+#endif
+
         f = fopen(filename, "w");
     }
     else
     {
+#ifdef CORE2_FILESYSTEM_VERBOSE_OUTPUT
         dprintf("core2_file_open(\"%s\", \"%s\")", filename, type);
+#endif
+
         f = fopen(filename, type);
     }
+
+#ifdef CORE2_FILESYSTEM_VERBOSE_OUTPUT
     dprintf(" - %p\n", (void *)f);
+#endif
+
     return f;
 }
 
 bool core2_file_close(FILE *f)
 {
+#ifdef CORE2_FILESYSTEM_VERBOSE_OUTPUT
     dprintf("core2_file_close(%p)\n", (void *)f);
+#endif
+
+    fflush(f);
+
     if (!fclose(f))
         return true;
 
     return false;
 }
 
-bool core2_file_move(const char *oldf, const char *newf)
+bool core2_file_move(const char *full_file_path, const char *new_directory)
 {
-    if (rename(oldf, newf) == -1)
-        return false;
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+    dprintf("core2_file_move(\"%s\") to \"%s\"\n", full_file_path, new_directory);
+#endif
 
+    char *fname = basename(full_file_path);
+    char *full_dest_filename = core2_string_concat(new_directory, fname);
+
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT)
+    dprintf("core2_file_move new filename is \"%s\"\n", full_dest_filename);
+#endif
+
+    if (rename(full_file_path, full_dest_filename) == -1)
+    {
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+        dprintf("core2_file_move FAILED\n");
+#endif
+
+        core2_free(full_dest_filename);
+        return false;
+    }
+
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+    dprintf("core2_file_move OK\n");
+#endif
+
+    core2_free(full_dest_filename);
     return true;
 }
 
 bool core2_file_write(const char *filename, const char *data, size_t len)
 {
-    dprintf("core2_write_file(\"%s\") - ", filename);
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+    dprintf("core2_file_write(\"%s\")\n", filename);
+#endif
 
-    FILE *f = fopen(filename, "w");
+    FILE *f = core2_file_open(filename, "w");
     if (f == NULL)
     {
-        dprintf("FAIL\n");
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+        dprintf("core2_file_write FAIL\n");
+#endif
+
         return false;
     }
 
     fwrite(data, 1, len, f);
-    fclose(f);
+    core2_file_close(f);
 
-    dprintf("OK\n");
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+    dprintf("core2_file_write OK\n");
+#endif
+
     return true;
 }
 
 bool core2_file_append(const char *filename, const char *data, size_t len)
 {
-    dprintf("core2_write_append(\"%s\") - ", filename);
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+    dprintf("core2_file_append(\"%s\")\n", filename);
+#endif
 
-    FILE *f = fopen(filename, "a");
+    FILE *f = core2_file_open(filename, "a");
     if (f == NULL)
     {
-        dprintf("FAIL\n");
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+        dprintf("core2_file_append FAIL\n");
+#endif
+
         return false;
     }
 
     fwrite(data, 1, len, f);
-    fclose(f);
+    core2_file_close(f);
 
-    dprintf("OK\n");
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+    dprintf("core2_file_append OK\n");
+#endif
+
     return true;
 }
 
@@ -91,28 +145,64 @@ bool core2_file_mkdir(const char *dirname, mode_t mode)
     if (mode == 0)
         mode = 0777;
 
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
     dprintf("core2_file_mkdir(\"%s\", %o) - ", dirname, mode);
+#endif
 
-    if (mkdir(dirname, mode) == -1)
+    struct stat st = {0};
+    if (stat(dirname, &st) == -1)
     {
-        dprintf("FAIL\n");
+        if (mkdir(dirname, mode) == -1)
+        {
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+            dprintf("FAIL\n");
+#endif
+
+            return false;
+        }
+        else
+        {
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+            dprintf("OK\n");
+#endif
+
+            return true;
+        }
+    }
+    else
+    {
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+        dprintf("DIR_EXISTS\n");
+#endif
+
         return false;
     }
 
-    dprintf("OK\n");
-    return true;
+    return false;
 }
 
-void core2_file_list(const char *dirname)
+void core2_file_list(const char *dirname, onFileFoundFn onFileFound)
 {
     struct dirent *dir;
+    char buf[PATH_MAX + 1];
+
     DIR *d = opendir(dirname);
 
     if (d)
     {
         while ((dir = readdir(d)) != NULL)
         {
-            dprintf("FOUND: %s\n", dir->d_name);
+            memset(buf, 0, sizeof(buf));
+            strcat(buf, dirname);
+            strcat(buf, "/");
+            strcat(buf, dir->d_name);
+
+            dprintf("FOUND: \"%s\"; ", buf);
+
+            char *filename = basename(buf);
+            dprintf("basename = \"%s\"\n", filename);
+
+            onFileFound(buf, filename);
         }
 
         closedir(d);

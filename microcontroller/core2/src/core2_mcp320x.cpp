@@ -1,72 +1,66 @@
 #include <core2.h>
 #include <Mcp320x.h>
 
-#define ADC_VREF 3311   // 3.3V Vref
-#define ADC_CLK 1600000 // 1600000  // SPI clock 1.6MHz
+SPISettings spi_settings;
+SemaphoreHandle_t lock;
 
-MCP3201 adc(ADC_VREF, 4); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
-MCP3201 adc1(ADC_VREF, 5);
+MCP3201 adc(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL1); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
+MCP3201 adc1(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL2);
+
+void core2_adc_chipselect_enable()
+{
+    digitalWrite(MCP320X_CS_CHANNEL1, HIGH);
+    digitalWrite(MCP320X_CS_CHANNEL2, HIGH);
+}
+
+void core2_adc_chipselect_disable()
+{
+    digitalWrite(MCP320X_CS_CHANNEL1, LOW);
+    digitalWrite(MCP320X_CS_CHANNEL2, LOW);
+}
 
 void core2_adc_read(float *Volt1, float *Volt2)
 {
-    dprintf("SPISettings\n");
+    dprintf("core2_adc_read()\n");
+    if (core2_lock_begin(lock))
+    {
+        core2_adc_chipselect_enable();
+        SPI.beginTransaction(spi_settings);
 
-    // initialize SPI interface for MCP3208 & LCD
-    SPISettings settings(ADC_CLK, MSBFIRST, SPI_MODE0);
+        //---------------------------------------------------------
+        uint16_t raw = adc.read(MCP3201::Channel::SINGLE_0);
+        uint16_t raw1 = adc1.read(MCP3201::Channel::SINGLE_0);
 
-    dprintf("SPI.begin\n");
-    SPI.begin();
+        // get analog value
+        uint16_t val = adc.toAnalog(raw);
+        uint16_t val1 = adc1.toAnalog(raw1);
 
-    dprintf("SPI.beginTransaction\n");
-    SPI.beginTransaction(settings);
+        float voltage1 = val * 4.795 / 1000;
+        float voltage2 = val1 * 9.215 / 1000 - val * 4.795 / 1000;
 
-    dprintf("adc.read\n");
-    //---------------------------------------------------------
-    uint16_t raw = adc.read(MCP3201::Channel::SINGLE_0);
-    uint16_t raw1 = adc1.read(MCP3201::Channel::SINGLE_0);
+        *Volt1 = voltage1;
+        *Volt2 = voltage2;
 
-    // get analog value
-    uint16_t val = adc.toAnalog(raw);
-    uint16_t val1 = adc1.toAnalog(raw1);
+        dprintf("Volt1 = %f, Volt2 = %f\n", voltage1, voltage2);
 
-    float voltage1 = val * 4.795 / 1000;
-    float voltage2 = val1 * 9.215 / 1000 - val * 4.795 / 1000;
+        //---------------------------------------------------------
 
-    *Volt1 = voltage1;
-    *Volt2 = voltage2;
-
-    dprintf("Volt1 = %f, Volt2 = %f\n", voltage1, voltage2);
-    dprintf("SPI.end\n");
-
-    //-------------
-    SPI.end();
-    dprintf("returning\n");
+        SPI.endTransaction();
+        core2_adc_chipselect_disable();
+        core2_lock_end(lock);
+    }
 }
 
 bool core2_mcp320x_init()
 {
-    /*dprintf("core2_mcp320x_init()\n");
+    dprintf("core2_mcp320x_init()\n");
+    lock = core2_lock_create();
 
     // configure PIN mode
-    pinMode(4, OUTPUT);
-    pinMode(5, OUTPUT);
+    pinMode(MCP320X_CS_CHANNEL1, OUTPUT);
+    pinMode(MCP320X_CS_CHANNEL2, OUTPUT);
 
-    // set initial PIN state
-    digitalWrite(4, HIGH);
-    digitalWrite(5, HIGH);
-
-    // initialize SPI interface for MCP3208 & LCD
-    SPISettings settings(ADC_CLK, MSBFIRST, SPI_MODE0);
-    SPI.begin();
-    SPI.beginTransaction(settings);*/
-
-    // configure PIN mode
-    pinMode(4, OUTPUT);
-    pinMode(5, OUTPUT);
-
-    // set initial PIN state
-    digitalWrite(4, HIGH);
-    digitalWrite(5, HIGH);
-
+    spi_settings = SPISettings(MCP320X_ADC_CLK, MSBFIRST, SPI_MODE0);
+    
     return true;
 }
