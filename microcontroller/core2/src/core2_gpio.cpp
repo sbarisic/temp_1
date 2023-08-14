@@ -1,7 +1,7 @@
 #include <core2.h>
 #include <driver/gpio.h>
 
-#define INTERRUPT_0_PIN GPIO_NUM_15
+#define INTERRUPT_0_PIN GPIO_NUM_0 // Pin 15
 
 xQueueHandle q_gpio0 = NULL;
 
