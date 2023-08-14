@@ -7,16 +7,6 @@
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 
-// #define SOC_SDMMC_USE_GPIO_MATRIX
-#include "driver/sdmmc_host.h"
-
-// Pin assignments can be set in menuconfig, see "SD SPI Example Configuration" menu.
-// You can also change the pin assignments here by changing the following 4 lines.
-#define PIN_NUM_MISO GPIO_NUM_35 // GPIO_NUM_2
-#define PIN_NUM_MOSI GPIO_NUM_23 // GPIO_NUM_15
-#define PIN_NUM_CLK  GPIO_NUM_32 // GPIO_NUM_14
-#define PIN_NUM_CS   GPIO_NUM_25 // GPIO_NUM_13
-
 #undef ESP_LOGI
 #define ESP_LOGI(a, ...)      \
     do                        \
@@ -129,43 +119,22 @@ void core2_file_list(const char *dirname)
     }
 }
 
-bool core2_filesystem_init()
+bool core2_filesystem_init(sdmmc_host_t *host, int CS)
 {
-    dprintf("core2_filesystem_init() - Initializing SD card, using SPI\n");
-
-    esp_err_t ret;
-    esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
-    sdmmc_card_t *card;
-
+    dprintf("core2_filesystem_init()\n");
     const char mount_point[] = "/sd";
 
-    sdmmc_host_t host = SDSPI_HOST_DEFAULT();
-
-    spi_bus_config_t bus_cfg = {
-        .mosi_io_num = PIN_NUM_MOSI,
-        .miso_io_num = PIN_NUM_MISO,
-        .sclk_io_num = PIN_NUM_CLK,
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1,
-        .max_transfer_sz = 4000,
-    };
-
-    ret = spi_bus_initialize((spi_host_device_t)host.slot, &bus_cfg, SDSPI_DEFAULT_DMA);
-
-    if (ret != ESP_OK)
-    {
-        dprintf("core2_filesystem_init() - Failed to initialize bus\n");
-        return false;
-    }
+    esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
 
     // This initializes the slot without card detect (CD) and write protect (WP) signals.
     // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
     sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-    slot_config.gpio_cs = PIN_NUM_CS;
-    slot_config.host_id = (spi_host_device_t)host.slot;
+    slot_config.gpio_cs = (gpio_num_t)CS;
+    slot_config.host_id = (spi_host_device_t)host->slot;
 
     dprintf("core2_filesystem_init() - Mounting filesystem\n");
-    ret = esp_vfs_fat_sdspi_mount(mount_point, &host, &slot_config, &mount_config, &card);
+    sdmmc_card_t *card;
+    esp_err_t ret = esp_vfs_fat_sdspi_mount(mount_point, host, &slot_config, &mount_config, &card);
 
     if (ret != ESP_OK)
     {

@@ -127,8 +127,12 @@ void setup()
     core2_init();
     core2_print_status();
 
-    core2_flash_init();
-    core2_filesystem_init();
+    sdmmc_host_t sdcard_host;
+    if (core2_spi_create(&sdcard_host, SDCARD_PIN_MOSI, SDCARD_PIN_MISO, SDCARD_PIN_CLK)) {        
+        core2_filesystem_init(&sdcard_host, SDCARD_PIN_CS);
+    }
+
+    core2_flash_init();   
     core2_gpio_init();
     core2_mcp320x_init();
     core2_oled_init();
