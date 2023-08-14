@@ -21,7 +21,8 @@ void core2_adc_chipselect_disable()
 
 void core2_adc_read(float *Volt1, float *Volt2)
 {
-    dprintf("core2_adc_read()\n");
+    //dprintf("core2_adc_read()\n");
+    
     if (core2_lock_begin(lock))
     {
         core2_adc_chipselect_enable();
@@ -41,7 +42,7 @@ void core2_adc_read(float *Volt1, float *Volt2)
         *Volt1 = voltage1;
         *Volt2 = voltage2;
 
-        dprintf("core2_adc_read(): Volt1 = %f, Volt2 = %f\n", voltage1, voltage2);
+        //dprintf("core2_adc_read(): Volt1 = %f, Volt2 = %f\n", voltage1, voltage2);
 
         //---------------------------------------------------------
 

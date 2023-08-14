@@ -15,10 +15,12 @@ void read_battery_scope()
         {
             // uint16_t raw1 = adc1.read(MCP3201::Channel::SINGLE_0);
             // uint16_t val1 = adc1.toAnalog(raw1);
-            uint16_t raw1 = 10;
-            uint16_t val1 = 10;
+            // uint16_t raw1 = 10;
+            // uint16_t val1 = 10;
+            // float naponj = val1 * 9.215 / 1000;
 
-            float naponj = val1 * 9.215 / 1000;
+            float naponj, b;
+            core2_adc_read(&naponj, &b);
 
             vTaskDelay(pdMS_TO_TICKS(1));
 
@@ -114,22 +116,6 @@ void network_logic(void *params)
     vTaskDelete(NULL);
 }
 
-void analog_voltage_test()
-{
-    dprintf("======================== analog_voltage_test()\n");
-
-    float a, b;
-    core2_adc_read(&a, &b);
-
-    dprintf("V1 = %f, V2 = %f\n", a, b);
-}
-
-void append_file_test()
-{
-    dprintf("======================== append_file_test()\n");
-    core2_file_append("/sd/test.txt", "Hello!\n", 7);
-}
-
 void run_tests()
 {
     printf("Starting tests\n");
@@ -137,10 +123,16 @@ void run_tests()
     while (true)
     {
         vTaskDelay(pdMS_TO_TICKS(3000));
-        analog_voltage_test();
+        dprintf("======================== analog_voltage_test()\n");
+        float a, b;
+        core2_adc_read(&a, &b);
+        dprintf("V1 = %f, V2 = %f\n", a, b);
 
         vTaskDelay(pdMS_TO_TICKS(3000));
-        append_file_test();
+        dprintf("======================== append_file_test()\n");
+        char buffer[256];
+        sprintf(buffer, "V1 = %f; V2 = %f\n", a, b);
+        core2_file_append("/sd/test.txt", buffer, strlen(buffer));
     }
 }
 
@@ -149,8 +141,8 @@ void setup()
     core2_init();
     core2_print_status();
 
-    pinMode(SDCARD_PIN_CS, OUTPUT);
-    digitalWrite(SDCARD_PIN_CS, LOW);
+    // pinMode(SDCARD_PIN_CS, OUTPUT);
+    // digitalWrite(SDCARD_PIN_CS, LOW);
 
     core2_spi_init();
     sdmmc_host_t sdcard_host;
@@ -160,7 +152,7 @@ void setup()
     }
 
     core2_mcp320x_init();
-    run_tests();
+    // run_tests();
 
     core2_flash_init();
     core2_gpio_init();
