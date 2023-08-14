@@ -30,10 +30,10 @@
 // SD SPI pin config
 // =================================================================================================
 
-#define SDCARD_PIN_MOSI GPIO_NUM_13 // GPIO_NUM_23 // GPIO_NUM_15
-#define SDCARD_PIN_MISO GPIO_NUM_12 // GPIO_NUM_35 // GPIO_NUM_2
-#define SDCARD_PIN_CLK GPIO_NUM_14  // GPIO_NUM_32 // GPIO_NUM_14
-#define SDCARD_PIN_CS GPIO_NUM_15   // GPIO_NUM_25 // GPIO_NUM_13
+#define SDCARD_PIN_MOSI GPIO_NUM_25 // GPIO_NUM_23 // GPIO_NUM_15
+#define SDCARD_PIN_MISO GPIO_NUM_33 // GPIO_NUM_35 // GPIO_NUM_2
+#define SDCARD_PIN_CLK GPIO_NUM_32  // GPIO_NUM_32 // GPIO_NUM_14
+#define SDCARD_PIN_CS GPIO_NUM_23   // GPIO_NUM_25 // GPIO_NUM_13
 
 // MCP320X SPI pin config
 // =================================================================================================

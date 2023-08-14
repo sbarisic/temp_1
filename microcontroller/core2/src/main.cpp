@@ -149,6 +149,9 @@ void setup()
     core2_init();
     core2_print_status();
 
+    pinMode(SDCARD_PIN_CS, OUTPUT);
+    digitalWrite(SDCARD_PIN_CS, LOW);
+
     core2_spi_init();
     sdmmc_host_t sdcard_host;
     if (core2_spi_create(&sdcard_host, SDCARD_PIN_MOSI, SDCARD_PIN_MISO, SDCARD_PIN_CLK))

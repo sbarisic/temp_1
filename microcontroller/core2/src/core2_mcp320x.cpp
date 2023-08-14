@@ -59,6 +59,7 @@ bool core2_mcp320x_init()
     // configure PIN mode
     pinMode(MCP320X_CS_CHANNEL1, OUTPUT);
     pinMode(MCP320X_CS_CHANNEL2, OUTPUT);
+    core2_adc_chipselect_disable();
 
     spi_settings = SPISettings(MCP320X_ADC_CLK, MSBFIRST, SPI_MODE0);
     
