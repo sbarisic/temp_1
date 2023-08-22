@@ -225,9 +225,12 @@ void setup()
     core2_init();
     core2_print_status();
 
+    core2_flash_init();
+    core2_gpio_init();
     core2_wifi_init();
     core2_clock_init();
     core2_json_init();
+    core2_mcp320x_init();
     core2_shell_init();
 
     // Start access point

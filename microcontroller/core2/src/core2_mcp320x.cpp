@@ -19,6 +19,12 @@ void core2_adc_chipselect_enable(core2_adc_channel_t Ch)
         digitalWrite(MCP320X_CS_CHANNEL2, HIGH);
 }
 
+void core2_adc_chipselect_enable_all()
+{
+    digitalWrite(MCP320X_CS_CHANNEL1, HIGH);
+    digitalWrite(MCP320X_CS_CHANNEL2, HIGH);
+}
+
 void core2_adc_chipselect_disable(core2_adc_channel_t Ch)
 {
     if (Ch & CORE2_ADC_CH1)
@@ -26,6 +32,12 @@ void core2_adc_chipselect_disable(core2_adc_channel_t Ch)
 
     if (Ch & CORE2_ADC_CH2)
         digitalWrite(MCP320X_CS_CHANNEL2, LOW);
+}
+
+void core2_adc_chipselect_disable_all()
+{
+    digitalWrite(MCP320X_CS_CHANNEL1, LOW);
+    digitalWrite(MCP320X_CS_CHANNEL2, LOW);
 }
 
 bool core2_adc_lock()
@@ -75,6 +87,9 @@ void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch,
             raw = adc.read(MCP3201::Channel::SINGLE_0);
             analog = adc.toAnalog(raw);
 
+            dprintf("adc.read    raw = %d\n", raw);
+            dprintf("adc.read analog = %d\n", analog);
+
             ChIdx++;
             VoltArray[ChIdx] = (float)analog * (Factors == NULL ? 1 : Factors[ChIdx]);
         }
@@ -83,6 +98,9 @@ void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch,
         {
             raw = adc1.read(MCP3201::Channel::SINGLE_0);
             analog = adc1.toAnalog(raw);
+
+            dprintf("adc1.read    raw = %d\n", raw);
+            dprintf("adc1.read analog = %d\n", analog);
 
             ChIdx++;
             VoltArray[ChIdx] = (float)analog * (Factors == NULL ? 1 : Factors[ChIdx]);
@@ -100,13 +118,13 @@ void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch,
 #endif
 }
 
-/*void core2_adc_read(float *Volt1, float *Volt2)
+void core2_adc_read(float *Volt1, float *Volt2)
 {
 #if !defined(CORE2_DISABLE_MCP320X)
     dprintf("core2_adc_read()\n");
     if (core2_lock_begin(lock))
     {
-        core2_adc_chipselect_enable();
+        core2_adc_chipselect_enable_all();
         SPI.beginTransaction(spi_settings);
 
         //---------------------------------------------------------
@@ -128,14 +146,14 @@ void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch,
         //---------------------------------------------------------
 
         SPI.endTransaction();
-        core2_adc_chipselect_disable();
+        core2_adc_chipselect_disable_all();
         core2_lock_end(lock);
     }
 #else
     *Volt1 = 0;
     *Volt2 = 0;
 #endif
-}*/
+}
 
 bool core2_mcp320x_init()
 {

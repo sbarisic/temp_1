@@ -14,7 +14,7 @@ void core2_main();
 #define CORE2_DEBUG_WIFI
 
 // Uncomment to disable compilation of modules
-#define CORE2_DISABLE_MCP320X
+//#define CORE2_DISABLE_MCP320X
 #define CORE2_DISABLE_OLED
 
 // Uncomment to disable complilation and calling of test functions
@@ -40,10 +40,10 @@ void core2_main();
 // SD SPI pin config
 // =================================================================================================
 
-#define SDCARD_PIN_MOSI GPIO_NUM_13 // GPIO_NUM_23 // GPIO_NUM_15
-#define SDCARD_PIN_MISO GPIO_NUM_12 // GPIO_NUM_35 // GPIO_NUM_2
-#define SDCARD_PIN_CLK GPIO_NUM_14  // GPIO_NUM_32 // GPIO_NUM_14
-#define SDCARD_PIN_CS GPIO_NUM_15   // GPIO_NUM_25 // GPIO_NUM_13
+#define SDCARD_PIN_MOSI GPIO_NUM_25 // GPIO_NUM_23 // GPIO_NUM_15
+#define SDCARD_PIN_MISO GPIO_NUM_33 // GPIO_NUM_35 // GPIO_NUM_2
+#define SDCARD_PIN_CLK GPIO_NUM_32  // GPIO_NUM_32 // GPIO_NUM_14
+#define SDCARD_PIN_CS GPIO_NUM_23   // GPIO_NUM_25 // GPIO_NUM_13
 
 // MCP320X SPI pin config
 // =================================================================================================
@@ -149,6 +149,7 @@ bool core2_adc_lock();
 void core2_adc_unlock(bool was_locked);
 // void core2_adc_read(float *Volt1, float *Volt2);
 void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch, bool UseLock);
+void core2_adc_read(float *Volt1, float *Volt2);
 
 // SPI
 // =================================================================================================

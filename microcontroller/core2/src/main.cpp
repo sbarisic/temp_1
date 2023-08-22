@@ -32,9 +32,18 @@ void core2_main()
     printf("Hello World!\n");
     // core2_wifi_ap_start();
 
+    float Volts[] = {0.0f, 0.0f};
+    float V1, V2;
+    float Factors[] = {4.795f / 1000, 1.0f};
+
     for (;;)
     {
-        send_data_to_server();
+        // core2_adc_read_ex(Volts, NULL, (core2_adc_channel_t)(CORE2_ADC_CH1 | CORE2_ADC_CH2), false);
+
+        core2_adc_read(&V1, &V2);
+        dprintf("V1 = %f, V2 = %f\n", V1, V2);
+
+        // send_data_to_server();
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 
