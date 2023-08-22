@@ -24,8 +24,10 @@ void send_data_to_server()
 
 void core2_main()
 {
-    const char *JSON_txt = "{ \"APIKey\": \"OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=\", \"Action\": 1, \"Napon1\": 16.789 }";
-    size_t JSON_txt_len = strlen(JSON_txt);
+    // const char *JSON_txt = "{ \"APIKey\": \"OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=\", \"Action\": 1, \"Napon1\": 16.789 }";
+    // size_t JSON_txt_len = strlen(JSON_txt);
 
     printf("Hello World!\n");
+
+    core2_shell_register("interrupt_read_voltage", interrupt_read_voltage);
 }

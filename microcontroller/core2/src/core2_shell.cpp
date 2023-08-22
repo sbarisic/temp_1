@@ -10,6 +10,8 @@
 ESPTelnet telnet;
 EscapeCodes ansi;
 
+core2_shell_cmd_t shell_commands[64];
+
 #define tprintfln(...)              \
     do                              \
     {                               \
@@ -17,15 +19,73 @@ EscapeCodes ansi;
         telnet.print("\r\n");       \
     } while (false)
 
-// ================================================================================
-
 void print_prompt()
 {
     telnet.print(ansi.setFG(ANSI_BRIGHT_WHITE));
-    telnet.print("core2$");
+    telnet.print("core$");
     telnet.print(ansi.reset());
     telnet.print(" ");
 }
+
+void core2_shell_register(const char *func_name, core2_shell_func func)
+{
+    for (size_t i = 0; i < (sizeof(shell_commands) / sizeof(*shell_commands)); i++)
+    {
+        if (shell_commands[i].name == NULL)
+        {
+            shell_commands[i].name = func_name; // TODO: Copy string?
+            shell_commands[i].func = func;
+            return;
+        }
+
+        if (shell_commands[i].name != NULL && !strcmp(shell_commands[i].name, func_name))
+        {
+            dprintf("core2_shell_register() fail, function already exists '%s'\n", func_name);
+            return;
+        }
+    }
+}
+
+void core2_shellcmd_help()
+{
+    for (size_t i = 0; i < (sizeof(shell_commands) / sizeof(*shell_commands)); i++)
+    {
+        if (shell_commands[i].name == NULL)
+            return;
+
+        tprintfln(" %s @ %p", shell_commands[i].name, (void *)shell_commands[i].func);
+    }
+}
+
+void core2_shell_init_commands()
+{
+    for (size_t i = 0; i < (sizeof(shell_commands) / sizeof(*shell_commands)); i++)
+    {
+        shell_commands[i] = {0};
+    }
+
+    core2_shell_register("help", core2_shellcmd_help);
+}
+
+bool core2_shell_invoke(String full_command)
+{
+    const char *func_name = full_command.c_str(); // TODO: Parse properly
+
+    for (size_t i = 0; i < (sizeof(shell_commands) / sizeof(*shell_commands)); i++)
+    {
+        if (shell_commands[i].name != NULL && !strcmp(shell_commands[i].name, func_name))
+        {
+            dprintf(">> Executing '%s'\n", func_name);
+
+            shell_commands[i].func();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// ================================================================================
 
 void onTelnetConnect(String ip)
 {
@@ -57,18 +117,14 @@ void onTelnetConnectionAttempt(String ip)
 
 void onTelnetInput(String str)
 {
-    // checks for a certain command
-    if (str == "ping")
-    {
-        tprintfln("Pong");
-        dprintf("Telnet: ping-pong\n");
-    }
-    else if (str == "quit")
+    if (str == "quit")
     {
         tprintfln("Leaving shell prompt");
         telnet.disconnectClient();
+        return;
     }
-    else
+
+    if (!core2_shell_invoke(str))
     {
         tprintfln("Unknown command '%s'", str.c_str());
     }
@@ -93,6 +149,7 @@ void c2_telnet_task(void *params)
 void core2_shell_init()
 {
     dprintf("core2_shell_init()\n");
+    core2_shell_init_commands();
 
     telnet.onConnect(onTelnetConnect);
     telnet.onConnectionAttempt(onTelnetConnectionAttempt);

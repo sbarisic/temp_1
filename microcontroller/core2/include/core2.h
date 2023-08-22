@@ -18,7 +18,7 @@ void core2_main();
 #define CORE2_DISABLE_OLED
 
 // Uncomment to disable complilation and calling of test functions
-#define CORE2_OMIT_TESTS 
+#define CORE2_OMIT_TESTS
 
 #ifdef CORE2_DEBUG
 #define dprintf printf
@@ -147,7 +147,7 @@ typedef enum
 bool core2_mcp320x_init();
 bool core2_adc_lock();
 void core2_adc_unlock(bool was_locked);
-//void core2_adc_read(float *Volt1, float *Volt2);
+// void core2_adc_read(float *Volt1, float *Volt2);
 void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch, bool UseLock);
 
 // SPI
@@ -177,4 +177,13 @@ bool core2_web_json_post(const char *server_name, const char *json_txt, size_t j
 // Shell & Telnet
 // =================================================================================================
 
+typedef void (*core2_shell_func)();
+
+typedef struct
+{
+    const char *name;
+    core2_shell_func func;
+} core2_shell_cmd_t;
+
+void core2_shell_register(const char *func_name, core2_shell_func func);
 void core2_shell_init();
