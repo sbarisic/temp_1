@@ -121,9 +121,10 @@ void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch,
 void core2_adc_read(float *Volt1, float *Volt2)
 {
 #if !defined(CORE2_DISABLE_MCP320X)
-    dprintf("core2_adc_read()\n");
-    if (core2_lock_begin(lock))
-    {
+    //dprintf("core2_adc_read()\n");
+
+   // if (core2_lock_begin(lock))
+   // {
         core2_adc_chipselect_enable_all();
         SPI.beginTransaction(spi_settings);
 
@@ -136,19 +137,20 @@ void core2_adc_read(float *Volt1, float *Volt2)
         uint16_t val1 = adc1.toAnalog(raw1);
 
         float voltage1 = val * 4.795 / 1000;
-        float voltage2 = val1 * 9.215 / 1000 - val * 4.795 / 1000;
+        float voltage2 = val1 * 9.215 / 1000 ;//- val * 4.795 / 1000;
 
         *Volt1 = voltage1;
         *Volt2 = voltage2;
 
-        dprintf("core2_adc_read(): Volt1 = %f, Volt2 = %f\n", voltage1, voltage2);
+        //dprintf("core2_adc_read(): Volt1 = %f, Volt2 = %f\n", voltage1, voltage2);
 
         //---------------------------------------------------------
 
         SPI.endTransaction();
         core2_adc_chipselect_disable_all();
-        core2_lock_end(lock);
-    }
+
+        //core2_lock_end(lock);
+   // }
 #else
     *Volt1 = 0;
     *Volt2 = 0;

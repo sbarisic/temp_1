@@ -71,6 +71,14 @@ void core2_json_add_field(const char *field_name, void *data, size_t len, core2_
         need_comma = true;
         break;
 
+    case CORE2_JSON_INT:
+        // dtostrf(*(float *)data, 0, 2, temp_buffer);
+        sprintf(temp_buffer, "%d", *(int *)data);
+
+        core2_json_concat(temp_buffer);
+        need_comma = true;
+        break;
+
     case CORE2_JSON_FLOAT_ARRAY:
         core2_json_concat("[ ");
 

@@ -14,7 +14,7 @@ void core2_main();
 #define CORE2_DEBUG_WIFI
 
 // Uncomment to disable compilation of modules
-//#define CORE2_DISABLE_MCP320X
+// #define CORE2_DISABLE_MCP320X
 #define CORE2_DISABLE_OLED
 
 // Uncomment to disable complilation and calling of test functions
@@ -165,12 +165,15 @@ typedef enum
     CORE2_JSON_INVALID = 0,
     CORE2_JSON_FLOAT = 1,
     CORE2_JSON_STRING = 2,
-    CORE2_JSON_FLOAT_ARRAY = 3
+    CORE2_JSON_FLOAT_ARRAY = 3,
+    CORE2_JSON_INT = 4
 } core2_json_fieldtype_t;
 
 bool core2_json_init();
 void core2_json_begin();
-void core2_json_end();
+void core2_json_add_field(const char *field_name, void *data, size_t len, core2_json_fieldtype_t data_type);
+void core2_json_end(char **dest_buffer, size_t *json_length);
+void core2_json_serialize(char **dest_buffer, size_t *json_length);
 
 // Web
 bool core2_web_json_post(const char *server_name, const char *json_txt, size_t json_txt_len);

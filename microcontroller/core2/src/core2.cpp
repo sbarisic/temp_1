@@ -257,11 +257,11 @@ void setup()
     core2_clock_time_now(cur_time);
     dprintf("Current date time: %s\n", cur_time);
 
-    char filename[30];
+    /*char filename[30];
     core2_clock_time_fmt(filename, sizeof(filename), "/sd/boot_%d%m%Y_%H%M%S.txt");
 
     const char *Text = "Hello ESP32 World!\n";
-    core2_file_write(filename, Text, strlen(Text));
+    core2_file_write(filename, Text, strlen(Text));*/
 
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);
 
