@@ -9,9 +9,6 @@ bool core2_spi_create(sdmmc_host_t *host, int MOSI, int MISO, int CLK)
 {
     dprintf("core2_spi_create(MOSI = %d, MISO = %d, CLK = %d)\n", MOSI, MISO, CLK);
 
-    //pinMode(MOSI, INPUT);
-    //pinMode(MISO, INPUT);
-
     sdmmc_host_t temp_host = SDSPI_HOST_DEFAULT();
     *host = temp_host;
 

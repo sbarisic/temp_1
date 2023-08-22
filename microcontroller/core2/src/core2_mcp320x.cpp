@@ -1,4 +1,6 @@
 #include <core2.h>
+
+#if !defined(CORE2_DISABLE_MCP320X)
 #include <Mcp320x.h>
 
 SPISettings spi_settings;
@@ -6,6 +8,7 @@ SemaphoreHandle_t lock;
 
 MCP3201 adc(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL1); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
 MCP3201 adc1(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL2);
+#endif
 
 void core2_adc_chipselect_enable()
 {
@@ -21,8 +24,8 @@ void core2_adc_chipselect_disable()
 
 void core2_adc_read(float *Volt1, float *Volt2)
 {
-    //dprintf("core2_adc_read()\n");
-    
+#if !defined(CORE2_DISABLE_MCP320X)
+    dprintf("core2_adc_read()\n");
     if (core2_lock_begin(lock))
     {
         core2_adc_chipselect_enable();
@@ -42,7 +45,7 @@ void core2_adc_read(float *Volt1, float *Volt2)
         *Volt1 = voltage1;
         *Volt2 = voltage2;
 
-        //dprintf("core2_adc_read(): Volt1 = %f, Volt2 = %f\n", voltage1, voltage2);
+        dprintf("core2_adc_read(): Volt1 = %f, Volt2 = %f\n", voltage1, voltage2);
 
         //---------------------------------------------------------
 
@@ -50,19 +53,27 @@ void core2_adc_read(float *Volt1, float *Volt2)
         core2_adc_chipselect_disable();
         core2_lock_end(lock);
     }
+#else
+    *Volt1 = 0;
+    *Volt2 = 0;
+#endif
 }
 
 bool core2_mcp320x_init()
 {
+#if defined(CORE2_DISABLE_MCP320X)
+    dprintf("core2_mcp320x_init() - SKIPPING, DISABLED\n");
+    return false;
+#else
     dprintf("core2_mcp320x_init()\n");
     lock = core2_lock_create();
 
     // configure PIN mode
     pinMode(MCP320X_CS_CHANNEL1, OUTPUT);
     pinMode(MCP320X_CS_CHANNEL2, OUTPUT);
-    core2_adc_chipselect_disable();
 
     spi_settings = SPISettings(MCP320X_ADC_CLK, MSBFIRST, SPI_MODE0);
-    
+
     return true;
+#endif
 }

@@ -1,7 +1,9 @@
 #include <core2.h>
 
+#if !defined(CORE2_DISABLE_OLED)
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#endif
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -110,10 +112,19 @@ static const uint8_t digital_font5x7[] PROGMEM = {
 };
 
 uint8_t *disp_mem;
+
+#if !defined(CORE2_DISABLE_OLED)
 Adafruit_SSD1306 *display;
+#else
+void *display;
+#endif
 
 void c2_disp_convert_xy(int X, int Y, int *Byte, int *Bit)
 {
+#if defined(CORE2_DISABLE_OLED)
+    return;
+#endif
+
     if (display == NULL)
         return;
 
@@ -124,6 +135,10 @@ void c2_disp_convert_xy(int X, int Y, int *Byte, int *Bit)
 
 int c2_disp_mem_get_from(int X, int Y, const uint8_t *src)
 {
+#if defined(CORE2_DISABLE_OLED)
+    return 0;
+#endif
+
     if (display == NULL)
         return 0;
 
@@ -139,6 +154,10 @@ int c2_disp_mem_get_from(int X, int Y, const uint8_t *src)
 
 void c2_disp_mem_set(int X, int Y, int V)
 {
+#if defined(CORE2_DISABLE_OLED)
+    return;
+#endif
+
     if (display == NULL)
         return;
 
@@ -159,6 +178,10 @@ void c2_disp_mem_set(int X, int Y, int V)
 
 void c2_copy_bits(const uint8_t *src, int src_offset_bits, int count, int dst_x, int dst_y)
 {
+#if defined(CORE2_DISABLE_OLED)
+    return;
+#endif
+
     if (display == NULL)
         return;
 
@@ -172,6 +195,10 @@ void c2_copy_bits(const uint8_t *src, int src_offset_bits, int count, int dst_x,
 
 void c2_blit_char(int dst_x, int dst_y, char chr)
 {
+#if defined(CORE2_DISABLE_OLED)
+    return;
+#endif
+
     if (display == NULL)
         return;
 
@@ -187,6 +214,10 @@ void c2_blit_char(int dst_x, int dst_y, char chr)
 
 void c2_scroll(int pixels)
 {
+#if defined(CORE2_DISABLE_OLED)
+    return;
+#endif
+
     if (display == NULL)
         return;
 
@@ -205,6 +236,10 @@ void c2_scroll(int pixels)
 
 void c2_printxy(int dst_x, int dst_y, const char *str)
 {
+#if defined(CORE2_DISABLE_OLED)
+    return;
+#endif
+
     if (display == NULL)
         return;
 
@@ -217,23 +252,39 @@ void c2_printxy(int dst_x, int dst_y, const char *str)
 
 void c2_clear()
 {
+#if defined(CORE2_DISABLE_OLED)
+    return;
+#endif
+
     if (display == NULL)
         return;
 
+#if !defined(CORE2_DISABLE_OLED)
     display->clearDisplay();
+#endif
 }
 
 void c2_display(uint16_t color)
 {
+#if defined(CORE2_DISABLE_OLED)
+    return;
+#endif
+
     if (display == NULL)
         return;
 
+#if !defined(CORE2_DISABLE_OLED)
     display->drawBitmap(0, 0, disp_mem, SCREEN_WIDTH, SCREEN_HEIGHT, color);
     display->display();
+#endif
 }
 
 void core2_oled_print(const char *txt)
 {
+#if defined(CORE2_DISABLE_OLED)
+    return;
+#endif
+
     dprintf("core2_oled_print: %s\n", txt);
 
     c2_scroll(FONT_H);
@@ -245,6 +296,10 @@ void core2_oled_print(const char *txt)
 
 bool core2_oled_init()
 {
+#if defined(CORE2_DISABLE_OLED)
+    dprintf("core2_oled_init() - SKIPPING, DISABLED\n");
+    return false;
+#else
     dprintf("core2_oled_init()\n");
 
     display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
@@ -269,4 +324,5 @@ bool core2_oled_init()
 
     core2_oled_print("Hello World!");
     return true;
+#endif
 }

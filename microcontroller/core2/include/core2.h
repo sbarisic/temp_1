@@ -4,11 +4,21 @@
 #include <WiFi.h>
 #include "driver/sdmmc_host.h"
 
+// Entry Point
+void core2_main();
+
 // Default defines
 // =================================================================================================
 
 #define CORE2_DEBUG
 #define CORE2_DEBUG_WIFI
+
+// Uncomment to disable compilation of modules
+#define CORE2_DISABLE_MCP320X
+#define CORE2_DISABLE_OLED
+
+// Uncomment to disable complilation and calling of test functions
+#define CORE2_OMIT_TESTS 
 
 #ifdef CORE2_DEBUG
 #define dprintf printf
@@ -30,11 +40,10 @@
 // SD SPI pin config
 // =================================================================================================
 
-// Dobro
-#define SDCARD_PIN_MOSI GPIO_NUM_25 // GPIO_NUM_23 // GPIO_NUM_15
-#define SDCARD_PIN_MISO GPIO_NUM_33 // GPIO_NUM_35 // GPIO_NUM_2
-#define SDCARD_PIN_CLK GPIO_NUM_32  // GPIO_NUM_32 // GPIO_NUM_14
-#define SDCARD_PIN_CS GPIO_NUM_23   // GPIO_NUM_25 // GPIO_NUM_13
+#define SDCARD_PIN_MOSI GPIO_NUM_13 // GPIO_NUM_23 // GPIO_NUM_15
+#define SDCARD_PIN_MISO GPIO_NUM_12 // GPIO_NUM_35 // GPIO_NUM_2
+#define SDCARD_PIN_CLK GPIO_NUM_14  // GPIO_NUM_32 // GPIO_NUM_14
+#define SDCARD_PIN_CS GPIO_NUM_15   // GPIO_NUM_25 // GPIO_NUM_13
 
 // MCP320X SPI pin config
 // =================================================================================================
@@ -68,6 +77,7 @@ void core2_queue_reset(xQueueHandle q);
 void core2_err_tostr(esp_err_t err, char *buffer);
 
 void *core2_malloc(size_t sz);
+void *core2_realloc(void *ptr, size_t sz);
 void core2_free(void *ptr);
 char *core2_string_concat(const char *a, const char *b); // Should call core2_free() on result
 bool core2_string_ends_with(const char *str, const char *end);
@@ -85,6 +95,8 @@ bool core2_wifi_init();
 bool core2_wifi_isconnected();
 IPAddress core2_wifi_getip();
 void core2_wifi_yield_until_connected();
+bool core2_wifi_ap_start();
+bool core2_wifi_ap_stop();
 
 // Clock
 // =================================================================================================
@@ -138,4 +150,22 @@ bool core2_spi_create(sdmmc_host_t *host, int MOSI, int MISO, int CLK);
 // JSON
 // =================================================================================================
 
+typedef enum
+{
+    CORE2_JSON_INVALID = 0,
+    CORE2_JSON_FLOAT = 1,
+    CORE2_JSON_STRING = 2,
+    CORE2_JSON_FLOAT_ARRAY = 3
+} core2_json_fieldtype_t;
+
 bool core2_json_init();
+void core2_json_begin();
+void core2_json_end();
+
+// Web
+bool core2_web_json_post(const char *server_name, const char *json_txt, size_t json_txt_len);
+
+// Shell & Telnet
+// =================================================================================================
+
+void core2_shell_init();

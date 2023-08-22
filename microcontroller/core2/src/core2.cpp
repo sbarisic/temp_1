@@ -11,8 +11,17 @@
 #include <esp_sntp.h>
 #include <string.h>
 
+#define printlogo dprintf
+
 void core2_init()
 {
+    printlogo("  _____             ___ \n");
+    printlogo(" / ___/__  _______ |_  |\n");
+    printlogo("/ /__/ _ \\/ __/ -_) __/ \n");
+    printlogo("\\___/\\___/_/  \\__/____/ \n");
+    printlogo("                        \n");
+
+                    
     dprintf("core2_init()\n");
 
     // Initialize NVS
@@ -151,7 +160,20 @@ void *core2_malloc(size_t sz)
         eprintf("malloc(%zu) failed", sz);
     }
 
+    memset(ptr, 0, sz);
     return ptr;
+}
+
+void *core2_realloc(void *ptr, size_t sz)
+{
+    void *new_ptr = realloc(ptr, sz);
+
+    if (new_ptr == NULL)
+    {
+        eprintf("realloc(%p ,%zu) failed", ptr, sz);
+    }
+
+    return new_ptr;
 }
 
 void core2_free(void *ptr)
@@ -159,6 +181,7 @@ void core2_free(void *ptr)
     free(ptr);
 }
 
+// Resulting string needs to be free'd after use
 char *core2_string_concat(const char *a, const char *b)
 {
     size_t len = strlen(a) + strlen(b) + 1;
@@ -186,4 +209,47 @@ bool core2_string_ends_with(const char *str, const char *end)
         return false;
 
     return strncmp(str + lenstr - lensuffix, end, lensuffix) == 0;
+}
+
+void core2_main_impl(void* args) {
+    core2_main();
+
+    while (1)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+    
+}
+
+void setup()
+{
+    core2_init();
+    core2_print_status();
+
+    core2_wifi_init();
+    core2_clock_init();
+    core2_json_init();
+    core2_shell_init();
+
+    // Start access point
+    //core2_wifi_ap_start();
+
+    core2_wifi_yield_until_connected();
+    dprintf("init() done\n");
+
+    char cur_time[21];
+    core2_clock_time_now(cur_time);
+    dprintf("Current date time: %s\n", cur_time);
+
+    xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);
+
+    //vTaskDelay(pdMS_TO_TICKS(1000 * 20));
+    //core2_wifi_ap_stop();
+
+    // Stop arduino task, job done
+    vTaskDelete(NULL);
+}
+
+void loop()
+{
 }
