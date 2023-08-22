@@ -138,8 +138,17 @@ void core2_file_list(const char *dirname, onFileFoundFn onFileFound);
 // MCP320X ADC
 // =================================================================================================
 
+typedef enum
+{
+    CORE2_ADC_CH1 = 1 << 0,
+    CORE2_ADC_CH2 = 1 << 1,
+} core2_adc_channel_t;
+
 bool core2_mcp320x_init();
-void core2_adc_read(float *Volt1, float *Volt2);
+bool core2_adc_lock();
+void core2_adc_unlock(bool was_locked);
+//void core2_adc_read(float *Volt1, float *Volt2);
+void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch, bool UseLock);
 
 // SPI
 // =================================================================================================

@@ -21,7 +21,6 @@ void core2_init()
     printlogo("\\___/\\___/_/  \\__/____/ \n");
     printlogo("                        \n");
 
-                    
     dprintf("core2_init()\n");
 
     // Initialize NVS
@@ -211,14 +210,14 @@ bool core2_string_ends_with(const char *str, const char *end)
     return strncmp(str + lenstr - lensuffix, end, lensuffix) == 0;
 }
 
-void core2_main_impl(void* args) {
+void core2_main_impl(void *args)
+{
     core2_main();
 
-    while (1)
+    for (;;)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
-    
 }
 
 void setup()
@@ -232,7 +231,7 @@ void setup()
     core2_shell_init();
 
     // Start access point
-    //core2_wifi_ap_start();
+    // core2_wifi_ap_start();
 
     core2_wifi_yield_until_connected();
     dprintf("init() done\n");
@@ -243,8 +242,8 @@ void setup()
 
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);
 
-    //vTaskDelay(pdMS_TO_TICKS(1000 * 20));
-    //core2_wifi_ap_stop();
+    // vTaskDelay(pdMS_TO_TICKS(1000 * 20));
+    // core2_wifi_ap_stop();
 
     // Stop arduino task, job done
     vTaskDelete(NULL);

@@ -10,19 +10,97 @@ MCP3201 adc(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL1); // ovisno o tipu AD konverte
 MCP3201 adc1(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL2);
 #endif
 
-void core2_adc_chipselect_enable()
+void core2_adc_chipselect_enable(core2_adc_channel_t Ch)
 {
-    digitalWrite(MCP320X_CS_CHANNEL1, HIGH);
-    digitalWrite(MCP320X_CS_CHANNEL2, HIGH);
+    if (Ch & CORE2_ADC_CH1)
+        digitalWrite(MCP320X_CS_CHANNEL1, HIGH);
+
+    if (Ch & CORE2_ADC_CH2)
+        digitalWrite(MCP320X_CS_CHANNEL2, HIGH);
 }
 
-void core2_adc_chipselect_disable()
+void core2_adc_chipselect_disable(core2_adc_channel_t Ch)
 {
-    digitalWrite(MCP320X_CS_CHANNEL1, LOW);
-    digitalWrite(MCP320X_CS_CHANNEL2, LOW);
+    if (Ch & CORE2_ADC_CH1)
+        digitalWrite(MCP320X_CS_CHANNEL1, LOW);
+
+    if (Ch & CORE2_ADC_CH2)
+        digitalWrite(MCP320X_CS_CHANNEL2, LOW);
 }
 
-void core2_adc_read(float *Volt1, float *Volt2)
+bool core2_adc_lock()
+{
+#if defined(CORE2_DISABLE_MCP320X)
+    return false;
+#else
+    return core2_lock_begin(lock);
+#endif
+}
+
+void core2_adc_unlock(bool was_locked)
+{
+#if defined(CORE2_DISABLE_MCP320X)
+    return;
+#else
+    if (was_locked)
+        core2_lock_end(lock);
+#endif
+}
+
+void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch, bool UseLock)
+{
+#if defined(CORE2_DISABLE_MCP320X)
+    {
+        VoltArray[0] = 11.98f;
+        return;
+    }
+#else
+
+    bool Locked = !UseLock;
+    int ChIdx = -1;
+
+    if (UseLock)
+        Locked = core2_adc_lock();
+
+    if (Locked)
+    {
+        core2_adc_chipselect_enable(Ch);
+        SPI.beginTransaction(spi_settings);
+
+        uint16_t raw = 0;
+        uint16_t analog = 0;
+
+        if (Ch & CORE2_ADC_CH1)
+        {
+            raw = adc.read(MCP3201::Channel::SINGLE_0);
+            analog = adc.toAnalog(raw);
+
+            ChIdx++;
+            VoltArray[ChIdx] = (float)analog * (Factors == NULL ? 1 : Factors[ChIdx]);
+        }
+
+        if (Ch & CORE2_ADC_CH2)
+        {
+            raw = adc1.read(MCP3201::Channel::SINGLE_0);
+            analog = adc1.toAnalog(raw);
+
+            ChIdx++;
+            VoltArray[ChIdx] = (float)analog * (Factors == NULL ? 1 : Factors[ChIdx]);
+        }
+
+        SPI.endTransaction();
+        core2_adc_chipselect_disable(Ch);
+
+        if (UseLock && Locked)
+        {
+            core2_adc_unlock(Locked);
+        }
+    }
+
+#endif
+}
+
+/*void core2_adc_read(float *Volt1, float *Volt2)
 {
 #if !defined(CORE2_DISABLE_MCP320X)
     dprintf("core2_adc_read()\n");
@@ -57,7 +135,7 @@ void core2_adc_read(float *Volt1, float *Volt2)
     *Volt1 = 0;
     *Volt2 = 0;
 #endif
-}
+}*/
 
 bool core2_mcp320x_init()
 {

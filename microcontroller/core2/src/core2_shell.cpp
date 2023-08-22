@@ -84,7 +84,7 @@ void c2_telnet_task(void *params)
     for (;;)
     {
         telnet.loop();
-        //vTaskDelay(pdMS_TO_TICKS(10));
+        // vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     vTaskDelete(NULL);
