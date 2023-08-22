@@ -22,8 +22,6 @@ void interrupt_read_voltage()
     dprintf("OK\n");
     core2_adc_unlock(adc_lock);
 
-    core2_file_write("/sd/") // TODO: read
-
     NaponiReady = true;
 
     /*for (int i = 0; i < 200; i++)
@@ -54,6 +52,13 @@ void send_data_to_server()
     printf("======= core2_json_test =======\n");
     printf("%s\n", json_buffer);
     printf("===============================\n");
+
+    // Save to file
+    char cur_time[21];
+    core2_clock_time_now(cur_time);
+    char filename[30];
+    core2_clock_time_fmt(filename, sizeof(filename), "/sd/read_json_%d%m%Y_%H%M%S.txt");
+    core2_file_write(filename, json_buffer, strlen(json_buffer));
 
     core2_web_json_post("https://demo.sbarisic.com/deviceaccess", json_buffer, strlen(json_buffer));
 
