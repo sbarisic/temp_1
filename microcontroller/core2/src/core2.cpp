@@ -220,21 +220,35 @@ void core2_main_impl(void *args)
     }
 }
 
+void loop()
+{
+}
+
 void setup()
 {
     core2_init();
     core2_print_status();
 
+    // pinMode(SDCARD_PIN_CS, OUTPUT);
+    // digitalWrite(SDCARD_PIN_CS, LOW);
+
+    core2_spi_init();
+    sdmmc_host_t sdcard_host;
+    if (core2_spi_create(&sdcard_host, SDCARD_PIN_MOSI, SDCARD_PIN_MISO, SDCARD_PIN_CLK))
+    {
+        core2_filesystem_init(&sdcard_host, SDCARD_PIN_CS);
+    }
+
+    core2_mcp320x_init();
+    // run_tests();
+
     core2_flash_init();
     core2_gpio_init();
+    core2_oled_init();
     core2_wifi_init();
     core2_clock_init();
     core2_json_init();
-    core2_mcp320x_init();
     core2_shell_init();
-
-    // Start access point
-    // core2_wifi_ap_start();
 
     core2_wifi_yield_until_connected();
     dprintf("init() done\n");
@@ -243,6 +257,12 @@ void setup()
     core2_clock_time_now(cur_time);
     dprintf("Current date time: %s\n", cur_time);
 
+    char filename[30];
+    core2_clock_time_fmt(filename, sizeof(filename), "/sd/boot_%d%m%Y_%H%M%S.txt");
+
+    const char *Text = "Hello ESP32 World!\n";
+    core2_file_write(filename, Text, strlen(Text));
+
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);
 
     // vTaskDelay(pdMS_TO_TICKS(1000 * 20));
@@ -250,8 +270,4 @@ void setup()
 
     // Stop arduino task, job done
     vTaskDelete(NULL);
-}
-
-void loop()
-{
 }
