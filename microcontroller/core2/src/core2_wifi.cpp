@@ -15,8 +15,8 @@ int32_t NextConnectWaitTime;
 
 bool IsInAccessPointMode;
 
-const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti", "TEST"};
-const char *PASSs[] = {"123456789", "123456789", "srgt#2018", "123456789"};
+const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti", "TEST", "Optima-34d393"};
+const char *PASSs[] = {"123456789", "123456789", "srgt#2018", "123456789", "OPTIMA2701002212"};
 
 bool ConnectionContains(const char *SSID, const char **PASS)
 {

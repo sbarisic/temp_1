@@ -20,6 +20,8 @@ void interrupt_read_voltage()
 
 void send_data_to_server()
 {
+    const char *json_txt = "{ \"APIKey\": \"OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=\", \"Action\": 1, \"Napon1\": 16.789 }";
+    core2_web_json_post("https://141.147.10.10/deviceaccess", json_txt, strlen(json_txt));
 }
 
 void core2_main()
@@ -28,6 +30,14 @@ void core2_main()
     // size_t JSON_txt_len = strlen(JSON_txt);
 
     printf("Hello World!\n");
+    // core2_wifi_ap_start();
+
+    for (;;)
+    {
+        send_data_to_server();
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
 
     core2_shell_register("interrupt_read_voltage", interrupt_read_voltage);
+    core2_shell_register("send", send_data_to_server);
 }
