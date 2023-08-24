@@ -10,11 +10,13 @@ void interrupt_read_voltage()
 
     for (int i = 0; i < 200; i++)
     {
-        // core2_adc_read_ex(Volts + i, NULL, CORE2_ADC_CH2, false);
+        core2_adc_read_ex(&(Volts[i]), NULL, CORE2_ADC_CH2, false);
+        Volts[i] = Volts[i] * 9.215 / 1000;
 
-        float V1, V2;
-        core2_adc_read(&V1, &V2);
-        Volts[i] = V2;
+        // WORKING!
+        // float V1, V2;
+        // core2_adc_read(&V1, &V2);
+        // Volts[i] = V2;
 
         vTaskDelay(pdMS_TO_TICKS(15));
     }
@@ -38,15 +40,9 @@ void send_data_to_server()
     size_t json_len;
 
     core2_json_begin();
-
-    const char *field1 = "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=";
-    core2_json_add_field("APIKey", &field1, 0, CORE2_JSON_STRING);
-
-    int field2 = 1;
-    core2_json_add_field("Action", &field2, 0, CORE2_JSON_INT);
-
+    core2_json_add_field_string("APIKey", "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=");
+    core2_json_add_field_int("Action", 1);
     core2_json_add_field("Test", &Volts, 200, CORE2_JSON_FLOAT_ARRAY);
-
     core2_json_serialize(&json_buffer, &json_len);
 
     printf("======= core2_json_test =======\n");

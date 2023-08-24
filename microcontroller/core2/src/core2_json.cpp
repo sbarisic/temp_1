@@ -103,6 +103,16 @@ void core2_json_add_field(const char *field_name, void *data, size_t len, core2_
     }
 }
 
+void core2_json_add_field_string(const char *field_name, const char *str)
+{
+    core2_json_add_field(field_name, (void *)str, 0, CORE2_JSON_STRING);
+}
+
+void core2_json_add_field_int(const char *field_name, int num)
+{
+    core2_json_add_field(field_name, &num, 0, CORE2_JSON_INT);
+}
+
 void core2_json_serialize(char **dest_buffer, size_t *json_length)
 {
     core2_json_concat(" }");

@@ -70,11 +70,23 @@ SemaphoreHandle_t core2_lock_create()
 
 bool core2_lock_begin(SemaphoreHandle_t lock)
 {
+    if (lock == NULL)
+    {
+        dprintf("core2_lock_begin() received NULL\n");
+        return false;
+    }
+
     return xSemaphoreTake(lock, portMAX_DELAY);
 }
 
 bool core2_lock_end(SemaphoreHandle_t lock)
 {
+    if (lock == NULL)
+    {
+        dprintf("core2_lock_end() received NULL\n");
+        return false;
+    }
+
     return xSemaphoreGive(lock);
 }
 
