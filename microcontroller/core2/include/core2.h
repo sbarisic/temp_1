@@ -59,11 +59,16 @@ void core2_main();
 #define MCP320X_ADC_VREF 3311   // 3.3V Vref
 #define MCP320X_ADC_CLK 1600000 // 1600000  // SPI clock 1.6MHz
 
+// GPIO config
+
+#define INTERRUPT0_PIN GPIO_NUM_15
+
 // Core
 // =================================================================================================
 
 void core2_init();
 void core2_print_status();
+uint32_t core2_random();
 
 SemaphoreHandle_t core2_lock_create();
 bool core2_lock_begin(SemaphoreHandle_t lock);
@@ -75,6 +80,7 @@ BaseType_t core2_queue_receive(xQueueHandle q, void *buffer);
 void core2_queue_reset(xQueueHandle q);
 
 void core2_err_tostr(esp_err_t err, char *buffer);
+void core2_resetreason_tostr(esp_reset_reason_t err, char *buffer, bool desc);
 
 void *core2_malloc(size_t sz);
 void *core2_realloc(void *ptr, size_t sz);
@@ -115,6 +121,7 @@ bool core2_gpio_init();
 bool core2_gpio_get_interrupt0();
 bool core2_gpio_set_interrupt0();
 void core2_gpio_clear_interrupt0();
+bool core2_gpio_enable_interrupt0(bool enable);
 
 // Flash
 // =================================================================================================
@@ -134,6 +141,7 @@ bool core2_file_write(const char *filename, const char *data, size_t len);
 bool core2_file_append(const char *filename, const char *data, size_t len);
 bool core2_file_mkdir(const char *dirname, mode_t mode = 0);
 void core2_file_list(const char *dirname, onFileFoundFn onFileFound);
+bool core2_file_write_timesuffix(const char *filename, const char *data, size_t len);
 
 // MCP320X ADC
 // =================================================================================================
@@ -166,7 +174,9 @@ typedef enum
     CORE2_JSON_FLOAT = 1,
     CORE2_JSON_STRING = 2,
     CORE2_JSON_FLOAT_ARRAY = 3,
-    CORE2_JSON_INT = 4
+    CORE2_JSON_INT = 4,
+    CORE2_JSON_FLOAT_DEC2 = 5,
+    CORE2_JSON_FLOAT_ARRAY_DEC2 = 6,
 } core2_json_fieldtype_t;
 
 bool core2_json_init();

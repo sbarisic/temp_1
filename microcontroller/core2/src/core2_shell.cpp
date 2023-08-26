@@ -1,6 +1,7 @@
 #include <core2.h>
 #include <ESPTelnet.h>
 #include <EscapeCodes.h>
+#include <getopt.h>
 
 // https://github.com/LennartHennigs/ESPTelnet
 // MIT License
@@ -70,6 +71,8 @@ void core2_shell_init_commands()
 bool core2_shell_invoke(String full_command)
 {
     const char *func_name = full_command.c_str(); // TODO: Parse properly
+
+
 
     for (size_t i = 0; i < (sizeof(shell_commands) / sizeof(*shell_commands)); i++)
     {

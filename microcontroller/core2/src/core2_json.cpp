@@ -38,6 +38,30 @@ char *core2_json_escape_string(char *str)
     return str;
 }
 
+const char *get_float_format(core2_json_fieldtype_t data_type)
+{
+    const char *fmt = "%f";
+
+    switch (data_type)
+    {
+    case CORE2_JSON_FLOAT_ARRAY_DEC2:
+    case CORE2_JSON_FLOAT_DEC2:
+        fmt = "%.2f";
+        break;
+
+    case CORE2_JSON_FLOAT_ARRAY:
+    case CORE2_JSON_FLOAT:
+        fmt = "%f";
+        break;
+
+    default:
+        dprintf("get_float_format(%d) NOT IMPLEMENTED", data_type);
+        break;
+    }
+
+    return fmt;
+}
+
 void core2_json_add_field(const char *field_name, void *data, size_t len, core2_json_fieldtype_t data_type)
 {
     char temp_buffer[64];
@@ -58,14 +82,14 @@ void core2_json_add_field(const char *field_name, void *data, size_t len, core2_
     {
     case CORE2_JSON_STRING:
         core2_json_concat("\"");
-        core2_json_concat(core2_json_escape_string(*(char **)data));
+        core2_json_concat(core2_json_escape_string((char*)data));
         core2_json_concat("\"");
         need_comma = true;
         break;
 
+    case CORE2_JSON_FLOAT_DEC2:
     case CORE2_JSON_FLOAT:
-        // dtostrf(*(float *)data, 0, 2, temp_buffer);
-        sprintf(temp_buffer, "%f", *(float *)data);
+        sprintf(temp_buffer, get_float_format(data_type), *(float *)data);
 
         core2_json_concat(temp_buffer);
         need_comma = true;
@@ -79,13 +103,14 @@ void core2_json_add_field(const char *field_name, void *data, size_t len, core2_
         need_comma = true;
         break;
 
+    case CORE2_JSON_FLOAT_ARRAY_DEC2:
     case CORE2_JSON_FLOAT_ARRAY:
         core2_json_concat("[ ");
 
         for (size_t i = 0; i < len; i++)
         {
             // dtostrf(((float *)data)[i], 0, 2, temp_buffer);
-            sprintf(temp_buffer, "%f", ((float *)data)[i]);
+            sprintf(temp_buffer, get_float_format(data_type), ((float *)data)[i]);
 
             core2_json_concat(temp_buffer);
 
