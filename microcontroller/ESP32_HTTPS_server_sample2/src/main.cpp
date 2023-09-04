@@ -16,23 +16,16 @@
 // #define SOC_SDMMC_USE_GPIO_MATRIX
 #include "driver/sdmmc_host.h"
 
-
-
 // Filesystem
 bool core2_filesystem_init();
 FILE *core2_file_open(const char *filename, const char *type = NULL);
-bool core2_file_close(FILE* f);
+bool core2_file_close(FILE *f);
 bool core2_file_move(const char *oldf, const char *newf);
 bool core2_file_write(const char *filename, const char *data, size_t len);
 bool core2_file_mkdir(const char *dirname, mode_t mode = 0);
 void core2_file_list(const char *dirname);
 
-
-
-
-
-
-const char *ssid = "Optima-34d393";
+const char *ssid = "Optima-34d393_EXT";
 const char *password = "OPTIMA2701002212";
 
 const char *host = "demo.sbarisic.com";
@@ -85,7 +78,6 @@ static void gpio_isr_handler(void *args) // definicija ISR
   int pinNumber = (int)args;
   xQueueSendFromISR(interruptQueue, &pinNumber, NULL);
 }
-
 
 void buttonPushedTask(void *params) // task koji se pokreće nakon aktivacije ISR
 {
@@ -254,18 +246,19 @@ void task4(void *pvparameter)
     doc["ACCvoltage2"] = voltage2;
     doc["Tlak"] = gpressure;
     doc["Temperatura"] = gtemperature;
-    //doc["Test"] = naponi;
+    // doc["Test"] = naponi;
 
-    if (naponi_ready) {
+    if (naponi_ready)
+    {
       Serial.println("Saljem napone!");
 
-      for (int i = 0; i < 200; i++) {
+      for (int i = 0; i < 200; i++)
+      {
         doc["Test"][i] = serialized(String(naponi[i] / 100, 2));
       }
 
       naponi_ready = 0;
     }
-
 
     String sendBuff;
     serializeJson(doc, sendBuff);
@@ -356,6 +349,21 @@ void task4(void *pvparameter)
 
     vTaskDelay(15000 / portTICK_PERIOD_MS);
   }
+}
+
+void buzzer(void *unused)
+{
+  pinMode(GPIO_NUM_25, OUTPUT);
+
+  while (1)
+  {
+    tone(GPIO_NUM_25, 3800, 1000);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    noTone(GPIO_NUM_25);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+  }
+
+  vTaskDelete(NULL);
 }
 
 void setup()
@@ -466,6 +474,8 @@ void setup()
       NULL, // task handle
       0     // core 1
   );
+
+  xTaskCreate(buzzer, "buzzer", 1024, NULL, 0, NULL);
 }
 
 void loop()
@@ -474,185 +484,188 @@ void loop()
   // vTaskSuspend(task1_handler);
 }
 
-
-
 /////////////////////////// SD CARD
-
 
 // Pin assignments can be set in menuconfig, see "SD SPI Example Configuration" menu.
 // You can also change the pin assignments here by changing the following 4 lines.
-#define PIN_NUM_MISO GPIO_NUM_35 // GPIO_NUM_2
-#define PIN_NUM_MOSI GPIO_NUM_23 // GPIO_NUM_15
-#define PIN_NUM_CLK  GPIO_NUM_32 // GPIO_NUM_14
-#define PIN_NUM_CS   GPIO_NUM_25 // GPIO_NUM_13
+#define PIN_NUM_MISO GPIO_NUM_33 // GPIO_NUM_2
+#define PIN_NUM_MOSI GPIO_NUM_26 // GPIO_NUM_15
+#define PIN_NUM_CLK GPIO_NUM_32  // GPIO_NUM_14
+#define PIN_NUM_CS GPIO_NUM_23   // GPIO_NUM_13
+
+#define SDCARD_PIN_MOSI GPIO_NUM_26 //
+#define SDCARD_PIN_MISO GPIO_NUM_33 //
+#define SDCARD_PIN_CLK GPIO_NUM_32  //
+#define SDCARD_PIN_CS GPIO_NUM_23   //
+
 #define dprintf printf
 
 #undef ESP_LOGI
-#define ESP_LOGI(a, ...)      \
-    do                        \
-    {                         \
-        dprintf(__VA_ARGS__); \
-        dprintf("\n");        \
-    } while (0)
+#define ESP_LOGI(a, ...)  \
+  do                      \
+  {                       \
+    dprintf(__VA_ARGS__); \
+    dprintf("\n");        \
+  } while (0)
 
 FILE *core2_file_open(const char *filename, const char *type)
 {
-    FILE *f = NULL;
+  FILE *f = NULL;
 
-    if (type == NULL)
-    {
-        dprintf("core2_file_open(\"%s\", \"w\")", filename);
-        f = fopen(filename, "w");
-    }
-    else
-    {
-        dprintf("core2_file_open(\"%s\", \"%s\")", filename, type);
-        f = fopen(filename, type);
-    }
-    dprintf(" - %p\n", (void *)f);
-    return f;
+  if (type == NULL)
+  {
+    dprintf("core2_file_open(\"%s\", \"w\")", filename);
+    f = fopen(filename, "w");
+  }
+  else
+  {
+    dprintf("core2_file_open(\"%s\", \"%s\")", filename, type);
+    f = fopen(filename, type);
+  }
+  dprintf(" - %p\n", (void *)f);
+  return f;
 }
 
 bool core2_file_close(FILE *f)
 {
-    dprintf("core2_file_close(%p)\n", (void *)f);
-    if (!fclose(f))
-        return true;
+  dprintf("core2_file_close(%p)\n", (void *)f);
+  if (!fclose(f))
+    return true;
 
-    return false;
+  return false;
 }
 
 bool core2_file_move(const char *oldf, const char *newf)
 {
-    if (rename(oldf, newf) == -1)
-        return false;
+  if (rename(oldf, newf) == -1)
+    return false;
 
-    return true;
+  return true;
 }
 
 bool core2_file_write(const char *filename, const char *data, size_t len)
 {
-    dprintf("core2_write_file(\"%s\") - ", filename);
+  dprintf("core2_write_file(\"%s\") - ", filename);
 
-    FILE *f = fopen(filename, "w");
-    if (f == NULL)
-    {
-        dprintf("FAIL\n");
-        return false;
-    }
+  FILE *f = fopen(filename, "w");
+  if (f == NULL)
+  {
+    dprintf("FAIL\n");
+    return false;
+  }
 
-    fwrite(data, 1, len, f);
-    fclose(f);
+  fwrite(data, 1, len, f);
+  fclose(f);
 
-    dprintf("OK\n");
-    return true;
+  dprintf("OK\n");
+  return true;
 }
 
 bool core2_file_append(const char *filename, const char *data, size_t len)
 {
-    dprintf("core2_write_append(\"%s\") - ", filename);
+  dprintf("core2_write_append(\"%s\") - ", filename);
 
-    FILE *f = fopen(filename, "a");
-    if (f == NULL)
-    {
-        dprintf("FAIL\n");
-        return false;
-    }
+  FILE *f = fopen(filename, "a");
+  if (f == NULL)
+  {
+    dprintf("FAIL\n");
+    return false;
+  }
 
-    fwrite(data, 1, len, f);
-    fclose(f);
+  fwrite(data, 1, len, f);
+  fclose(f);
 
-    dprintf("OK\n");
-    return true;
+  dprintf("OK\n");
+  return true;
 }
 
 bool core2_file_mkdir(const char *dirname, mode_t mode)
 {
-    if (mode == 0)
-        mode = 0777;
+  if (mode == 0)
+    mode = 0777;
 
-    dprintf("core2_file_mkdir(\"%s\", %o) - ", dirname, mode);
+  dprintf("core2_file_mkdir(\"%s\", %o) - ", dirname, mode);
 
-    if (mkdir(dirname, mode) == -1)
-    {
-        dprintf("FAIL\n");
-        return false;
-    }
+  if (mkdir(dirname, mode) == -1)
+  {
+    dprintf("FAIL\n");
+    return false;
+  }
 
-    dprintf("OK\n");
-    return true;
+  dprintf("OK\n");
+  return true;
 }
 
 void core2_file_list(const char *dirname)
 {
-    struct dirent *dir;
-    DIR *d = opendir(dirname);
+  struct dirent *dir;
+  DIR *d = opendir(dirname);
 
-    if (d)
+  if (d)
+  {
+    while ((dir = readdir(d)) != NULL)
     {
-        while ((dir = readdir(d)) != NULL)
-        {
-            dprintf("FOUND: %s\n", dir->d_name);
-        }
-
-        closedir(d);
+      dprintf("FOUND: %s\n", dir->d_name);
     }
+
+    closedir(d);
+  }
 }
 
 bool core2_filesystem_init()
 {
-    dprintf("core2_filesystem_init() - Initializing SD card, using SPI\n");
+  dprintf("core2_filesystem_init() - Initializing SD card, using SPI\n");
 
-    esp_err_t ret;
-    esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
-    sdmmc_card_t *card;
+  esp_err_t ret;
+  esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
+  sdmmc_card_t *card;
 
-    const char mount_point[] = "/sd";
+  const char mount_point[] = "/sd";
 
-    sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+  sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
-    spi_bus_config_t bus_cfg = {
-        .mosi_io_num = PIN_NUM_MOSI,
-        .miso_io_num = PIN_NUM_MISO,
-        .sclk_io_num = PIN_NUM_CLK,
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1,
-        .max_transfer_sz = 4000,
-    };
+  spi_bus_config_t bus_cfg = {
+      .mosi_io_num = PIN_NUM_MOSI,
+      .miso_io_num = PIN_NUM_MISO,
+      .sclk_io_num = PIN_NUM_CLK,
+      .quadwp_io_num = -1,
+      .quadhd_io_num = -1,
+      .max_transfer_sz = 4000,
+  };
 
-    ret = spi_bus_initialize((spi_host_device_t)host.slot, &bus_cfg, SDSPI_DEFAULT_DMA);
+  ret = spi_bus_initialize((spi_host_device_t)host.slot, &bus_cfg, SDSPI_DEFAULT_DMA);
 
-    if (ret != ESP_OK)
-    {
-        dprintf("core2_filesystem_init() - Failed to initialize bus\n");
-        return false;
-    }
+  if (ret != ESP_OK)
+  {
+    dprintf("core2_filesystem_init() - Failed to initialize bus\n");
+    return false;
+  }
 
-    // This initializes the slot without card detect (CD) and write protect (WP) signals.
-    // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
-    sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-    slot_config.gpio_cs = PIN_NUM_CS;
-    slot_config.host_id = (spi_host_device_t)host.slot;
+  // This initializes the slot without card detect (CD) and write protect (WP) signals.
+  // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
+  sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
+  slot_config.gpio_cs = PIN_NUM_CS;
+  slot_config.host_id = (spi_host_device_t)host.slot;
 
-    dprintf("core2_filesystem_init() - Mounting filesystem\n");
-    ret = esp_vfs_fat_sdspi_mount(mount_point, &host, &slot_config, &mount_config, &card);
+  dprintf("core2_filesystem_init() - Mounting filesystem\n");
+  ret = esp_vfs_fat_sdspi_mount(mount_point, &host, &slot_config, &mount_config, &card);
 
-    if (ret != ESP_OK)
-    {
-        if (ret == ESP_FAIL)
-            dprintf("Failed to mount filesystem. If you want the card to be formatted, set the CONFIG_EXAMPLE_FORMAT_IF_MOUNT_FAILED menuconfig option\n");
-        else
-            dprintf("Failed to initialize the card (%s). Make sure SD card lines have pull-up resistors in place\n", esp_err_to_name(ret));
+  if (ret != ESP_OK)
+  {
+    if (ret == ESP_FAIL)
+      dprintf("Failed to mount filesystem. If you want the card to be formatted, set the CONFIG_EXAMPLE_FORMAT_IF_MOUNT_FAILED menuconfig option\n");
+    else
+      dprintf("Failed to initialize the card (%s). Make sure SD card lines have pull-up resistors in place\n", esp_err_to_name(ret));
 
-        return false;
-    }
+    return false;
+  }
 
-    dprintf("core2_filesystem_init() - Filesystem mounted @ \"%s\"\n", mount_point);
-    sdmmc_card_print_info(stdout, card);
+  dprintf("core2_filesystem_init() - Filesystem mounted @ \"%s\"\n", mount_point);
+  sdmmc_card_print_info(stdout, card);
 
-    dprintf("core2_filesystem_init() - Creating folders\n");
-    core2_file_mkdir("/sd/logs");       // Log directory
-    core2_file_mkdir("/sd/processing"); // Temporary processing directory, files which have not been uploaded?
+  dprintf("core2_filesystem_init() - Creating folders\n");
+  core2_file_mkdir("/sd/logs");       // Log directory
+  core2_file_mkdir("/sd/processing"); // Temporary processing directory, files which have not been uploaded?
 
-    return true;
+  return true;
 }
