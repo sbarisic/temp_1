@@ -83,6 +83,13 @@ static void gpio_isr_handler(void *args) // definicija ISR
 
 bool leds_initialized = false;
 
+void trigger_solenoid()
+{
+  digitalWrite(GPIO_NUM_27, HIGH);
+  vTaskDelay(pdMS_TO_TICKS(300));
+  digitalWrite(GPIO_NUM_27, LOW);
+}
+
 void led_enable(bool r, bool g, bool b)
 {
   if (!leds_initialized)
@@ -150,6 +157,7 @@ void buttonPushedTask(void *params) // task koji se pokreće nakon aktivacije IS
       printf("\n");
 
       digitalWrite(13, LOW);
+      trigger_solenoid();
 
       xEventGroupSetBits(eventGroup, gotVoltageDrop); // javljamo da su padovi napona očitani
       gpio_isr_handler_add(gpinNumber, gpio_isr_handler, (void *)pinNumber);
@@ -401,6 +409,9 @@ void setup()
   gpio_set_intr_type(PIN_SWITCH, GPIO_INTR_NEGEDGE);
 
   pinMode(13, OUTPUT);
+  pinMode(GPIO_NUM_27, OUTPUT);
+
+  trigger_solenoid();
 
   interruptQueue = xQueueCreate(1, sizeof(int));                       // postavljen queue za interrupt
   xTaskCreate(buttonPushedTask, "button pushed", 2048, NULL, 1, NULL); // task koji se izvršava po interruptu
