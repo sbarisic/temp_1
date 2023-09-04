@@ -67,6 +67,8 @@ char string[8];
 float naponi[200]; // marica za zapis padova napona u interruptu
 volatile int naponi_ready;
 
+volatile bool buzzer_enable = false;
+
 EventGroupHandle_t eventGroup;
 const int gotVoltage = BIT0;
 const int gotTempPress = BIT1;
@@ -77,6 +79,22 @@ static void gpio_isr_handler(void *args) // definicija ISR
 {
   int pinNumber = (int)args;
   xQueueSendFromISR(interruptQueue, &pinNumber, NULL);
+}
+
+bool leds_initialized = false;
+
+void led_enable(bool r, bool g, bool b)
+{
+  if (!leds_initialized)
+  {
+    pinMode(13, OUTPUT);
+    pinMode(14, OUTPUT);
+    pinMode(12, OUTPUT);
+  }
+
+  digitalWrite(14, r ? HIGH : LOW);
+  digitalWrite(12, g ? HIGH : LOW);
+  digitalWrite(13, b ? HIGH : LOW);
 }
 
 void buttonPushedTask(void *params) // task koji se pokreće nakon aktivacije ISR
@@ -353,14 +371,19 @@ void task4(void *pvparameter)
 
 void buzzer(void *unused)
 {
+  printf("Starting buzzer\n");
   pinMode(GPIO_NUM_25, OUTPUT);
+  digitalWrite(GPIO_NUM_25, LOW);
 
   while (1)
   {
-    tone(GPIO_NUM_25, 3800, 1000);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    noTone(GPIO_NUM_25);
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    if (buzzer_enable)
+    {
+      tone(GPIO_NUM_25, 3800, 1000);
+      vTaskDelay(pdMS_TO_TICKS(1000));
+      noTone(GPIO_NUM_25);
+      vTaskDelay(pdMS_TO_TICKS(1000));
+    }
   }
 
   vTaskDelete(NULL);
@@ -369,6 +392,7 @@ void buzzer(void *unused)
 void setup()
 {
   naponi_ready = 0;
+  xTaskCreate(buzzer, "buzzer", 1024, NULL, 0, NULL);
 
   // definicija GPIO kao ISR
   gpio_set_direction(PIN_SWITCH, GPIO_MODE_INPUT);
@@ -388,9 +412,22 @@ void setup()
 
   eventGroup = xEventGroupCreate();
 
-  pinMode(13, OUTPUT);
-  pinMode(14, OUTPUT);
-  pinMode(12, OUTPUT);
+  // pinMode(13, OUTPUT);
+  // pinMode(14, OUTPUT);
+  // pinMode(12, OUTPUT);
+
+  buzzer_enable = true;
+  led_enable(true, false, false);
+  vTaskDelay(pdMS_TO_TICKS(1000));
+
+  led_enable(false, true, false);
+  vTaskDelay(pdMS_TO_TICKS(1000));
+
+  led_enable(false, false, true);
+
+  vTaskDelay(pdMS_TO_TICKS(1000));
+  led_enable(false, false, false);
+  buzzer_enable = false;
 
   // I2C
   Wire.begin();
@@ -474,8 +511,6 @@ void setup()
       NULL, // task handle
       0     // core 1
   );
-
-  xTaskCreate(buzzer, "buzzer", 1024, NULL, 0, NULL);
 }
 
 void loop()
