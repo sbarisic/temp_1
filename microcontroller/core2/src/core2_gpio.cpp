@@ -1,9 +1,15 @@
 #include <core2.h>
 #include <driver/gpio.h>
-
-#define INTERRUPT0_PIN GPIO_NUM_15
-
 xQueueHandle q_gpio0 = NULL;
+
+volatile bool GPIO_INT0_ENABLED;
+
+bool core2_gpio_enable_interrupt0(bool enable)
+{
+    bool last_state = GPIO_INT0_ENABLED;
+    GPIO_INT0_ENABLED = enable;
+    return last_state;
+}
 
 bool core2_gpio_get_interrupt0()
 {
@@ -44,7 +50,8 @@ static void IRAM_ATTR gpio_interrupt_handler(void *args)
 
     if (INT_PIN == INTERRUPT0_PIN)
     {
-        core2_gpio_set_interrupt0();
+        if (GPIO_INT0_ENABLED)
+            core2_gpio_set_interrupt0();
     }
 }
 
@@ -70,7 +77,7 @@ void CreateInterrupt(gpio_num_t INPUT_PIN)
 bool core2_gpio_init()
 {
     dprintf("core2_gpio_init()\n");
-    
+
     // Install global interrupt handler routine
     esp_err_t err = gpio_install_isr_service(0);
 

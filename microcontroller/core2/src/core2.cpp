@@ -33,6 +33,7 @@ void core2_init()
     }
 }
 
+#define FEATURE_SPACE "   "
 void core2_print_status()
 {
     /* Print chip information */
@@ -41,16 +42,27 @@ void core2_print_status()
 
     esp_chip_info(&chip_info);
 
-    dprintf("This is %s chip with %d CPU core(s), WiFi%s%s, ",
-            CONFIG_IDF_TARGET,
-            chip_info.cores,
-            (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-            (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
+    dprintf("This is %s chip with %d CPU core(s), features:\n", CONFIG_IDF_TARGET, chip_info.cores);
+
+    if (chip_info.features & CHIP_FEATURE_WIFI_BGN)
+        dprintf(FEATURE_SPACE "2.4GHz WiFi\n");
+
+    if (chip_info.features & CHIP_FEATURE_BLE)
+        dprintf(FEATURE_SPACE "Bluetooth LE\n");
+
+    if (chip_info.features & CHIP_FEATURE_BT)
+        dprintf(FEATURE_SPACE "Bluetooth Classic\n");
+
+    if (chip_info.features & CHIP_FEATURE_IEEE802154)
+        dprintf(FEATURE_SPACE "IEEE 802.15.4\n");
+
+    if (chip_info.features & CHIP_FEATURE_EMB_PSRAM)
+        dprintf(FEATURE_SPACE "Embedded PSRAM\n");
 
     unsigned major_rev = chip_info.revision / 100;
     unsigned minor_rev = chip_info.revision % 100;
 
-    dprintf("silicon revision v%d.%d, ", major_rev, minor_rev);
+    dprintf("Silicon revision v%d.%d\n", major_rev, minor_rev);
     if (esp_flash_get_size(NULL, &flash_size) != ESP_OK)
     {
         dprintf("Get flash size failed");
@@ -59,6 +71,15 @@ void core2_print_status()
 
     dprintf("%luMB %s flash\n", flash_size / (1024 * 1024), (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
     dprintf("Minimum free heap size: %ld bytes\n", esp_get_minimum_free_heap_size());
+
+    esp_reset_reason_t reason = esp_reset_reason();
+    char resetreason[64];
+
+    core2_resetreason_tostr(reason, resetreason, false);
+    dprintf("%s - ", resetreason);
+
+    core2_resetreason_tostr(reason, resetreason, true);
+    dprintf("%s", resetreason);
 }
 
 SemaphoreHandle_t core2_lock_create()
@@ -162,6 +183,42 @@ void core2_err_tostr(esp_err_t err, char *buffer)
     }
 }
 
+// @brief Expects 64 byte buffer
+void core2_resetreason_tostr(esp_reset_reason_t err, char *buffer, bool desc)
+{
+#undef MAKE_CASE
+#define MAKE_CASE(err, descr)      \
+    case err:                      \
+        if (desc)                  \
+        {                          \
+            strcpy(buffer, descr); \
+        }                          \
+        else                       \
+        {                          \
+            strcpy(buffer, #err);  \
+        }                          \
+        break
+
+    switch (err)
+    {
+        MAKE_CASE(ESP_RST_UNKNOWN, "Reset reason can not be determined");
+        MAKE_CASE(ESP_RST_POWERON, "Reset due to power-on event");
+        MAKE_CASE(ESP_RST_EXT, "Reset by external pin (not applicable for ESP32)");
+        MAKE_CASE(ESP_RST_SW, "Software reset via esp_restart");
+        MAKE_CASE(ESP_RST_PANIC, "Software reset due to exception/panic");
+        MAKE_CASE(ESP_RST_INT_WDT, "Reset (software or hardware) due to interrupt watchdog");
+        MAKE_CASE(ESP_RST_TASK_WDT, "Reset due to task watchdog");
+        MAKE_CASE(ESP_RST_WDT, "Reset due to other watchdogs");
+        MAKE_CASE(ESP_RST_DEEPSLEEP, "Reset after exiting deep sleep mode");
+        MAKE_CASE(ESP_RST_BROWNOUT, "Brownout reset (software or hardware)");
+        MAKE_CASE(ESP_RST_SDIO, "Reset over SDIO");
+
+    default:
+        strcpy(buffer, "UNKNOWN");
+        break;
+    }
+}
+
 void *core2_malloc(size_t sz)
 {
     void *ptr = malloc(sz);
@@ -206,6 +263,11 @@ char *core2_string_concat(const char *a, const char *b)
     strcat(res, b);
 
     return res;
+}
+
+uint32_t core2_random()
+{
+    return esp_random();
 }
 
 bool core2_string_ends_with(const char *str, const char *end)
@@ -274,6 +336,11 @@ void setup()
 
     const char *Text = "Hello ESP32 World!\n";
     core2_file_write(filename, Text, strlen(Text));*/
+
+    core2_shell_register("int0", []()
+                         { core2_gpio_set_interrupt0(); });
+
+    core2_shell_register("esp_restart", esp_restart);
 
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);
 

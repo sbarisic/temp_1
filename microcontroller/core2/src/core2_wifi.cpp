@@ -68,8 +68,8 @@ bool core2_wifi_ap_start()
     IsInAccessPointMode = true;
 
     // TODO: Move to separate config
-    IPAddress local_ip(192, 168, 1, 42);
-    IPAddress gateway(192, 168, 1, 1);
+    IPAddress local_ip(192, 168, 42, 42);
+    IPAddress gateway(192, 168, 42, 1);
     IPAddress subnet(255, 255, 255, 0);
 
     if (!WiFi.softAPConfig(local_ip, gateway, subnet))

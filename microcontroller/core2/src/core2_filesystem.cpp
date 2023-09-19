@@ -120,10 +120,12 @@ bool core2_file_write_timesuffix(const char *filename, const char *data, size_t 
     dprintf("TODO! core2_file_write_timesuffix\n");
 
     char cur_time[21];
-    core2_clock_time_now(cur_time);
-    // TODO
+    core2_clock_time_fmt(cur_time, sizeof(cur_time), "%d%m%Y_%H%M%S");
 
-    return false;
+    char new_filename[512];
+    sprintf(new_filename, filename, cur_time);
+
+    return core2_file_write(new_filename, data, len);
 }
 
 bool core2_file_append(const char *filename, const char *data, size_t len)
