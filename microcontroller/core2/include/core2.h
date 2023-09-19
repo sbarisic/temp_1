@@ -49,10 +49,10 @@
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "core2_tdeck.h"
 
-#define SDCARD_PIN_MOSI 0
-#define SDCARD_PIN_MISO 0
-#define SDCARD_PIN_CLK 0
-#define SDCARD_PIN_CS 0
+#define SDCARD_PIN_MOSI 99
+#define SDCARD_PIN_MISO 99
+#define SDCARD_PIN_CLK 99
+#define SDCARD_PIN_CS 99
 
 #else
 #error ESP32 target not defined
