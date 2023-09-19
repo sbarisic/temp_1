@@ -48,6 +48,8 @@
 
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "core2_tdeck.h"
+#define ESP32_TDECK
+void core2_main_tdeck();
 
 #define SDCARD_PIN_MOSI 99
 #define SDCARD_PIN_MISO 99
