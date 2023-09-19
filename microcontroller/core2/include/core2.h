@@ -1,11 +1,10 @@
+#pragma once
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #include <freertos/queue.h>
 #include <WiFi.h>
 #include "driver/sdmmc_host.h"
-
-// Entry Point
-void core2_main();
 
 // Default defines
 // =================================================================================================
@@ -40,10 +39,27 @@ void core2_main();
 // SD SPI pin config
 // =================================================================================================
 
+#if CONFIG_IDF_TARGET_ESP32
+
 #define SDCARD_PIN_MOSI GPIO_NUM_25 // GPIO_NUM_23 // GPIO_NUM_15
 #define SDCARD_PIN_MISO GPIO_NUM_33 // GPIO_NUM_35 // GPIO_NUM_2
 #define SDCARD_PIN_CLK GPIO_NUM_32  // GPIO_NUM_32 // GPIO_NUM_14
 #define SDCARD_PIN_CS GPIO_NUM_23   // GPIO_NUM_25 // GPIO_NUM_13
+
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "core2_tdeck.h"
+
+#define SDCARD_PIN_MOSI 0
+#define SDCARD_PIN_MISO 0
+#define SDCARD_PIN_CLK 0
+#define SDCARD_PIN_CS 0
+
+#else
+#error ESP32 target not defined
+#endif
+
+// ========= Entry Point ===========================================================================
+void core2_main();
 
 // MCP320X SPI pin config
 // =================================================================================================
