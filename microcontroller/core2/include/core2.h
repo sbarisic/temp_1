@@ -51,10 +51,10 @@
 #define ESP32_TDECK
 void core2_main_tdeck();
 
-#define SDCARD_PIN_MOSI 99
-#define SDCARD_PIN_MISO 99
-#define SDCARD_PIN_CLK 99
-#define SDCARD_PIN_CS 99
+#define SDCARD_PIN_MOSI BOARD_SPI_MOSI
+#define SDCARD_PIN_MISO BOARD_SPI_MISO
+#define SDCARD_PIN_CLK BOARD_SPI_SCK
+#define SDCARD_PIN_CS BOARD_SDCARD_CS
 
 #else
 #error ESP32 target not defined
