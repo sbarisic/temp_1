@@ -39,26 +39,11 @@
 // SD SPI pin config
 // =================================================================================================
 
-#if CONFIG_IDF_TARGET_ESP32
-
 #define SDCARD_PIN_MOSI GPIO_NUM_26 // 
 #define SDCARD_PIN_MISO GPIO_NUM_33 // 
 #define SDCARD_PIN_CLK GPIO_NUM_32  // 
 #define SDCARD_PIN_CS GPIO_NUM_23   // 
 
-#elif CONFIG_IDF_TARGET_ESP32S3
-#include "core2_tdeck.h"
-#define ESP32_TDECK
-void core2_main_tdeck();
-
-#define SDCARD_PIN_MOSI BOARD_SPI_MOSI
-#define SDCARD_PIN_MISO BOARD_SPI_MISO
-#define SDCARD_PIN_CLK BOARD_SPI_SCK
-#define SDCARD_PIN_CS BOARD_SDCARD_CS
-
-#else
-#error ESP32 target not defined
-#endif
 
 // ========= Entry Point ===========================================================================
 void core2_main();

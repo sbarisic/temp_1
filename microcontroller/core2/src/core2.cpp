@@ -323,10 +323,6 @@ void setup()
     core2_init();
     core2_print_status();
 
-#ifdef ESP32_TDECK
-    core2_main_tdeck();
-#else
-
     // pinMode(SDCARD_PIN_CS, OUTPUT);
     // digitalWrite(SDCARD_PIN_CS, LOW);
 
@@ -366,7 +362,6 @@ void setup()
 
     core2_shell_register("esp_restart", esp_restart);
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);
-#endif
 
     // vTaskDelay(pdMS_TO_TICKS(1000 * 20));
     // core2_wifi_ap_stop();
