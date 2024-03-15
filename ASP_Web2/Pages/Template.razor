@@ -1,0 +1,66 @@
+﻿@page "/template"
+@using System.Collections.Specialized
+@using Microsoft.AspNetCore.SignalR.Client
+@using Proj2.Database
+@using Proj2.Code
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+@implements IAsyncDisposable
+
+<PageTitle>@PageTitle</PageTitle>
+
+<AuthorizeView>
+	<Authorized>
+		<h1>@PageTitle</h1>
+
+		<p><em>Loading...</em></p>
+	</Authorized>
+
+
+</AuthorizeView>
+
+@code {
+	string PageTitle { get; set; } = "Template";
+
+	[CascadingParameter]
+	public IModalService Modal {
+		get; set;
+	}
+
+	[CascadingParameter]
+	public MainLayout Layout {
+		get; set;
+	}
+
+	bool IsAdmin {
+		get; set;
+	}
+
+	NameValueCollection Query = null;
+	DatabaseContext DbCtx;
+
+	protected override void OnInitialized() {
+		Query = Query ?? Utils.ParseQuery(Navigation.Uri);
+		DbCtx = new DatabaseContext();
+
+		ReloadData();
+		Layout?.SetNaviText(PageTitle);
+	}
+
+	public async ValueTask DisposeAsync() {
+		DbCtx.Dispose();
+	}
+
+	protected override void OnAfterRender(bool firstRender) {
+		if (!AuthStateProvider.IsAuthenticated())
+			Navigation.NavigateTo("/login");
+	}
+
+	void ReloadData() {
+		IsAdmin = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADMIN);
+	}
+}

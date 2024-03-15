@@ -1,0 +1,109 @@
+﻿@using Proj2.Code
+@using System.Reflection
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+@inject AuthStateProvider AuthStateProvider
+
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="editAdminModalLabel">@BlazoredModal.Title</h5>
+        </div>
+
+        <div class="modal-body">
+
+            @foreach (Field F in Fields) {
+                if (F.FieldType == FieldType.Input) {
+                    <div class="input-group mb-1">
+                        <span class="input-group-text">@F.Name</span>
+                        <input type="text" class="form-control" placeholder="@F.Value" @bind=F.Value>
+                    </div>
+                } else if (F.FieldType == FieldType.DropDownField) {
+                    <div class="input-group mb-3">
+                        <label class="input-group-text">@F.Name</label>
+                        <select class="form-select" @bind=F.Value>
+                            <option selected value="0">Choose...</option>
+
+                            @for (int i = 0; i < F.Values.Length; i++) {
+                                <option value="@F.Values[i].Value">@F.Values[i].Key</option>
+                            }
+                        </select>
+                    </div>
+                }
+            }
+
+
+
+            @*<div class="input-group mb-1">
+            <span class="input-group-text">Qwedawdaw</span>
+            <input type="text" class="form-control" placeholder="Username" aria-label="Username">
+            </div>*@
+
+
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @onclick="@(e => Close())">Close</button>
+            <button type="button" class="btn btn-primary" @onclick="@(e => SaveChanges())">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal {
+        get; set;
+    }
+
+    [Parameter]
+    public Field[] Fields {
+        get; set;
+    }
+
+    protected override void OnInitialized() {
+    }
+
+    void Close() {
+        BlazoredModal.CancelAsync();
+    }
+
+    void SaveChanges() {
+        BlazoredModal.CloseAsync();
+    }
+
+    public class Field {
+        public FieldType FieldType {
+            get; set;
+        }
+
+        public string Name {
+            get; set;
+        }
+
+        public string Value {
+            get; set;
+        }
+
+        public KeyValuePair<string, string>[] Values {
+            get; set;
+        }
+
+        public Field(string Name, string Value) {
+            this.Name = Name;
+            this.Value = Value;
+            FieldType = FieldType.Input;
+        }
+
+        public Field(string Name, KeyValuePair<string, string>[] Values) {
+            this.Name = Name;
+            this.Values = Values;
+            FieldType = FieldType.DropDownField;
+        }
+    }
+
+    public enum FieldType {
+        Input,
+        DropDownField,
+    }
+}

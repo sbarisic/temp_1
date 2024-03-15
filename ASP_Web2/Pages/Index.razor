@@ -1,0 +1,85 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.SignalR.Client
+@using Proj2.Database
+
+@inject NavigationManager Navigation
+@*@inject ItemDataService ItemService*@
+
+<PageTitle>Index</PageTitle>
+
+<AuthorizeView>
+	<Authorized>
+		@*<div class="row mb-3">
+		<div class="form-group">
+		<label for="input_item" class="form-label">
+		Item Name:
+		</label>
+
+		<div class="col-sm-10">
+		<input id="input_item" class="form-control" type="text" @bind="itemInput" />
+		</div>
+		</div>
+		</div>
+
+		<div class="row mb-3">
+		<div class="form-group">
+		<label for="input_voltage" class="form-label">
+		Voltage:
+		</label>
+
+		<div class="col-sm-10">
+		<input id="input_voltage" class="form-control" type="text" @bind="itemVoltage" size="50" />
+		</div>
+		</div>
+		</div>*@
+
+		<button class="btn btn-primary" @onclick="@(e => CreateDb())">Create Database</button>
+	</Authorized>
+</AuthorizeView>
+
+@code {
+	void CreateDb() {
+		DatabaseContext.CreateDb();
+	}
+
+	/*private HubConnection HubCon;
+
+	string itemInput;
+	string itemVoltage;
+
+	public bool IsConnected {
+	get {
+	if (HubCon == null)
+	return false;
+
+	return HubCon.State == HubConnectionState.Connected;
+	}
+	}
+
+	protected override async Task OnInitializedAsync() {
+	HubCon = new HubConnectionBuilder()
+	.WithUrl(Navigation.ToAbsoluteUri("/comhub"))
+	.Build();
+
+	await HubCon.StartAsync();
+	}*/
+
+	//if (!IsConnected)
+	//	return;
+
+	/*using (DatabaseContext DbCtx = new DatabaseContext()) {
+		DbItemData Item = DbCtx.GetItem(itemInput);
+
+			if (Item == null)
+		return;
+
+		if (float.TryParse(itemVoltage, out float Voltage)) {
+			//Item.TimeStamp = DateTime.Now;
+			Item.Voltage = Voltage;
+		}
+
+		DbCtx.UpdateItem(Item);
+	}*/
+
+	//await HubCon.SendAsync("SendStateHasChanged");
+}

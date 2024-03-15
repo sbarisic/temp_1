@@ -1,0 +1,285 @@
+﻿@page "/uprave"
+@using Microsoft.AspNetCore.SignalR.Client
+@using Proj2.Database
+@using Proj2.Code
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+@implements IDisposable
+
+<PageTitle>Uprave</PageTitle>
+
+<AuthorizeView>
+	<Authorized>
+		<div class="accordion mx-2 my-2">
+			@{
+				int Counter = 0;
+
+				string GetCounter() {
+					return "item_" + Counter;
+				}
+			}
+
+			@foreach (DbAdministration Administration in AllAdministrations) {
+				Counter++;
+				GetUpravaStyle(Administration, out string UpravaButtonStyle, out bool UpravaHasError, out bool UpravaHasWarning);
+
+				<div class="accordion-item">
+					<h2 class="accordion-header">
+						<button class="accordion-button @UpravaButtonStyle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@GetCounter()" aria-expanded="true" aria-controls="@GetCounter()">
+							<p class="mx-0 my-0">
+								@Administration.Name
+
+								@if (UpravaHasError) { // TODO: ALERT/WARNING badges
+									<span class="badge bg-danger ms-2">ERROR</span>
+								}
+
+								@if (UpravaHasWarning) { // TODO: ALERT/WARNING badges
+									<span class="badge bg-warning ms-2">WARNING</span>
+								}
+							</p>
+						</button>
+					</h2>
+					<div id="@GetCounter()" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+						<div class="accordion-body">
+
+							<div class="container-fluid">
+								<div class="row mb-2">
+									<div class="col">
+										@{
+											var ButtonPaddingX = "mx-1";
+										}
+
+										<button class="btn btn-outline-primary @ButtonPaddingX" @onclick="@(e=> OnViewAdministration(Administration))">Pregled Uprave</button>
+
+										@if (OnDeleteAdministrationEnabled) {
+											<button class="btn btn-outline-danger @ButtonPaddingX" @onclick="@(e=> OnDeleteAdministration(Administration))">Obriši</button>
+										}
+									</div>
+								</div>
+
+								<div class="row">
+									<div class="col">
+										<AddressView CurrentAddress="Administration.Address" />
+										@*<strong>Broj Vozila: </strong>@Administration.Vehicles.Count<br />*@
+									</div>
+								</div>
+
+								@if ((Administration.Vehicles?.Count ?? 0) > 0) {
+
+									<div class="row">
+										<div class="col">
+											@*<hr class="my-2">*@
+											<ul class="list-group mt-3">
+												@foreach (DbVehicle V in Administration.Vehicles) {
+													GetVoziloStyle(V, out string ListGroupItemStyle, out string ButtonStyle, out bool HasError, out bool HasWarning);
+
+													<li class="list-group-item p-1 @ListGroupItemStyle">
+														<div class="container-fluid">
+															<div class="row">
+																<div class="col p-0">
+																	<p class="m-0">@V.Name</p>
+																</div>
+
+																<div class="col p-0">
+																	<p class="m-0">@V.LicensePlate</p>
+																</div>
+
+																<div class="col p-0">
+																	@if (HasError) {
+																		<span class="badge bg-danger mx-1">ERROR</span>
+																	}
+
+																	@if (HasWarning) {
+																		<span class="badge bg-warning mx-1">WARNING</span>
+																	}
+																</div>
+
+																<div class="col p-0">
+																	<button class="btn btn-sm float-end @ButtonStyle" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button>
+																</div>
+															</div>
+														</div>
+													</li>
+												}
+											</ul>
+										</div>
+									</div>
+
+								}
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+
+			@if (EditMenuEnabled) {
+				<div class="accordion-item">
+					<h2 class="accordion-header">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#item_addnew" aria-expanded="true" aria-controls="item_addnew">
+							<p class="mx-0 my-0">
+								<span class="oi oi-wrench"></span>
+								<span> Edit</span>
+							</p>
+						</button>
+					</h2>
+					<div id="item_addnew" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+						<div class="accordion-body">
+							<button class="btn btn-outline-success" @onclick="@OnNewAdministration">Nova Uprava</button>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	</Authorized>
+
+</AuthorizeView>
+
+@code {
+	[CascadingParameter]
+	public IModalService Modal {
+		get; set;
+	}
+
+	[CascadingParameter]
+	public MainLayout Layout {
+		get; set;
+	}
+
+	bool EditMenuEnabled {
+		get; set;
+	}
+
+	bool OnDeleteAdministrationEnabled {
+		get; set;
+	}
+
+	DatabaseContext DbCtx;
+	public List<DbAdministration> AllAdministrations;
+
+	void ReloadData() {
+		DbUser Usr = AuthStateProvider.GetDbUser(DbCtx);
+
+		if (AllAdministrations != null) {
+			AllAdministrations.Clear();
+			AllAdministrations = null;
+		}
+
+		if (Usr == null)
+			return;
+
+		AllAdministrations = DbCtx.GetAllAdministrations(Usr);
+
+		EditMenuEnabled = DbCtx.HasPermission(Usr, DbPermission.PermissionNames.ADMIN);
+		OnDeleteAdministrationEnabled = EditMenuEnabled;
+	}
+
+	protected override void OnInitialized() {
+		DbCtx = new DatabaseContext();
+
+		ReloadData();
+		Layout?.SetNaviText("Sve Uprave");
+	}
+
+	void GetUpravaStyle(DbAdministration Administration, out string UpravaButtonStyle, out bool HasError, out bool HasWarning) {
+		UpravaButtonStyle = "";
+
+		HasWarning = Administration.HasAnyWarnings();
+		HasError = Administration.HasAnyErrors();
+
+		if (HasError) {
+			UpravaButtonStyle = "list-group-item-danger";
+		} else if (HasWarning) {
+			UpravaButtonStyle = "list-group-item-warning";
+		}
+	}
+
+	void GetVoziloStyle(DbVehicle V, out string ListGroupItemStyle, out string ButtonStyle, out bool HasError, out bool HasWarning) {
+		ListGroupItemStyle = "";
+		ButtonStyle = "btn-outline-secondary";
+
+		HasWarning = V.HasAnyWarnings();
+		HasError = V.HasAnyErrors();
+
+
+		if (HasError) {
+			ListGroupItemStyle = "list-group-item-danger";
+			ButtonStyle = "btn-danger";
+		} else if (HasWarning) {
+			ListGroupItemStyle = "list-group-item-warning";
+			ButtonStyle = "btn-warning";
+		}
+	}
+
+	protected override void OnAfterRender(bool firstRender) {
+		if (!AuthStateProvider.IsAuthenticated())
+			Navigation.NavigateTo("/login");
+	}
+
+	void OnViewAdministration(DbAdministration Up) {
+		Navigation.NavigateTo("/pregled_uprave?i=" + Up.ID);
+	}
+
+	async Task OnDeleteAdministration(DbAdministration Up) {
+		if (!OnDeleteAdministrationEnabled)
+			return;
+
+		ModalResult Result = await QueryModal.Show(Modal, "Obriši Upravu", string.Format("Jeste li sigurni da želite obrisati \"{0}\"", Up.Name));
+
+		if (Result.Confirmed) {
+			DbCtx.DeleteEntity(Up);
+
+			ReloadData();
+			StateHasChanged();
+		}
+	}
+
+	void OnPregledVozila(DbVehicle V) {
+		Navigation.NavigateTo("/pregled_vozila?i=" + V.ID);
+	}
+
+	async Task OnNewAdministration() {
+		EditModal.Field[] EditFields = new[] {
+				new EditModal.Field("Naziv", "Nova Uprava"),
+};
+
+		ModalResult Result = await Modal.Show<EditModal>("Dodaj Upravu", new ModalParameters().Add("Fields", EditFields)).Result;
+		if (Result.Confirmed) {
+			if (string.IsNullOrEmpty(EditFields[0].Value)) {
+				return;
+			}
+
+			DbAddress EmptyAddr = DbCtx.CreateNew<DbAddress>(null);
+			DbCtx.CreateNew<DbAdministration>(AuthStateProvider.GetDbUser(DbCtx), Admin => {
+				Admin.Name = EditFields[0].Value;
+				Admin.Address = EmptyAddr;
+			});
+
+
+
+
+			/*DbCtx.CreateNew<DbVehicle>((NewVehicle) => {
+				NewVehicle.Name = EditFields[0].Value;
+				NewVehicle.LicensePlate = EditFields[1].Value;
+
+				//new Vozilo(EditFields[0].Value, EditFields[1].Value);
+				//CurrentAdministration.Vozila.Add(NewVehicle);
+
+				CurrentAdministration.Vehicles.Add(NewVehicle);
+			});
+
+			DbCtx.Commit();*/
+
+			DbCtx.Commit();
+			ReloadData();
+			StateHasChanged();
+		}
+	}
+
+	public void Dispose() {
+		DbCtx.Dispose();
+	}
+}
