@@ -37,7 +37,7 @@ QueueHandle_t interruptQueue;
 // define for MCP3201
 // #define SPI_CS      4        // SPI slave select
 // #define SPI_CS1     5
-#define ADC_VREF 3311   // 3.3V Vref
+#define ADC_VREF 3299   // 3.3V Vref
 #define ADC_CLK 1600000 // 1600000  // SPI clock 1.6MHz
 
 uint8_t id = 0x28;                   // i2c address
@@ -52,8 +52,9 @@ double outputmin = 1677722;  // output at minimum pressure [counts]
 double pmax = 10;            // maximum value of pressure range [bar, psi, kPa, etc.]
 double pmin = 0;             // minimum value of pressure range [bar, psi, kPa, etc.]
 
-MCP3201 adc(ADC_VREF, 4); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
-MCP3201 adc1(ADC_VREF, 5);
+MCP3201 adc(ADC_VREF, 5); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
+MCP3201 adc1(ADC_VREF, 17);
+MCP3201 adcc(ADC_VREF, 4);
 
 // define LCD SSD1306
 U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g(U8G2_R0, U8X8_PIN_NONE);
@@ -61,6 +62,7 @@ U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g(U8G2_R0, U8X8_PIN_NONE);
 // Global variable
 float voltage1;
 float voltage2;
+float current;
 float gpressure;
 float gtemperature;
 char string[8];
@@ -136,7 +138,7 @@ void buttonPushedTask(void *params) // task koji se pokreće nakon aktivacije IS
         {
           uint16_t raw1 = adc1.read(MCP3201::Channel::SINGLE_0);
           uint16_t val1 = adc1.toAnalog(raw1);
-          float naponj = val1 * 9.215 / 1000;
+          float naponj = val1 * 13.75 / 1000;
           delay(1);
           if (naponj < minnapon)
             minnapon = naponj;
@@ -175,13 +177,23 @@ void task1(void *parameters)
 
     uint16_t raw = adc.read(MCP3201::Channel::SINGLE_0);
     uint16_t raw1 = adc1.read(MCP3201::Channel::SINGLE_0);
+    
 
     // get analog value
     uint16_t val = adc.toAnalog(raw);
     uint16_t val1 = adc1.toAnalog(raw1);
+    
+    int voltagesum = 0; 
+    for (int i = 0; i < 50; i++) {
+    uint16_t raw2 = adcc.read(MCP3201::Channel::SINGLE_0);  
+    uint16_t valc = adcc.toAnalog(raw2);
+    voltagesum = voltagesum + int(valc);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
 
-    voltage1 = val * 4.795 / 1000;
-    voltage2 = val1 * 9.215 / 1000 - val * 4.795 / 1000;
+    }
+    voltage1 = val * 7.34 / 1000;
+    voltage2 = val1 * 13.75 / 1000 - val * 7.34 / 1000;
+    current = (voltagesum / 50) * 2;
 
     xEventGroupSetBits(eventGroup, gotVoltage); // javljamo da su naponi očitani
 
@@ -244,9 +256,9 @@ void task3(void *pvparameter)
       u8g.drawStr(65, 42, dtostrf(gpressure, 5, 2, string));
       u8g.drawStr(105, 42, "Bar");
 
-      u8g.drawStr(6, 56, "Temp : ");
-      u8g.drawStr(65, 56, dtostrf(gtemperature, 5, 2, string));
-      u8g.drawStr(105, 56, "C");
+      //u8g.drawStr(6, 56, "Temp : ");
+      u8g.drawStr(65, 56, dtostrf(current, 5, 2, string));
+      u8g.drawStr(105, 56, "mA");
 
     } while (u8g.nextPage());
 
@@ -270,6 +282,7 @@ void task4(void *pvparameter)
     doc["Action"] = 1;
     doc["ACCvoltage1"] = voltage1;
     doc["ACCvoltage2"] = voltage2;
+    doc["ACCcurrent"] = current;
     doc["Tlak"] = gpressure;
     doc["Temperatura"] = gtemperature;
     // doc["Test"] = naponi;
@@ -447,12 +460,14 @@ void setup()
   u8g.begin();
 
   // configure PIN mode
-  pinMode(4, OUTPUT);
   pinMode(5, OUTPUT);
+  pinMode(17, OUTPUT);
+  pinMode(4, OUTPUT);
 
   // set initial PIN state
-  digitalWrite(4, HIGH);
   digitalWrite(5, HIGH);
+  digitalWrite(17, HIGH);
+  digitalWrite(4,HIGH);
 
   // initialize SPI interface for MCP3208 & LCD
   SPISettings settings(ADC_CLK, MSBFIRST, SPI_MODE0);
@@ -473,6 +488,7 @@ void setup()
   Serial.println(WiFi.localIP());
 
   core2_filesystem_init();
+  delay(250);
 
   xTaskCreatePinnedToCore(
       task1,
@@ -627,19 +643,35 @@ bool core2_file_append(const char *filename, const char *data, size_t len)
 
 bool core2_file_mkdir(const char *dirname, mode_t mode)
 {
-  if (mode == 0)
-    mode = 0777;
+    if (mode == 0)
+        mode = 0777;
 
-  dprintf("core2_file_mkdir(\"%s\", %o) - ", dirname, mode);
+    dprintf("core2_file_mkdir(\"%s\", %o) - ", dirname, mode);
 
-  if (mkdir(dirname, mode) == -1)
-  {
-    dprintf("FAIL\n");
+    struct stat st = {0};
+    if (stat(dirname, &st) == -1)
+    {
+        if (mkdir(dirname, mode) == -1)
+        {
+            dprintf("FAIL\n");
+
+            return false;
+        }
+        else
+        {
+            dprintf("OK\n");
+
+            return true;
+        }
+    }
+    else
+    {
+        dprintf("DIR_EXISTS\n");
+
+        return false;
+    }
+
     return false;
-  }
-
-  dprintf("OK\n");
-  return true;
 }
 
 void core2_file_list(const char *dirname)
@@ -712,6 +744,9 @@ bool core2_filesystem_init()
   dprintf("core2_filesystem_init() - Creating folders\n");
   core2_file_mkdir("/sd/logs");       // Log directory
   core2_file_mkdir("/sd/processing"); // Temporary processing directory, files which have not been uploaded?
+
+const char data[] = "Test teoajwdiajwd";
+  core2_file_write("/sd/test.txt", data, sizeof(data));
 
   return true;
 }
