@@ -1,11 +1,10 @@
+#pragma once
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #include <freertos/queue.h>
 #include <WiFi.h>
 #include "driver/sdmmc_host.h"
-
-// Entry Point
-void core2_main();
 
 // Default defines
 // =================================================================================================
@@ -44,6 +43,10 @@ void core2_main();
 #define SDCARD_PIN_MISO GPIO_NUM_33 // 
 #define SDCARD_PIN_CLK GPIO_NUM_32  // 
 #define SDCARD_PIN_CS GPIO_NUM_23   // 
+
+
+// ========= Entry Point ===========================================================================
+void core2_main();
 
 // MCP320X SPI pin config
 // =================================================================================================

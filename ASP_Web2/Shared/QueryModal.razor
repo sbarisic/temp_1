@@ -1,0 +1,78 @@
+﻿@using Proj2.Code
+@using System.Reflection
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+@inject AuthStateProvider AuthStateProvider
+
+<div class="modal-dialog">
+	<div class="modal-content">
+		<div class="modal-header">
+			<h5 class="modal-title" id="editAdminModalLabel">@BlazoredModal.Title</h5>
+		</div>
+
+		<div class="modal-body">
+			<div class="container p-0">
+				@foreach (var Line in MessageLines) {
+					<div class="row">
+						<div class="col">@Line</div>
+					</div>
+				}
+			</div>
+
+			@*@foreach (Field F in Fields) {
+			<div class="input-group mb-1">
+			<span class="input-group-text">@F.Name</span>
+			<input type="text" class="form-control" placeholder="@F.Value" @bind=F.Value>
+			</div>
+			}*@
+
+
+
+			@*<div class="input-group mb-1">
+			<span class="input-group-text">Qwedawdaw</span>
+			<input type="text" class="form-control" placeholder="Username" aria-label="Username">
+			</div>*@
+
+
+		</div>
+
+		<div class="modal-footer">
+			<button type="button" class="btn btn-primary" @onclick="@(e => OnOK())">OK</button>
+			<button type="button" class="btn btn-secondary" @onclick="@(e => OnCancel())">Cancel</button>
+		</div>
+	</div>
+</div>
+
+@code {
+	[CascadingParameter]
+	BlazoredModalInstance BlazoredModal {
+		get; set;
+	}
+
+	[Parameter]
+	public string Message {
+		get; set;
+	}
+
+	string[] MessageLines {
+		get {
+			return Message.Split(new[] { '\n' });
+		}
+	}
+
+	protected override void OnInitialized() {
+	}
+
+	void OnCancel() {
+		BlazoredModal.CancelAsync();
+	}
+
+	void OnOK() {
+		BlazoredModal.CloseAsync();
+	}
+
+	public static async Task<ModalResult> Show(IModalService Modal, string Title, string Message) {
+		return await Modal.Show<QueryModal>(Title, new ModalParameters().Add(nameof(Message), Message)).Result;
+	}
+}

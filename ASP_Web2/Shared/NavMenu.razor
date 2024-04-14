@@ -1,0 +1,80 @@
+﻿@using Proj2.Code
+@using Proj2.Database
+
+@inject AuthStateProvider AuthStateProvider
+
+<div>
+	<nav class="flex-column">
+		<ul class="nav nav-pills flex-column mb-auto">
+			<AuthorizeView>
+				<NotAuthorized>
+
+					<NavLink class="nav-link text-light" href="login">
+						<span class="oi oi-account-login" aria-hidden="true"></span> Login
+					</NavLink>
+
+				</NotAuthorized>
+
+				<Authorized>
+					@*<li>
+					<NavLink class="nav-link text-light" href="" Match="NavLinkMatch.All">
+					<span class="oi oi-home" aria-hidden="true"></span> Home
+					</NavLink>
+					</li>*@
+
+					<li>
+						<NavLink class="nav-link text-light" href="uprave">
+							<span class="oi oi-list-rich" aria-hidden="true"></span> Sve Uprave
+						</NavLink>
+					</li>
+
+					<li>
+						<NavLink class="nav-link text-light" href="pregled_uprave">
+							<span class="oi oi-eye" aria-hidden="true"></span> Pregled Uprave
+						</NavLink>
+					</li>
+
+					<li>
+						<NavLink class="nav-link text-light" href="pregled_vozila">
+							<span class="oi oi-key" aria-hidden="true"></span> Pregled Vozila
+						</NavLink>
+					</li>
+
+					@if (IsAdmin) {
+						<hr />
+
+
+						<NavLink class="nav-link text-light" href="permissions">
+							<span class="oi oi-lock-locked" aria-hidden="true"></span> Prava Pristupa
+						</NavLink>
+					}
+
+
+					@*<li>
+					<NavLink class="nav-link text-light" href="dataview">
+					<span class="oi oi-chevron-right" aria-hidden="true"></span> Pregled
+					</NavLink>
+					</li>*@
+
+				</Authorized>
+			</AuthorizeView>
+		</ul>
+	</nav>
+</div>
+
+@code {
+	bool IsAdmin {
+		get; set;
+	}
+
+	protected override void OnInitialized() {
+		using (DatabaseContext DbCtx = new DatabaseContext()) {
+			IsAdmin = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.EDIT_ADMINISTRATION_DETAILS);
+		}
+	}
+	/*string Username {
+		get {
+			return AuthStateProvider.GetDbUser().Username;
+		}
+	}*/
+}

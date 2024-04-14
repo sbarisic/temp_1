@@ -1,0 +1,272 @@
+﻿@page "/pregled_uprave"
+
+@using Microsoft.AspNetCore.SignalR.Client
+@using Proj2.Database
+@using Proj2.Code
+@using System.Collections.Specialized
+@using System.Linq
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+@implements IDisposable
+
+
+<PageTitle>Pregled Uprave</PageTitle>
+
+<AuthorizeView>
+	<Authorized>
+		@if (CurrentAdministration != null) {
+			@* Uprava i informacije o uopravi *@
+
+			<div class="card">
+				<div class="card-body">
+					<div class="container-fluid">
+						<div class="row">
+							<div class="col">
+								<h4 class="card-title">@CurrentAdministration.Name</h4>
+							</div>
+						</div>
+
+						@if (HasError || HasWarning) {
+							<div class="row my-1">
+								<div class="col">
+									@if (HasError) {
+										<span class="badge bg-danger mx-1">ERROR</span>
+									}
+
+									@if (HasWarning) {
+										<span class="badge bg-warning mx-1">WARNING</span>
+									}
+								</div>
+							</div>
+						}
+
+
+						<div class="row mb-2 my-2">
+							<div class="col">
+								@{
+									var ButtonPaddingX = "mx-1";
+								}
+
+								@if (OnEditDescriptionEnabled) {
+									<button class="btn btn-sm btn-outline-primary @ButtonPaddingX" @onclick="@(e => OnEditDescription())">Uredi Opis</button>
+								}
+
+								@if (OnAddVehicleEnabled) {
+									<button class="btn btn-sm btn-outline-success @ButtonPaddingX" @onclick="@(e => OnAddVehicle())">Dodaj Vozilo</button>
+								}
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col">
+								<AddressView CurrentAddress="CurrentAdministration.Address" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			@if (CurrentAdministration.Vehicles != null && CurrentAdministration.Vehicles.Count > 0) {
+				<table class="table table-striped table-hover mt-4">
+					<thead>
+						<tr>
+							<th scope="col">Vozilo</th>
+							<th scope="col">Tablica</th>
+							<th scope="col">Error / Warning</th>
+							<th scope="col">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (DbVehicle V in CurrentAdministration.Vehicles) {
+							GetVoziloTableRowStyle(V, out string TableRowStyle, out bool HasError, out bool HasWarning);
+
+							<tr class="@TableRowStyle">
+								<td>@V.Name</td>
+								<td>@V.LicensePlate</td>
+
+								<td>
+									@if (HasError) {
+										<span class="badge bg-danger mx-1">ERROR</span>
+									}
+
+									@if (HasWarning) {
+										<span class="badge bg-warning mx-1">WARNING</span>
+									}
+								</td>
+
+								<td>
+									<div class="container-fluid">
+										<div class="row">
+											<div class="col">
+												<div class="float-end">
+													<button class="btn btn-sm btn-outline-secondary mx-1" @onclick="@(e=> OnPregledVozila(V))">Pregled Vozila</button>
+
+													@if (OnDeleteVehicleEnabled) {
+														<button class="btn btn-sm btn-outline-danger mx-1" @onclick="@(e => OnDeleteVehicle())">Obriši</button>
+													}
+												</div>
+											</div>
+										</div>
+									</div>
+
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+
+		} else {
+			<p><em>Loading...</em></p>
+		}
+
+	</Authorized>
+</AuthorizeView>
+
+@code {
+	[CascadingParameter]
+	public IModalService Modal {
+		get; set;
+	}
+
+	[CascadingParameter]
+	public MainLayout Layout {
+		get; set;
+	}
+
+	bool OnEditDescriptionEnabled {
+		get; set;
+	}
+
+	bool OnAddVehicleEnabled {
+		get; set;
+	}
+
+	bool OnDeleteVehicleEnabled {
+		get; set;
+	}
+
+	NameValueCollection Query = null;
+	DatabaseContext DbCtx;
+
+	DbAdministration CurrentAdministration = null;
+	bool HasError = false;
+	bool HasWarning = false;
+
+	void GetVoziloTableRowStyle(DbVehicle V, out string TableRowStyle, out bool HasError, out bool HasWarning) {
+		TableRowStyle = "";
+		HasError = V.HasAnyErrors();
+		HasWarning = V.HasAnyWarnings();
+
+		if (HasError) {
+			TableRowStyle = "table-danger";
+		} else if (HasWarning) {
+			TableRowStyle = "table-warning";
+		}
+	}
+
+	protected override void OnInitialized() {
+		Query = Query ?? Utils.ParseQuery(Navigation.Uri);
+		DbCtx = new DatabaseContext();
+
+		string ViewID = Query.Get("i") ?? "";
+
+		if (!string.IsNullOrEmpty(ViewID)) {
+			//CurrentAdministration = Structures.Uprave.Where(U => U.ID == ViewID).FirstOrDefault();
+
+			CurrentAdministration = DbCtx.GetAdministration(ViewID);
+
+			if (CurrentAdministration != null) {
+				HasError = CurrentAdministration.HasAnyErrors();
+				HasWarning = CurrentAdministration.HasAnyWarnings();
+
+
+			}
+		}
+
+		OnEditDescriptionEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.EDIT_ADMINISTRATION_DETAILS, CurrentAdministration);
+		OnAddVehicleEnabled = DbCtx.HasPermission(AuthStateProvider, DbPermission.PermissionNames.ADD_REMOVE_ADMINISTRATION_VEHICLE, CurrentAdministration);
+		OnDeleteVehicleEnabled = OnAddVehicleEnabled;
+
+		Layout?.SetNaviText("Pregled Uprave");
+	}
+
+	protected override void OnAfterRender(bool firstRender) {
+		if (!AuthStateProvider.IsAuthenticated())
+			Navigation.NavigateTo("/login");
+	}
+
+	void OnPregledVozila(DbVehicle V) {
+		Navigation.NavigateTo("/pregled_vozila?i=" + V.ID);
+	}
+
+	async void OnAddVehicle() {
+		if (!OnAddVehicleEnabled)
+			return;
+
+		EditModal.Field[] EditFields = new[] {
+				new EditModal.Field("Naziv", "Nema Naziva"),
+				new EditModal.Field("Tablica","")
+};
+
+		ModalResult Result = await Modal.Show<EditModal>("Dodaj Vozilo", new ModalParameters().Add("Fields", EditFields)).Result;
+		if (Result.Confirmed) {
+			if (string.IsNullOrEmpty(EditFields[0].Value) || string.IsNullOrEmpty(EditFields[1].Value)) {
+				return;
+			}
+
+			DbCtx.CreateNew<DbVehicle>(AuthStateProvider.GetDbUser(DbCtx), (NewVehicle) => {
+				NewVehicle.Name = EditFields[0].Value;
+				NewVehicle.LicensePlate = EditFields[1].Value;
+
+				//new Vozilo(EditFields[0].Value, EditFields[1].Value);
+				//CurrentAdministration.Vozila.Add(NewVehicle);
+
+				CurrentAdministration.Vehicles.Add(NewVehicle);
+			});
+
+			DbCtx.Commit();
+			StateHasChanged();
+		}
+	}
+
+	async void OnDeleteVehicle() {
+		if (!OnDeleteVehicleEnabled)
+			return;
+	}
+
+	async void OnEditDescription() {
+		if (!OnEditDescriptionEnabled)
+			return;
+
+		EditModal.Field[] EditFields = new[] {
+			new EditModal.Field( "Naziv", CurrentAdministration.Name),
+			new EditModal.Field( "Street", CurrentAdministration.Address.Street),
+			new EditModal.Field( "City", CurrentAdministration.Address.City),
+			new EditModal.Field( "Region", CurrentAdministration.Address.Region),
+			new EditModal.Field( "Postal Code", CurrentAdministration.Address.PostalCode),
+			new EditModal.Field( "Phone Number", CurrentAdministration.Address.PhoneNumber)
+	};
+
+		ModalResult Result = await Modal.Show<EditModal>("Opis Uprave", new ModalParameters().Add("Fields", EditFields)).Result;
+		if (Result.Confirmed) {
+			CurrentAdministration.Name = EditFields[0].Value;
+			CurrentAdministration.Address.Street = EditFields[1].Value;
+			CurrentAdministration.Address.City = EditFields[2].Value;
+			CurrentAdministration.Address.Region = EditFields[3].Value;
+			CurrentAdministration.Address.PostalCode = EditFields[4].Value;
+			CurrentAdministration.Address.PhoneNumber = EditFields[5].Value;
+
+			DbCtx.Commit();
+			StateHasChanged();
+		}
+	}
+
+	public void Dispose() {
+		DbCtx.Dispose();
+	}
+}

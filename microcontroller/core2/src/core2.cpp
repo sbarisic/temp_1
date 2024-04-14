@@ -11,6 +11,8 @@
 #include <esp_sntp.h>
 #include <string.h>
 
+#include <USB.h>
+
 #define printlogo dprintf
 
 void core2_init()
@@ -69,8 +71,10 @@ void core2_print_status()
         return;
     }
 
-    dprintf("%luMB %s flash\n", flash_size / (1024 * 1024), (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
-    dprintf("Minimum free heap size: %ld bytes\n", esp_get_minimum_free_heap_size());
+    dprintf("%lu MB %s flash\n", flash_size / (1024 * 1024), (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
+
+    uint32_t free_heap = esp_get_minimum_free_heap_size();
+    dprintf("Minimum free heap size: %ld bytes (%ld kb)\n", free_heap, free_heap / 1024);
 
     esp_reset_reason_t reason = esp_reset_reason();
     char resetreason[64];
@@ -79,7 +83,7 @@ void core2_print_status()
     dprintf("%s - ", resetreason);
 
     core2_resetreason_tostr(reason, resetreason, true);
-    dprintf("%s", resetreason);
+    dprintf("%s\n", resetreason);
 }
 
 SemaphoreHandle_t core2_lock_create()
@@ -294,12 +298,28 @@ void core2_main_impl(void *args)
     }
 }
 
+void core2_wait_for_serial()
+{
+    fflush(stdout);
+    fpurge(stdin);
+
+    Serial.begin(115200);
+
+    while (!Serial)
+        vTaskDelay(pdMS_TO_TICKS(100));
+
+    Serial.flush();
+}
+
 void loop()
 {
 }
 
 void setup()
 {
+    // vTaskDelay(pdMS_TO_TICKS(10000));
+    core2_wait_for_serial();
+
     core2_init();
     core2_print_status();
 
@@ -341,7 +361,6 @@ void setup()
                          { core2_gpio_set_interrupt0(); });
 
     core2_shell_register("esp_restart", esp_restart);
-
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);
 
     // vTaskDelay(pdMS_TO_TICKS(1000 * 20));

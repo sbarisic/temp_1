@@ -117,6 +117,8 @@ bool core2_file_write(const char *filename, const char *data, size_t len)
 // @brief Adds current time as file name suffix
 bool core2_file_write_timesuffix(const char *filename, const char *data, size_t len)
 {
+    dprintf("TODO! core2_file_write_timesuffix\n");
+
     char cur_time[21];
     core2_clock_time_fmt(cur_time, sizeof(cur_time), "%d%m%Y_%H%M%S");
 
