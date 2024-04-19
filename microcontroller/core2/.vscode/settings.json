@@ -9,5 +9,6 @@
         "initializer_list": "cpp",
         "fishglshader.h": "c",
         "stdint.h": "c"
-    }
+    },
+    "cmake.configureOnOpen": false
 }

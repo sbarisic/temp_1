@@ -157,6 +157,9 @@ bool core2_file_append(const char *filename, const char *data, size_t len);
 bool core2_file_mkdir(const char *dirname, mode_t mode = 0);
 void core2_file_list(const char *dirname, onFileFoundFn onFileFound);
 bool core2_file_write_timesuffix(const char *filename, const char *data, size_t len);
+bool core2_file_exists(const char *filename);
+size_t core2_file_length(FILE *f);
+void *core2_file_read_all(const char *filename, size_t *len);
 
 // MCP320X ADC
 // =================================================================================================

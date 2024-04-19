@@ -1,18 +1,18 @@
 #include <core2.h>
 
-#include <dirent.h>
-#include <string.h>
-#include <sys/unistd.h>
-#include <sys/stat.h>
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
+#include <dirent.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/unistd.h>
 
 #undef ESP_LOGI
-#define ESP_LOGI(a, ...)      \
-    do                        \
-    {                         \
-        dprintf(__VA_ARGS__); \
-        dprintf("\n");        \
+#define ESP_LOGI(a, ...)                                                                                               \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        dprintf(__VA_ARGS__);                                                                                          \
+        dprintf("\n");                                                                                                 \
     } while (0)
 
 FILE *core2_file_open(const char *filename, const char *type)
@@ -223,12 +223,45 @@ void core2_file_list(const char *dirname, onFileFoundFn onFileFound)
     }
 }
 
+bool core2_file_exists(const char *filename)
+{
+    if (access(filename, F_OK))
+        return true;
+
+    return false;
+}
+
+size_t core2_file_length(FILE *f)
+{
+    fseek(f, 0, SEEK_END);
+    size_t len = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    return len;
+}
+
+void *core2_file_read_all(const char *filename, size_t *len)
+{
+    if (core2_file_exists(filename))
+    {
+        FILE *f = core2_file_open(filename, "r");
+        *len = core2_file_length(f);
+
+        void *buf = core2_malloc(*len);
+        fread(buf, 1, *len, f);
+
+        return buf;
+    }
+
+    return NULL;
+}
+
 bool core2_filesystem_init(sdmmc_host_t *host, int CS)
 {
     dprintf("core2_filesystem_init()\n");
     const char mount_point[] = "/sd";
 
-    esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
+    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+        .format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
 
     // This initializes the slot without card detect (CD) and write protect (WP) signals.
     // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
@@ -243,9 +276,11 @@ bool core2_filesystem_init(sdmmc_host_t *host, int CS)
     if (ret != ESP_OK)
     {
         if (ret == ESP_FAIL)
-            dprintf("Failed to mount filesystem. If you want the card to be formatted, set the CONFIG_EXAMPLE_FORMAT_IF_MOUNT_FAILED menuconfig option\n");
+            dprintf("Failed to mount filesystem. If you want the card to be formatted, set the "
+                    "CONFIG_EXAMPLE_FORMAT_IF_MOUNT_FAILED menuconfig option\n");
         else
-            dprintf("Failed to initialize the card (%s). Make sure SD card lines have pull-up resistors in place\n", esp_err_to_name(ret));
+            dprintf("Failed to initialize the card (%s). Make sure SD card lines have pull-up resistors in place\n",
+                    esp_err_to_name(ret));
 
         return false;
     }
