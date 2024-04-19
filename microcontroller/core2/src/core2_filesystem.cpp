@@ -8,11 +8,11 @@
 #include <sys/unistd.h>
 
 #undef ESP_LOGI
-#define ESP_LOGI(a, ...)                                                                                               \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        dprintf(__VA_ARGS__);                                                                                          \
-        dprintf("\n");                                                                                                 \
+#define ESP_LOGI(a, ...)      \
+    do                        \
+    {                         \
+        dprintf(__VA_ARGS__); \
+        dprintf("\n");        \
     } while (0)
 
 FILE *core2_file_open(const char *filename, const char *type)
@@ -225,9 +225,25 @@ void core2_file_list(const char *dirname, onFileFoundFn onFileFound)
 
 bool core2_file_exists(const char *filename)
 {
-    if (access(filename, F_OK))
-        return true;
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+    dprintf("core2_file_exists(\"%s\") - ", filename);
+#endif
 
+    FILE *f = core2_file_open(filename, "r");
+
+    if (f != NULL)
+    {
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+        dprintf("TRUE\n");
+#endif
+
+        core2_file_close(f);
+        return true;
+    }
+
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+    dprintf("FALSE\n");
+#endif
     return false;
 }
 
@@ -241,14 +257,24 @@ size_t core2_file_length(FILE *f)
 
 void *core2_file_read_all(const char *filename, size_t *len)
 {
+#if defined(CORE2_FILESYSTEM_VERBOSE_OUTPUT) || defined(CORE2_FILESYSTEM_SIMPLE_OUTPUT)
+    dprintf("core2_file_read_all(\"%s\")\n", filename);
+#endif
+
     if (core2_file_exists(filename))
     {
         FILE *f = core2_file_open(filename, "r");
         *len = core2_file_length(f);
 
         void *buf = core2_malloc(*len);
-        fread(buf, 1, *len, f);
+        if (buf == NULL)
+        {
+            fclose(f);
+            return NULL;
+        }
 
+        fread(buf, 1, *len, f);
+        fclose(f);
         return buf;
     }
 

@@ -72,6 +72,7 @@ void core2_main()
     printf("Hello World!\n");
 
     core2_http_start();
+    core2_wifi_try_connect("Barisic", "123456789");
     
     //core2_wifi_ap_start();
 

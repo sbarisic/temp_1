@@ -34,6 +34,16 @@ bool ConnectionContains(const char *SSID, const char **PASS)
     return false;
 }
 
+bool core2_wifi_try_connect(const char *ssid, const char *pass)
+{
+    LastBeginConnect = core2_clock_bootseconds();
+
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, pass);
+
+    return true;
+}
+
 bool c2_wifi_begin_connect(int32_t NextConnectWaitTime)
 {
     if (core2_clock_seconds_since(LastBeginConnect) < NextConnectWaitTime)
@@ -53,9 +63,7 @@ bool c2_wifi_begin_connect(int32_t NextConnectWaitTime)
         if (ConnectionContains(SSID, &PASS))
         {
             dprintf("c2_wifi_begin_connect(%d) SSID: %s\n", NextConnectWaitTime, SSID);
-            WiFi.mode(WIFI_STA);
-            WiFi.begin(SSID, PASS);
-            return true;
+            return core2_wifi_try_connect(SSID, PASS);
         }
     }
 

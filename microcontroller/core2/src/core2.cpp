@@ -24,6 +24,7 @@ void core2_init()
     printlogo("                        \n");
 
     dprintf("core2_init()\n");
+    dprintf("Running ESP IDF " IDF_VER);
 
 #ifdef CORE2_TDECK
     dprintf("Running on T-DECK, enabling board poweron\n");
@@ -250,6 +251,7 @@ void *core2_malloc(size_t sz)
     if (ptr == NULL)
     {
         eprintf("malloc(%zu) failed", sz);
+        return NULL;
     }
 
     memset(ptr, 0, sz);

@@ -118,6 +118,7 @@ IPAddress core2_wifi_getip();
 void core2_wifi_yield_until_connected();
 bool core2_wifi_ap_start();
 bool core2_wifi_ap_stop();
+bool core2_wifi_try_connect(const char *ssid, const char *pass);
 
 // Clock
 // =================================================================================================
