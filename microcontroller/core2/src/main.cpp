@@ -70,7 +70,10 @@ void interrupt_read_voltage()
 void core2_main()
 {
     printf("Hello World!\n");
-    core2_wifi_ap_start();
+
+    if (core2_wifi_ap_start()) {
+        core2_http_start();
+    }
 
     // core2_gpio_set_interrupt0();
 

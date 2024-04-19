@@ -25,6 +25,23 @@ void core2_init()
 
     dprintf("core2_init()\n");
 
+#ifdef CORE2_TDECK
+    dprintf("Running on T-DECK, enabling board poweron\n");
+
+    pinMode(BOARD_POWERON, OUTPUT);
+    digitalWrite(BOARD_POWERON, HIGH);
+
+    pinMode(BOARD_SDCARD_CS, OUTPUT);
+    pinMode(RADIO_CS_PIN, OUTPUT);
+    pinMode(BOARD_TFT_CS, OUTPUT);
+
+    digitalWrite(BOARD_SDCARD_CS, HIGH);
+    digitalWrite(RADIO_CS_PIN, HIGH);
+    digitalWrite(BOARD_TFT_CS, HIGH);
+
+    vTaskDelay(pdMS_TO_TICKS(100));
+#endif
+
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -33,6 +50,9 @@ void core2_init()
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
+
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 }
 
 #define FEATURE_SPACE "   "
@@ -328,7 +348,7 @@ void setup()
 
     core2_spi_init();
     sdmmc_host_t sdcard_host;
-    if (core2_spi_create(&sdcard_host, SDCARD_PIN_MOSI, SDCARD_PIN_MISO, SDCARD_PIN_CLK))
+    if (core2_spi_create_sdmmc_host(&sdcard_host, SDCARD_PIN_MOSI, SDCARD_PIN_MISO, SDCARD_PIN_CLK))
     {
         core2_filesystem_init(&sdcard_host, SDCARD_PIN_CS);
     }
@@ -340,27 +360,24 @@ void setup()
     core2_gpio_init();
     core2_oled_init();
     core2_wifi_init();
-    core2_clock_init();
+    // core2_clock_init();
     core2_json_init();
-    core2_shell_init();
 
-    core2_wifi_yield_until_connected();
+    // core2_wifi_yield_until_connected();
+
+    // char cur_time[21];
+    // core2_clock_time_now(cur_time);
+    // dprintf("Current date time: %s\n", cur_time);
+
+    /*
+        core2_shell_init();
+
+        core2_shell_register("int0", []()
+                             { core2_gpio_set_interrupt0(); });
+        core2_shell_register("esp_restart", esp_restart);
+    */
+
     dprintf("init() done\n");
-
-    char cur_time[21];
-    core2_clock_time_now(cur_time);
-    dprintf("Current date time: %s\n", cur_time);
-
-    /*char filename[30];
-    core2_clock_time_fmt(filename, sizeof(filename), "/sd/boot_%d%m%Y_%H%M%S.txt");
-
-    const char *Text = "Hello ESP32 World!\n";
-    core2_file_write(filename, Text, strlen(Text));*/
-
-    core2_shell_register("int0", []()
-                         { core2_gpio_set_interrupt0(); });
-
-    core2_shell_register("esp_restart", esp_restart);
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);
 
     // vTaskDelay(pdMS_TO_TICKS(1000 * 20));

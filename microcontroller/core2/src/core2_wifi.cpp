@@ -15,7 +15,7 @@ int32_t NextConnectWaitTime;
 
 bool IsInAccessPointMode;
 
-const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti", "TEST", "Optima-34d393"};
+const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti", "Tst", "Optima-34d393"};
 const char *PASSs[] = {"123456789", "123456789", "srgt#2018", "123456789", "OPTIMA2701002212"};
 
 bool ConnectionContains(const char *SSID, const char **PASS)
@@ -109,6 +109,12 @@ void c2_wifi_task(void *params)
 
     for (;;)
     {
+        if (IsInAccessPointMode)
+        {
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            continue;
+        }
+
         wl_status_t WiFiStatus = WiFi.status();
 
         switch (WiFiStatus)
@@ -145,6 +151,8 @@ void c2_wifi_task(void *params)
                 ConnectionValid = true;
                 IP = WiFi.localIP();
                 dprintf(PRF "IP = %s\n", IP.toString().c_str());
+
+                core2_clock_init();
             }
 
             break;

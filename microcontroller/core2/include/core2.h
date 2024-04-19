@@ -6,14 +6,20 @@
 #include <WiFi.h>
 #include "driver/sdmmc_host.h"
 
+#ifdef CORE2_TDECK
+#include "core2_tdeck.h"
+#endif
+
 // Default defines
 // =================================================================================================
 
 #define CORE2_DEBUG
 #define CORE2_DEBUG_WIFI
 
+#define CORE2_AP_MODE_ONLY // Start wifi in access mode only
+
 // Uncomment to disable compilation of modules
-// #define CORE2_DISABLE_MCP320X
+#define CORE2_DISABLE_MCP320X
 #define CORE2_DISABLE_OLED
 
 // Uncomment to disable complilation and calling of test functions
@@ -39,11 +45,17 @@
 // SD SPI pin config
 // =================================================================================================
 
-#define SDCARD_PIN_MOSI GPIO_NUM_26 // 
-#define SDCARD_PIN_MISO GPIO_NUM_33 // 
-#define SDCARD_PIN_CLK GPIO_NUM_32  // 
-#define SDCARD_PIN_CS GPIO_NUM_23   // 
-
+#ifdef CORE2_TDECK
+#define SDCARD_PIN_MOSI BOARD_SPI_MOSI
+#define SDCARD_PIN_MISO BOARD_SPI_MISO
+#define SDCARD_PIN_CLK BOARD_SPI_SCK
+#define SDCARD_PIN_CS BOARD_SDCARD_CS
+#else
+#define SDCARD_PIN_MOSI GPIO_NUM_26 //
+#define SDCARD_PIN_MISO GPIO_NUM_33 //
+#define SDCARD_PIN_CLK GPIO_NUM_32  //
+#define SDCARD_PIN_CS GPIO_NUM_23   //
+#endif
 
 // ========= Entry Point ===========================================================================
 void core2_main();
@@ -166,7 +178,7 @@ void core2_adc_read(float *Volt1, float *Volt2);
 // =================================================================================================
 
 bool core2_spi_init();
-bool core2_spi_create(sdmmc_host_t *host, int MOSI, int MISO, int CLK);
+bool core2_spi_create_sdmmc_host(sdmmc_host_t *host, int MOSI, int MISO, int CLK);
 
 // JSON
 // =================================================================================================
@@ -191,6 +203,8 @@ void core2_json_end(char **dest_buffer, size_t *json_length);
 void core2_json_serialize(char **dest_buffer, size_t *json_length);
 
 // Web
+// =================================================================================================
+
 bool core2_web_json_post(const char *server_name, const char *json_txt, size_t json_txt_len);
 
 // Shell & Telnet
@@ -206,3 +220,8 @@ typedef struct
 
 void core2_shell_register(const char *func_name, core2_shell_func func);
 void core2_shell_init();
+
+// HTTP
+// =================================================================================================
+
+bool core2_http_start();
