@@ -7,6 +7,10 @@
 #include <esp_tls.h>
 #include <esp_http_server.h>
 
+httpd_handle_t http_server = NULL;
+
+// https://github.com/espressif/esp-idf/blob/v5.2.1/examples/protocols/http_server/simple/main/main.c#L368
+
 /* An HTTP GET handler */
 esp_err_t hello_get_handler(httpd_req_t *req)
 {
@@ -38,7 +42,15 @@ const httpd_uri_t hello = {
     .method = HTTP_GET,
     .handler = hello_get_handler};
 
-httpd_handle_t server = NULL;
+void connect_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+{
+    httpd_handle_t *server = (httpd_handle_t *)arg;
+    if (*server == NULL)
+    {
+        dprintf("Starting webserver\n");
+        *server = http_server;
+    }
+}
 
 bool core2_http_start()
 {
@@ -50,12 +62,15 @@ bool core2_http_start()
     // Start the httpd server
     dprintf("Starting server on port: '%d'\n", config.server_port);
 
-    if (httpd_start(&server, &config) == ESP_OK)
+    if (httpd_start(&http_server, &config) == ESP_OK)
     {
         // Set URI handlers
         dprintf("Registering URI handlers\n");
-        httpd_register_uri_handler(server, &hello);
+        httpd_register_uri_handler(http_server, &hello);
     }
+
+    dprintf("Registering IP_EVENT_STA_GOT_IP handler\n");
+    esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, NULL);
 
     return true;
 }
