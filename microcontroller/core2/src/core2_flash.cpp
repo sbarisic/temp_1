@@ -13,7 +13,6 @@ bool core2_flash_init()
 {
     dprintf("core2_flash_init()\n");
 
-
     part = esp_partition_find_first(DATA_STORE_PARTITION_TYPE, DATA_STORE_PARTITION_SUBTYPE, NULL);
 
     if (part == NULL)
