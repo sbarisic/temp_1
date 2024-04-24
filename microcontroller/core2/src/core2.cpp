@@ -371,13 +371,12 @@ void setup()
     // core2_clock_time_now(cur_time);
     // dprintf("Current date time: %s\n", cur_time);
 
-    /*
-        core2_shell_init();
-
-        core2_shell_register("int0", []()
-                             { core2_gpio_set_interrupt0(); });
-        core2_shell_register("esp_restart", esp_restart);
-    */
+    core2_shell_init();
+    core2_shell_register("int0", [](core2_shell_func_params_t *params)
+                         { core2_gpio_set_interrupt0(); });
+                         
+    core2_shell_register("esp_restart", [](core2_shell_func_params_t *params)
+                         { esp_restart(); });
 
     dprintf("init() done\n");
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);

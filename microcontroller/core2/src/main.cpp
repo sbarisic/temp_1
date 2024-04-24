@@ -67,15 +67,21 @@ void interrupt_read_voltage()
     }*/
 }
 
+void core2_shellcmd_get_variables(core2_shell_func_params_t *params)
+{
+    params->print(params, "{ \"vars\": [{ \"variable_name\": \"Var 1\" }, { \"variable_name\": \"Var 2\", \"value\": \"Some Value\"}] }");
+}
+
 void core2_main()
 {
     printf("Hello World!\n");
+    core2_shell_register("get_variables", core2_shellcmd_get_variables);
 
     core2_http_start();
-    //core2_wifi_try_connect("Barisic", "123456789");
-    core2_wifi_try_connect("Serengeti", "srgt#2018");
-    
-    //core2_wifi_ap_start();
+    core2_wifi_try_connect("Barisic", "123456789");
+    // core2_wifi_try_connect("Serengeti", "srgt#2018");
+
+    // core2_wifi_ap_start();
 
     // core2_gpio_set_interrupt0();
 

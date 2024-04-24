@@ -12,9 +12,20 @@
 
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/custom.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
 </head>
 
-<body>
+<body onload="core2_js_main()">
+    <!-- Begin Templates -->
+    <script id="input_temp" type="text/x-handlebars">
+        <div class="mb-3">
+            <label class="font-weight-bold">{{variable_name}}</label>
+            <input id="{{variable_name}}" type="{{input_type}}" value="{{value}}"  class="form-control">
+        </div>
+    </script>
+    <!-- End Templates -->
+
     <header>
         <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
             <div class="container h-100 d-flex justify-content-center">
@@ -24,32 +35,9 @@
     </header>
 
     <main role="main" class="container">
-        <div class="mb-3">
-            <label class="font-weight-bold">Variable 1</label>
-            <input type="text" class="form-control">
-        </div>
+        <div id="generated_content"></div>
 
-        <div class="mb-3">
-            <label class="font-weight-bold">Variable 2</label>
-            <input type="text" class="form-control">
-        </div>
-
-        <div class="mb-3">
-            <label class="font-weight-bold">Some password</label>
-            <input type="password" class="form-control">
-        </div>
-
-        <div class="mb-3">
-            <label class="font-weight-bold">Variable 3</label>
-            <input type="text" class="form-control">
-        </div>
-
-        <div class="mb-3">
-            <label class="font-weight-bold">Variable 4</label>
-            <input type="text" class="form-control">
-        </div>
-
-        <button type="button" class="btn btn-primary mt-4">Save</button>
+        <button type="button" class="btn btn-primary mt-4" onclick="core2_onSave()">Save</button>
     </main>
 
     <footer class="footer">

@@ -6,27 +6,22 @@
 // https://github.com/LennartHennigs/ESPTelnet
 // MIT License
 
+#define DISABLE_TELNET
 #define TELNET_PORT 1123
 
-ESPTelnet telnet;
+// ESPTelnet telnet;
 EscapeCodes ansi;
 
 core2_shell_cmd_t shell_commands[64];
 
+#ifndef DISABLE_TELNET
 #define tprintfln(...)              \
     do                              \
     {                               \
         telnet.printf(__VA_ARGS__); \
         telnet.print("\r\n");       \
     } while (false)
-
-void print_prompt()
-{
-    telnet.print(ansi.setFG(ANSI_BRIGHT_WHITE));
-    telnet.print("core$");
-    telnet.print(ansi.reset());
-    telnet.print(" ");
-}
+#endif
 
 void core2_shell_register(const char *func_name, core2_shell_func func)
 {
@@ -47,15 +42,22 @@ void core2_shell_register(const char *func_name, core2_shell_func func)
     }
 }
 
-void core2_shellcmd_help()
+void core2_shellcmd_help(core2_shell_func_params_t *params)
 {
+    size_t buf_len = 128;
+    char *buf = (char *)core2_malloc(buf_len);
+
     for (size_t i = 0; i < (sizeof(shell_commands) / sizeof(*shell_commands)); i++)
     {
         if (shell_commands[i].name == NULL)
             return;
 
-        tprintfln(" %s @ %p", shell_commands[i].name, (void *)shell_commands[i].func);
+        memset(buf, 0, buf_len);
+        sprintf(buf, " %s @ %p\n", shell_commands[i].name, (void *)shell_commands[i].func);
+        params->print(params, buf);
     }
+
+    core2_free(buf);
 }
 
 void core2_shell_init_commands()
@@ -68,11 +70,11 @@ void core2_shell_init_commands()
     core2_shell_register("help", core2_shellcmd_help);
 }
 
-bool core2_shell_invoke(String full_command)
+bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *params)
 {
-    const char *func_name = full_command.c_str(); // TODO: Parse properly
+    dprintf("core2_shell_invoke(\"%s\")\n", full_command);
 
-
+    const char *func_name = full_command; // TODO: Parse properly
 
     for (size_t i = 0; i < (sizeof(shell_commands) / sizeof(*shell_commands)); i++)
     {
@@ -80,7 +82,7 @@ bool core2_shell_invoke(String full_command)
         {
             dprintf(">> Executing '%s'\n", func_name);
 
-            shell_commands[i].func();
+            shell_commands[i].func(params);
             return true;
         }
     }
@@ -89,6 +91,15 @@ bool core2_shell_invoke(String full_command)
 }
 
 // ================================================================================
+
+#ifndef DISABLE_TELNET
+void print_prompt()
+{
+    telnet.print(ansi.setFG(ANSI_BRIGHT_WHITE));
+    telnet.print("core$");
+    telnet.print(ansi.reset());
+    telnet.print(" ");
+}
 
 void onTelnetConnect(String ip)
 {
@@ -136,8 +147,6 @@ void onTelnetInput(String str)
     print_prompt();
 }
 
-// ================================================================================
-
 void c2_telnet_task(void *params)
 {
     for (;;)
@@ -149,11 +158,15 @@ void c2_telnet_task(void *params)
     vTaskDelete(NULL);
 }
 
+#endif
+// ================================================================================
+
 void core2_shell_init()
 {
     dprintf("core2_shell_init()\n");
     core2_shell_init_commands();
 
+#ifndef DISABLE_TELNET
     telnet.onConnect(onTelnetConnect);
     telnet.onConnectionAttempt(onTelnetConnectionAttempt);
     telnet.onReconnect(onTelnetReconnect);
@@ -166,4 +179,5 @@ void core2_shell_init()
     }
 
     xTaskCreate(c2_telnet_task, "c2_telnet_task", 4096, NULL, 1, NULL);
+#endif
 }

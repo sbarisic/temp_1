@@ -214,7 +214,17 @@ bool core2_web_json_post(const char *server_name, const char *json_txt, size_t j
 // Shell & Telnet
 // =================================================================================================
 
-typedef void (*core2_shell_func)();
+typedef void (*core2_shell_print_func)(void* self, const char *str);
+
+typedef struct
+{
+    core2_shell_print_func print;
+    void* ud1;
+    void* ud2;
+    void* ud3;
+} core2_shell_func_params_t;
+
+typedef void (*core2_shell_func)(core2_shell_func_params_t* params);
 
 typedef struct
 {
@@ -223,13 +233,13 @@ typedef struct
 } core2_shell_cmd_t;
 
 void core2_shell_register(const char *func_name, core2_shell_func func);
+bool core2_shell_invoke(const char* full_command, core2_shell_func_params_t *params);
 void core2_shell_init();
 
 // HTTP
 // =================================================================================================
 
 bool core2_http_start();
-
 
 // Updates
 // =================================================================================================

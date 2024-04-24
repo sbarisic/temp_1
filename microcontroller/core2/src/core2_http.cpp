@@ -64,32 +64,63 @@ esp_err_t shell_post_handler(httpd_req_t *req)
     size_t len = req->content_len;
     dprintf("/shell - Content length: %d\n", len);
 
-    if (len > 2048)
+    if (len > 2048 || len <= 0)
     {
         httpd_resp_send_500(req);
         return ESP_OK;
     }
 
-    char *buffer = (char *)core2_malloc(len);
+    char *buffer = (char *)core2_malloc(len + 1);
+    if (buffer == NULL)
+    {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "core2_malloc() returned NULL");
+        return ESP_OK;
+    }
+
     int recv_res = httpd_req_recv(req, buffer, len);
+    dprintf("httpd_req_recv() - %d\n", recv_res);
 
     if (recv_res <= 0)
     {
-        httpd_resp_send_500(req);
+        core2_free(buffer);
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "httpd_req_recv() errored");
         return ESP_OK;
     }
 
-    dprintf("/shell handler was invoked!\n");
+    // Null terminate the buffer
+    buffer[len] = 0;
 
-    for (size_t i = 0; i < len; i++)
+    char *print_buffer = (char *)core2_malloc(4096);
+    size_t printbuf_idx = 0;
+
+    // Invoke command here
+    core2_shell_func_params_t params;
+    params.ud1 = req;
+    params.ud2 = print_buffer;
+    params.ud3 = &printbuf_idx;
+
+    params.print = [](void *self, const char *str)
     {
-        dprintf("%c", buffer[i]);
-    }
-    
-    dprintf("\n");
-    
+        core2_shell_func_params_t *self_params = (core2_shell_func_params_t *)self;
+        size_t *printbuf_idx_p = (size_t *)self_params->ud3;
+        size_t len = strlen(str);
 
-    httpd_resp_send(req, "/shell OK", HTTPD_RESP_USE_STRLEN);
+        memcpy((void *)((size_t)self_params->ud2 + (*printbuf_idx_p)), str, len);
+
+        *printbuf_idx_p = (*printbuf_idx_p) + len;
+    };
+
+    if (!core2_shell_invoke(buffer, &params))
+    {
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Shell command not found");
+    }
+    else
+    {
+        httpd_resp_send(req, print_buffer, HTTPD_RESP_USE_STRLEN);
+    }
+
+    core2_free(print_buffer);
+    core2_free(buffer);
     return ESP_OK;
 }
 
