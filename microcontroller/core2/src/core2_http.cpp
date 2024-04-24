@@ -6,14 +6,15 @@
 #include <esp_tls.h>
 #include <esp_wifi.h>
 
-esp_err_t root_get_handler(httpd_req_t *req);
+//==========================================================
 
 httpd_handle_t http_server = NULL;
 
-const httpd_uri_t root_handler = {
-    .uri = "*",
-    .method = HTTP_GET,
-    .handler = root_get_handler};
+esp_err_t root_get_handler(httpd_req_t *req);
+esp_err_t shell_post_handler(httpd_req_t *req);
+
+const httpd_uri_t root_handler = {.uri = "*", .method = HTTP_GET, .handler = root_get_handler};
+const httpd_uri_t shell_handler = {.uri = "/shell", .method = HTTP_POST, .handler = shell_post_handler};
 
 esp_err_t root_get_handler(httpd_req_t *req)
 {
@@ -58,6 +59,40 @@ esp_err_t root_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+esp_err_t shell_post_handler(httpd_req_t *req)
+{
+    size_t len = req->content_len;
+    dprintf("/shell - Content length: %d\n", len);
+
+    if (len > 2048)
+    {
+        httpd_resp_send_500(req);
+        return ESP_OK;
+    }
+
+    char *buffer = (char *)core2_malloc(len);
+    int recv_res = httpd_req_recv(req, buffer, len);
+
+    if (recv_res <= 0)
+    {
+        httpd_resp_send_500(req);
+        return ESP_OK;
+    }
+
+    dprintf("/shell handler was invoked!\n");
+
+    for (size_t i = 0; i < len; i++)
+    {
+        dprintf("%c", buffer[i]);
+    }
+    
+    dprintf("\n");
+    
+
+    httpd_resp_send(req, "/shell OK", HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
 bool core2_http_start()
 {
     dprintf("core2_http_start()\n");
@@ -72,6 +107,7 @@ bool core2_http_start()
     if (httpd_start(&http_server, &config) == ESP_OK)
     {
         httpd_register_uri_handler(http_server, &root_handler);
+        httpd_register_uri_handler(http_server, &shell_handler);
     }
     else
     {
