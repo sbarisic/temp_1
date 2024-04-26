@@ -1,5 +1,8 @@
 #include <core2.h>
 
+core2_shell_cvar_t cvar_testString;
+core2_shell_cvar_t cvar_testInt;
+
 float Volts[200];
 
 bool send_data_to_server(char *json_buffer, size_t json_len)
@@ -33,7 +36,6 @@ void interrupt_read_voltage()
 
     dprintf("OK\n");
 
-
     core2_json_t *json = core2_json_create();
 
     core2_json_add_field_string(json, "APIKey", "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw="); // TODO
@@ -47,6 +49,7 @@ void interrupt_read_voltage()
     char *json_buffer;
     size_t json_len;
     core2_json_serialize(json, &json_buffer, &json_len);
+    core2_json_delete(json);
 
     printf("======= core2_json_test =======\n");
     printf("%s\n", json_buffer);
@@ -77,6 +80,17 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t *params)
 void core2_main()
 {
     printf("Hello World!\n");
+
+    /*core2_array_run_tests();
+
+    printf("Done!\n");
+    while (true)
+    {
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }*/
+
+    core2_shell_register_var(&cvar_testString, "testString", NULL, core2_cvar_type::STRING);
+    core2_shell_register_var(&cvar_testString, "testInt", 0, core2_cvar_type::INT32);
     core2_shell_register("get_variables", core2_shellcmd_get_variables);
 
     core2_http_start();

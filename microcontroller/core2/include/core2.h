@@ -103,6 +103,20 @@ void core2_free(void *ptr);
 char *core2_string_concat(const char *a, const char *b); // Should call core2_free() on result
 bool core2_string_ends_with(const char *str, const char *end);
 
+typedef struct
+{
+    void *memory;
+    size_t element_size;
+    size_t length;
+} core2_array_t;
+
+core2_array_t *core2_array_create(size_t element_size);
+void core2_array_delete(core2_array_t *array);
+void core2_array_get(core2_array_t *array, int index, void *element_ptr);
+void core2_array_set(core2_array_t *array, int index, void *element_ptr);
+void core2_array_insert_end(core2_array_t *array, void *element_ptr);
+void core2_array_run_tests();
+
 // OLED
 // =================================================================================================
 
@@ -208,9 +222,10 @@ typedef struct
 
 core2_json_t *core2_json_create();
 void core2_json_delete(core2_json_t *json);
-void core2_json_add_field(core2_json_t *json,const char *field_name, void *data, size_t len, core2_json_fieldtype_t data_type);
-void core2_json_add_field_string(core2_json_t *json,const char *field_name, const char *str);
-void core2_json_add_field_int(core2_json_t *json,const char *field_name, int num);
+void core2_json_add_field(core2_json_t *json, const char *field_name, void *data, size_t len,
+                          core2_json_fieldtype_t data_type);
+void core2_json_add_field_string(core2_json_t *json, const char *field_name, const char *str);
+void core2_json_add_field_int(core2_json_t *json, const char *field_name, int num);
 void core2_json_serialize(core2_json_t *json, char **dest_buffer, size_t *json_length);
 
 // Web
@@ -239,7 +254,21 @@ typedef struct
     core2_shell_func func;
 } core2_shell_cmd_t;
 
+typedef enum
+{
+    INT32,
+    STRING
+} core2_cvar_type;
+
+typedef struct
+{
+    const char *name;
+    core2_cvar_type var_type;
+    void *var_ptr;
+} core2_shell_cvar_t;
+
 void core2_shell_register(const char *func_name, core2_shell_func func);
+void core2_shell_register_var(core2_shell_cvar_t *cvar, const char *var_name, void *var_ptr, core2_cvar_type var_type);
 bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *params);
 void core2_shell_init();
 

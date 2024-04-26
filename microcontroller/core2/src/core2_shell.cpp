@@ -1,6 +1,6 @@
-#include <core2.h>
 #include <ESPTelnet.h>
 #include <EscapeCodes.h>
+#include <core2.h>
 #include <getopt.h>
 
 // https://github.com/LennartHennigs/ESPTelnet
@@ -13,13 +13,14 @@
 EscapeCodes ansi;
 
 core2_shell_cmd_t shell_commands[64];
+core2_array_t *shell_cvars;
 
 #ifndef DISABLE_TELNET
-#define tprintfln(...)              \
-    do                              \
-    {                               \
-        telnet.printf(__VA_ARGS__); \
-        telnet.print("\r\n");       \
+#define tprintfln(...)                                                                                                 \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        telnet.printf(__VA_ARGS__);                                                                                    \
+        telnet.print("\r\n");                                                                                          \
     } while (false)
 #endif
 
@@ -40,6 +41,21 @@ void core2_shell_register(const char *func_name, core2_shell_func func)
             return;
         }
     }
+}
+
+void core2_shell_register_var(core2_shell_cvar_t *cvar, const char *var_name, void *var_ptr, core2_cvar_type var_type)
+{
+    if (cvar == NULL)
+    {
+        dprintf("core2_shell_register_var(\"%s\", cvar) fail, cvar is NULL", var_name);
+        return;
+    }
+
+    cvar->name = var_name;
+    cvar->var_ptr = var_ptr;
+    cvar->var_type = var_type;
+
+    core2_array_insert_end(shell_cvars, &cvar);
 }
 
 void core2_shellcmd_help(core2_shell_func_params_t *params)
@@ -88,6 +104,11 @@ bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *par
     }
 
     return false;
+}
+
+void core2_shell_init_cvars()
+{
+    shell_cvars = core2_array_create(sizeof(core2_shell_cvar_t *));
 }
 
 // ================================================================================
@@ -165,6 +186,7 @@ void core2_shell_init()
 {
     dprintf("core2_shell_init()\n");
     core2_shell_init_commands();
+    core2_shell_init_cvars();
 
 #ifndef DISABLE_TELNET
     telnet.onConnect(onTelnetConnect);
