@@ -33,20 +33,20 @@ void interrupt_read_voltage()
 
     dprintf("OK\n");
 
-    char *json_buffer;
-    size_t json_len;
 
-    core2_json_begin();
+    core2_json_t *json = core2_json_create();
 
-    core2_json_add_field_string("APIKey", "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw="); // TODO
-    core2_json_add_field_int("Action", 1);
-    core2_json_add_field("Volts", &Volts, (sizeof(Volts) / sizeof(*Volts)), CORE2_JSON_FLOAT_ARRAY_DEC2);
+    core2_json_add_field_string(json, "APIKey", "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw="); // TODO
+    core2_json_add_field_int(json, "Action", 1);
+    core2_json_add_field(json, "Volts", &Volts, (sizeof(Volts) / sizeof(*Volts)), CORE2_JSON_FLOAT_ARRAY_DEC2);
 
     char time_now[32] = {0};
     core2_clock_time_now(time_now);
-    core2_json_add_field_string("LocalTime", time_now);
+    core2_json_add_field_string(json, "LocalTime", time_now);
 
-    core2_json_serialize(&json_buffer, &json_len);
+    char *json_buffer;
+    size_t json_len;
+    core2_json_serialize(json, &json_buffer, &json_len);
 
     printf("======= core2_json_test =======\n");
     printf("%s\n", json_buffer);
@@ -58,7 +58,7 @@ void interrupt_read_voltage()
         send_data_to_server(json_buffer, json_len);
     }
 
-    core2_json_end(&json_buffer, &json_len);
+    core2_free(json_buffer);
     core2_adc_unlock(adc_lock);
 
     /*for (int i = 0; i < 200; i++)
@@ -69,7 +69,9 @@ void interrupt_read_voltage()
 
 void core2_shellcmd_get_variables(core2_shell_func_params_t *params)
 {
-    params->print(params, "{ \"vars\": [{ \"variable_name\": \"Var 1\" }, { \"variable_name\": \"Var 2\", \"value\": \"Some Value\"}] }");
+    params->print(
+        params,
+        "{ \"vars\": [{ \"variable_name\": \"Var 1\" }, { \"variable_name\": \"Var 2\", \"value\": \"Some Value\"}] }");
 }
 
 void core2_main()

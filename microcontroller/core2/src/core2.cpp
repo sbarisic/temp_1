@@ -363,8 +363,7 @@ void setup()
     core2_oled_init();
     core2_wifi_init();
     // core2_clock_init();
-    core2_json_init();
-
+    
     // core2_wifi_yield_until_connected();
 
     // char cur_time[21];

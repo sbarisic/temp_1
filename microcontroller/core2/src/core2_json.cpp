@@ -2,34 +2,50 @@
 
 #define CHUNK_SIZE 512
 
-char *buffer = NULL;
-size_t buffer_len = 0;
-size_t buffer_content_len = 0;
-bool need_comma;
+// char *buffer = NULL;
+// size_t buffer_len = 0;
+// size_t buffer_content_len = 0;
+// bool need_comma;
 
-void core2_json_concat(const char *str)
+void core2_json_concat(core2_json_t *json, const char *str)
 {
     size_t str_len = strlen(str);
 
-    if (str_len + buffer_content_len >= buffer_len)
+    if (str_len + json->buffer_content_len >= json->buffer_len)
     {
         // Make some space or somethin'
-        buffer_len = str_len + buffer_content_len + CHUNK_SIZE;
-        buffer = (char *)core2_realloc(buffer, buffer_len);
+        json->buffer_len = str_len + json->buffer_content_len + CHUNK_SIZE;
+        json->buffer = (char *)core2_realloc(json->buffer, json->buffer_len);
     }
 
-    strcat(buffer, str);
-    buffer_content_len = strlen(buffer);
+    strcat(json->buffer, str);
+    json->buffer_content_len = strlen(json->buffer);
 }
 
-void core2_json_begin()
+core2_json_t *core2_json_create()
 {
-    buffer = (char *)core2_malloc(CHUNK_SIZE);
-    buffer_len = CHUNK_SIZE;
-    buffer_content_len = 0;
-    need_comma = false;
+    core2_json_t *json = (core2_json_t *)malloc(sizeof(core2_json_t));
 
-    core2_json_concat("{ ");
+    json->buffer = (char *)core2_malloc(CHUNK_SIZE);
+    json->buffer_len = CHUNK_SIZE;
+    json->buffer_content_len = 0;
+    json->need_comma = false;
+
+    core2_json_concat(json, "{ ");
+
+    return json;
+}
+
+void core2_json_delete(core2_json_t *json)
+{
+    if (json->buffer != NULL)
+    {
+        core2_free(json->buffer);
+        json->buffer = NULL;
+        json->buffer_len = 0; 
+    }
+
+    core2_free(json);
 }
 
 char *core2_json_escape_string(char *str)
@@ -62,64 +78,65 @@ const char *get_float_format(core2_json_fieldtype_t data_type)
     return fmt;
 }
 
-void core2_json_add_field(const char *field_name, void *data, size_t len, core2_json_fieldtype_t data_type)
+void core2_json_add_field(core2_json_t *json, const char *field_name, void *data, size_t len,
+                          core2_json_fieldtype_t data_type)
 {
     char temp_buffer[64];
 
-    if (need_comma)
+    if (json->need_comma)
     {
-        core2_json_concat(", \"");
+        core2_json_concat(json, ", \"");
     }
     else
     {
-        core2_json_concat("\"");
+        core2_json_concat(json, "\"");
     }
 
-    core2_json_concat(field_name);
-    core2_json_concat("\": ");
+    core2_json_concat(json, field_name);
+    core2_json_concat(json, "\": ");
 
     switch (data_type)
     {
     case CORE2_JSON_STRING:
-        core2_json_concat("\"");
-        core2_json_concat(core2_json_escape_string((char*)data));
-        core2_json_concat("\"");
-        need_comma = true;
+        core2_json_concat(json, "\"");
+        core2_json_concat(json, core2_json_escape_string((char *)data));
+        core2_json_concat(json, "\"");
+        json->need_comma = true;
         break;
 
     case CORE2_JSON_FLOAT_DEC2:
     case CORE2_JSON_FLOAT:
         sprintf(temp_buffer, get_float_format(data_type), *(float *)data);
 
-        core2_json_concat(temp_buffer);
-        need_comma = true;
+        core2_json_concat(json, temp_buffer);
+        json->need_comma = true;
         break;
 
     case CORE2_JSON_INT:
         // dtostrf(*(float *)data, 0, 2, temp_buffer);
         sprintf(temp_buffer, "%d", *(int *)data);
 
-        core2_json_concat(temp_buffer);
-        need_comma = true;
+        core2_json_concat(json, temp_buffer);
+        json->need_comma = true;
         break;
 
     case CORE2_JSON_FLOAT_ARRAY_DEC2:
     case CORE2_JSON_FLOAT_ARRAY:
-        core2_json_concat("[ ");
+        core2_json_concat(json, "[ ");
 
         for (size_t i = 0; i < len; i++)
         {
             // dtostrf(((float *)data)[i], 0, 2, temp_buffer);
             sprintf(temp_buffer, get_float_format(data_type), ((float *)data)[i]);
 
-            core2_json_concat(temp_buffer);
+            core2_json_concat(json, temp_buffer);
 
             if (i < len - 1)
-                core2_json_concat(", ");
+                core2_json_concat(json, ", ");
         }
 
-        core2_json_concat(" ]");
-        need_comma = true;
+        core2_json_concat(json, " ]");
+        json->need_comma = true;
         break;
 
     default:
@@ -128,30 +145,30 @@ void core2_json_add_field(const char *field_name, void *data, size_t len, core2_
     }
 }
 
-void core2_json_add_field_string(const char *field_name, const char *str)
+void core2_json_add_field_string(core2_json_t *json, const char *field_name, const char *str)
 {
-    core2_json_add_field(field_name, (void *)str, 0, CORE2_JSON_STRING);
+    core2_json_add_field(json, field_name, (void *)str, 0, CORE2_JSON_STRING);
 }
 
-void core2_json_add_field_int(const char *field_name, int num)
+void core2_json_add_field_int(core2_json_t *json, const char *field_name, int num)
 {
-    core2_json_add_field(field_name, &num, 0, CORE2_JSON_INT);
+    core2_json_add_field(json, field_name, &num, 0, CORE2_JSON_INT);
 }
 
-void core2_json_serialize(char **dest_buffer, size_t *json_length)
+void core2_json_serialize(core2_json_t *json, char **dest_buffer, size_t *json_length)
 {
-    core2_json_concat(" }");
+    core2_json_concat(json, " }");
 
     if (dest_buffer != NULL && json_length != NULL)
     {
-        *dest_buffer = (char *)core2_malloc(buffer_content_len + 1);
-        *json_length = buffer_content_len;
-        memcpy(*dest_buffer, buffer, buffer_content_len);
+        *dest_buffer = (char *)core2_malloc(json->buffer_content_len + 1);
+        *json_length = json->buffer_content_len;
+        memcpy(*dest_buffer, json->buffer, json->buffer_content_len);
 
-        core2_free(buffer);
-        buffer = NULL;
-        buffer_len = 0;
-        buffer_content_len = 0;
+        core2_free(json->buffer);
+        json->buffer = NULL;
+        json->buffer_len = 0;
+        json->buffer_content_len = 0;
     }
 }
 
@@ -188,14 +205,3 @@ void core2_json_test()
     core2_json_end(&json_buffer, &json_len);
 }
 #endif
-
-bool core2_json_init()
-{
-    dprintf("core2_json_init()\n");
-
-#ifndef CORE2_OMIT_TESTS
-    core2_json_test();
-#endif
-
-    return true;
-}

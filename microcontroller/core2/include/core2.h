@@ -1,10 +1,10 @@
 #pragma once
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-#include <freertos/queue.h>
-#include <WiFi.h>
 #include "driver/sdmmc_host.h"
+#include <WiFi.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#include <freertos/semphr.h>
 
 #ifdef CORE2_TDECK
 #include "core2_tdeck.h"
@@ -31,12 +31,12 @@
 #define dprintf(...)
 #endif
 
-#define eprintf(...)         \
-    do                       \
-    {                        \
-        printf("[ERROR] ");  \
-        printf(__VA_ARGS__); \
-        printf("\n");        \
+#define eprintf(...)                                                                                                   \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        printf("[ERROR] ");                                                                                            \
+        printf(__VA_ARGS__);                                                                                           \
+        printf("\n");                                                                                                  \
     } while (0)
 
 // #define CORE2_FILESYSTEM_VERBOSE_OUTPUT // Prints very long debug outputs to the output stream
@@ -198,13 +198,20 @@ typedef enum
     CORE2_JSON_FLOAT_ARRAY_DEC2 = 6,
 } core2_json_fieldtype_t;
 
-bool core2_json_init();
-void core2_json_begin();
-void core2_json_add_field(const char *field_name, void *data, size_t len, core2_json_fieldtype_t data_type);
-void core2_json_add_field_string(const char *field_name, const char *str);
-void core2_json_add_field_int(const char *field_name, int num);
-void core2_json_end(char **dest_buffer, size_t *json_length);
-void core2_json_serialize(char **dest_buffer, size_t *json_length);
+typedef struct
+{
+    char *buffer;
+    size_t buffer_len;
+    size_t buffer_content_len;
+    bool need_comma;
+} core2_json_t;
+
+core2_json_t *core2_json_create();
+void core2_json_delete(core2_json_t *json);
+void core2_json_add_field(core2_json_t *json,const char *field_name, void *data, size_t len, core2_json_fieldtype_t data_type);
+void core2_json_add_field_string(core2_json_t *json,const char *field_name, const char *str);
+void core2_json_add_field_int(core2_json_t *json,const char *field_name, int num);
+void core2_json_serialize(core2_json_t *json, char **dest_buffer, size_t *json_length);
 
 // Web
 // =================================================================================================
@@ -214,17 +221,17 @@ bool core2_web_json_post(const char *server_name, const char *json_txt, size_t j
 // Shell & Telnet
 // =================================================================================================
 
-typedef void (*core2_shell_print_func)(void* self, const char *str);
+typedef void (*core2_shell_print_func)(void *self, const char *str);
 
 typedef struct
 {
     core2_shell_print_func print;
-    void* ud1;
-    void* ud2;
-    void* ud3;
+    void *ud1;
+    void *ud2;
+    void *ud3;
 } core2_shell_func_params_t;
 
-typedef void (*core2_shell_func)(core2_shell_func_params_t* params);
+typedef void (*core2_shell_func)(core2_shell_func_params_t *params);
 
 typedef struct
 {
@@ -233,7 +240,7 @@ typedef struct
 } core2_shell_cmd_t;
 
 void core2_shell_register(const char *func_name, core2_shell_func func);
-bool core2_shell_invoke(const char* full_command, core2_shell_func_params_t *params);
+bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *params);
 void core2_shell_init();
 
 // HTTP
