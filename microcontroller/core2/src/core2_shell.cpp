@@ -13,14 +13,14 @@
 EscapeCodes ansi;
 
 core2_shell_cmd_t shell_commands[64];
-core2_array_t *shell_cvars;
+core2_array_t *shell_cvars; // array of core2_shell_cvar_t*
 
 #ifndef DISABLE_TELNET
-#define tprintfln(...)                                                                                                 \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        telnet.printf(__VA_ARGS__);                                                                                    \
-        telnet.print("\r\n");                                                                                          \
+#define tprintfln(...)              \
+    do                              \
+    {                               \
+        telnet.printf(__VA_ARGS__); \
+        telnet.print("\r\n");       \
     } while (false)
 #endif
 
@@ -57,6 +57,37 @@ void core2_shell_register_var(core2_shell_cvar_t *cvar, const char *var_name, vo
 
     core2_array_insert_end(shell_cvars, &cvar);
 }
+
+size_t core2_shell_cvar_count()
+{
+    return shell_cvars->length;
+}
+
+core2_shell_cvar_t *core2_shell_cvar_get(int idx)
+{
+    core2_shell_cvar_t **cvar = NULL;
+
+    core2_array_get(shell_cvars, idx, &cvar);
+
+    return *cvar;
+}
+
+/*bool core2_shell_cvar_tostring(core2_shell_cvar_t *cvar, char *buf)
+{
+    switch (cvar->var_type)
+    {
+    case core2_cvar_type::STRING:
+        sprintf(buf, "%s", cvar->var_ptr);
+        return true;
+
+    case core2_cvar_type::INT32:
+        sprintf(buf, "%d", (int32_t)cvar->var_ptr);
+        return true;
+
+    default:
+        return false;
+    }
+}*/
 
 void core2_shellcmd_help(core2_shell_func_params_t *params)
 {

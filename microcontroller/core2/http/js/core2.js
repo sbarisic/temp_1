@@ -19,13 +19,6 @@ function core2_post(location, cmd) {
 function core2_js_main() {
     console.log("Core2 JS Main();");
 
-    core2_post("/shell", "get_variables").then((val) => {
-        console.log("Value:");
-        console.log(val);
-    });
-
-
-
     let generated_content = [];
 
     core2_post("/shell", "get_variables").then((val) => val.json()).then((val) => {

@@ -1,7 +1,10 @@
 #include <core2.h>
+#include <esp_http_server.h>
 
 core2_shell_cvar_t cvar_testString;
+core2_shell_cvar_t cvar_testString2;
 core2_shell_cvar_t cvar_testInt;
+core2_shell_cvar_t cvar_getvar_count;
 
 float Volts[200];
 
@@ -72,9 +75,51 @@ void interrupt_read_voltage()
 
 void core2_shellcmd_get_variables(core2_shell_func_params_t *params)
 {
-    params->print(
-        params,
-        "{ \"vars\": [{ \"variable_name\": \"Var 1\" }, { \"variable_name\": \"Var 2\", \"value\": \"Some Value\"}] }");
+    core2_json_t *json = core2_json_create();
+    core2_json_begin_field(json, "vars", CORE2_JSON_BEGIN_ARRAY);
+
+    size_t count = core2_shell_cvar_count();
+    for (size_t i = 0; i < count; i++)
+    {
+        core2_shell_cvar_t *cvar = core2_shell_cvar_get(i);
+
+        core2_json_add(json, CORE2_JSON_BEGIN_OBJECT);
+        core2_json_add_field_string(json, "variable_name", cvar->name);
+
+        switch (cvar->var_type)
+        {
+        case core2_cvar_type::STRING:
+            core2_json_add_field_string(json, "value", (const char *)cvar->var_ptr);
+            break;
+
+        case core2_cvar_type::INT32:
+            core2_json_add_field_int(json, "value", (int32_t)cvar->var_ptr);
+            break;
+
+        default:
+            // TODO:
+            core2_json_add_field_string(json, "value", "TODO: NOT IMPLEMENTED");
+            break;
+        }
+
+        core2_json_add(json, CORE2_JSON_END_OBJECT);
+    }
+
+    core2_json_add(json, CORE2_JSON_END_ARRAY);
+
+    char *json_buffer;
+    size_t json_len;
+    core2_json_serialize(json, &json_buffer, &json_len);
+    core2_json_delete(json);
+
+    httpd_resp_set_type((httpd_req_t *)params->ud1, "application/json");
+    params->print(params, json_buffer);
+
+    core2_free(json_buffer);
+
+    int cnt = (int)cvar_getvar_count.var_ptr;
+    cnt++;
+    cvar_getvar_count.var_ptr = (void *)cnt;
 }
 
 void core2_main()
@@ -89,8 +134,12 @@ void core2_main()
         vTaskDelay(pdMS_TO_TICKS(10));
     }*/
 
-    core2_shell_register_var(&cvar_testString, "testString", NULL, core2_cvar_type::STRING);
-    core2_shell_register_var(&cvar_testString, "testInt", 0, core2_cvar_type::INT32);
+    // TODO: Load varijabli iz flash memorije ili sa SD kartice
+    core2_shell_register_var(&cvar_testString, "testString", (void *)"Test string value", core2_cvar_type::STRING);
+    //core2_shell_register_var(&cvar_testString2, "testString2", NULL, core2_cvar_type::STRING);
+    core2_shell_register_var(&cvar_testInt, "testInt", 0, core2_cvar_type::INT32);
+    core2_shell_register_var(&cvar_getvar_count, "getvar_count", 0, core2_cvar_type::INT32);
+
     core2_shell_register("get_variables", core2_shellcmd_get_variables);
 
     core2_http_start();

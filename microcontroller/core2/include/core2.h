@@ -210,6 +210,12 @@ typedef enum
     CORE2_JSON_INT = 4,
     CORE2_JSON_FLOAT_DEC2 = 5,
     CORE2_JSON_FLOAT_ARRAY_DEC2 = 6,
+    
+    // core2_json_add
+    CORE2_JSON_BEGIN_ARRAY = 100,
+    CORE2_JSON_END_ARRAY = 101,
+    CORE2_JSON_BEGIN_OBJECT = 102,
+    CORE2_JSON_END_OBJECT = 103
 } core2_json_fieldtype_t;
 
 typedef struct
@@ -222,10 +228,15 @@ typedef struct
 
 core2_json_t *core2_json_create();
 void core2_json_delete(core2_json_t *json);
+
+void core2_json_add(core2_json_t *json, core2_json_fieldtype_t data_type);
+void core2_json_begin_field(core2_json_t *json, const char *field_name, core2_json_fieldtype_t data_type);
+
 void core2_json_add_field(core2_json_t *json, const char *field_name, void *data, size_t len,
                           core2_json_fieldtype_t data_type);
 void core2_json_add_field_string(core2_json_t *json, const char *field_name, const char *str);
 void core2_json_add_field_int(core2_json_t *json, const char *field_name, int num);
+
 void core2_json_serialize(core2_json_t *json, char **dest_buffer, size_t *json_length);
 
 // Web
@@ -271,6 +282,9 @@ void core2_shell_register(const char *func_name, core2_shell_func func);
 void core2_shell_register_var(core2_shell_cvar_t *cvar, const char *var_name, void *var_ptr, core2_cvar_type var_type);
 bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *params);
 void core2_shell_init();
+
+size_t core2_shell_cvar_count();
+core2_shell_cvar_t *core2_shell_cvar_get(int idx);
 
 // HTTP
 // =================================================================================================

@@ -42,7 +42,7 @@ void core2_json_delete(core2_json_t *json)
     {
         core2_free(json->buffer);
         json->buffer = NULL;
-        json->buffer_len = 0; 
+        json->buffer_len = 0;
     }
 
     core2_free(json);
@@ -78,6 +78,65 @@ const char *get_float_format(core2_json_fieldtype_t data_type)
     return fmt;
 }
 
+void core2_json_add(core2_json_t *json, core2_json_fieldtype_t data_type)
+{
+    switch (data_type)
+    {
+    case CORE2_JSON_BEGIN_ARRAY:
+    case CORE2_JSON_BEGIN_OBJECT:
+        if (json->need_comma)
+        {
+            core2_json_concat(json, ", ");
+            json->need_comma = false;
+        }
+        break;
+    }
+
+    switch (data_type)
+    {
+    case CORE2_JSON_BEGIN_ARRAY:
+        core2_json_concat(json, "[ ");
+        json->need_comma = false;
+        break;
+
+    case CORE2_JSON_END_ARRAY:
+        core2_json_concat(json, " ]");
+        json->need_comma = true;
+        break;
+
+    case CORE2_JSON_BEGIN_OBJECT:
+        core2_json_concat(json, "{ ");
+        json->need_comma = false;
+        break;
+
+    case CORE2_JSON_END_OBJECT:
+        core2_json_concat(json, " }");
+        json->need_comma = true;
+        break;
+
+    default:
+        eprintf("core2_json_add unknown data_type %d\n", (int)data_type);
+        break;
+    }
+}
+
+void core2_json_begin_field(core2_json_t *json, const char *field_name, core2_json_fieldtype_t data_type)
+{
+    if (json->need_comma)
+    {
+        core2_json_concat(json, ", \"");
+        json->need_comma = false;
+    }
+    else
+    {
+        core2_json_concat(json, "\"");
+    }
+
+    core2_json_concat(json, field_name);
+    core2_json_concat(json, "\": ");
+    core2_json_add(json, data_type);
+}
+
 void core2_json_add_field(core2_json_t *json, const char *field_name, void *data, size_t len,
                           core2_json_fieldtype_t data_type)
 {
@@ -86,6 +145,7 @@ void core2_json_add_field(core2_json_t *json, const char *field_name, void *data
     if (json->need_comma)
     {
         core2_json_concat(json, ", \"");
+        json->need_comma = false;
     }
     else
     {
@@ -98,9 +158,17 @@ void core2_json_add_field(core2_json_t *json, const char *field_name, void *data
     switch (data_type)
     {
     case CORE2_JSON_STRING:
-        core2_json_concat(json, "\"");
-        core2_json_concat(json, core2_json_escape_string((char *)data));
-        core2_json_concat(json, "\"");
+        if (data == NULL)
+        {
+            core2_json_concat(json, "null");
+        }
+        else
+        {
+            core2_json_concat(json, "\"");
+            core2_json_concat(json, core2_json_escape_string((char *)data));
+            core2_json_concat(json, "\"");
+        }
+
         json->need_comma = true;
         break;
 
