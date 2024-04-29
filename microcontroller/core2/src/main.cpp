@@ -88,11 +88,11 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t *params)
 
         switch (cvar->var_type)
         {
-        case core2_cvar_type::STRING:
+        case CORE2_CVAR_STRING:
             core2_json_add_field_string(json, "value", (const char *)cvar->var_ptr);
             break;
 
-        case core2_cvar_type::INT32:
+        case CORE2_CVAR_INT32:
             core2_json_add_field_int(json, "value", (int32_t)cvar->var_ptr);
             break;
 
@@ -135,16 +135,20 @@ void core2_main()
     }*/
 
     // TODO: Load varijabli iz flash memorije ili sa SD kartice
-    core2_shell_register_var(&cvar_testString, "testString", (void *)"Test string value", core2_cvar_type::STRING);
-    //core2_shell_register_var(&cvar_testString2, "testString2", NULL, core2_cvar_type::STRING);
-    core2_shell_register_var(&cvar_testInt, "testInt", 0, core2_cvar_type::INT32);
-    core2_shell_register_var(&cvar_getvar_count, "getvar_count", 0, core2_cvar_type::INT32);
+    core2_shell_cvar_register(&cvar_testString, "testString", (void *)"Test string value", CORE2_CVAR_STRING);
+    core2_shell_cvar_register(&cvar_testInt, "testInt", 0, CORE2_CVAR_INT32);
+    core2_shell_cvar_register(&cvar_getvar_count, "getvar_count", 0, CORE2_CVAR_INT32);
 
     core2_shell_register("get_variables", core2_shellcmd_get_variables);
+    core2_shell_save_cvars();
 
+    // TODO: Make handlebars local
     core2_http_start();
-    core2_wifi_try_connect("Barisic", "123456789");
-    // core2_wifi_try_connect("Serengeti", "srgt#2018");
+
+    // core2_wifi_ap_start();
+
+    // core2_wifi_try_connect("Tst", "123456789");
+    core2_wifi_try_connect("Serengeti", "srgt#2018");
 
     // core2_wifi_ap_start();
 

@@ -157,6 +157,8 @@ bool core2_gpio_enable_interrupt0(bool enable);
 // =================================================================================================
 
 bool core2_flash_init();
+void core2_flash_cvar_store(core2_shell_cvar_t *cvar);
+void core2_flash_cvar_load(core2_shell_cvar_t *cvar);
 
 // Filesystem
 // =================================================================================================
@@ -267,8 +269,8 @@ typedef struct
 
 typedef enum
 {
-    INT32,
-    STRING
+    CORE2_CVAR_INT32,
+    CORE2_CVAR_STRING
 } core2_cvar_type;
 
 typedef struct
@@ -279,12 +281,14 @@ typedef struct
 } core2_shell_cvar_t;
 
 void core2_shell_register(const char *func_name, core2_shell_func func);
-void core2_shell_register_var(core2_shell_cvar_t *cvar, const char *var_name, void *var_ptr, core2_cvar_type var_type);
 bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *params);
 void core2_shell_init();
 
+void core2_shell_cvar_register(core2_shell_cvar_t *cvar, const char *var_name, void *var_ptr, core2_cvar_type var_type);
 size_t core2_shell_cvar_count();
 core2_shell_cvar_t *core2_shell_cvar_get(int idx);
+core2_shell_cvar_t *core2_shell_cvar_find(const char *var_name);
+void core2_shell_save_cvars();
 
 // HTTP
 // =================================================================================================

@@ -1,9 +1,9 @@
 #include <core2.h>
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 #include <esp_chip_info.h>
 #include <esp_flash.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <nvs_flash.h>
 #include <rtc.h>
 
@@ -42,18 +42,6 @@ void core2_init()
 
     vTaskDelay(pdMS_TO_TICKS(100));
 #endif
-
-    // Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-    {
-        dprintf("Doing nvs_flash_erase()\n");
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
 }
 
 #define FEATURE_SPACE "   "
@@ -92,7 +80,8 @@ void core2_print_status()
         return;
     }
 
-    dprintf("%lu MB %s flash\n", flash_size / (1024 * 1024), (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
+    dprintf("%lu MB %s flash\n", flash_size / (1024 * 1024),
+            (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
     uint32_t free_heap = esp_get_minimum_free_heap_size();
     dprintf("Minimum free heap size: %ld bytes (%ld kb)\n", free_heap, free_heap / 1024);
@@ -173,9 +162,9 @@ void core2_queue_reset(xQueueHandle q)
 // @brief Expects 30 byte buffer
 void core2_err_tostr(esp_err_t err, char *buffer)
 {
-#define MAKE_CASE(err)        \
-    case err:                 \
-        strcpy(buffer, #err); \
+#define MAKE_CASE(err)                                                                                                 \
+    case err:                                                                                                          \
+        strcpy(buffer, #err);                                                                                          \
         break
 
     switch (err)
@@ -212,16 +201,16 @@ void core2_err_tostr(esp_err_t err, char *buffer)
 void core2_resetreason_tostr(esp_reset_reason_t err, char *buffer, bool desc)
 {
 #undef MAKE_CASE
-#define MAKE_CASE(err, descr)      \
-    case err:                      \
-        if (desc)                  \
-        {                          \
-            strcpy(buffer, descr); \
-        }                          \
-        else                       \
-        {                          \
-            strcpy(buffer, #err);  \
-        }                          \
+#define MAKE_CASE(err, descr)                                                                                          \
+    case err:                                                                                                          \
+        if (desc)                                                                                                      \
+        {                                                                                                              \
+            strcpy(buffer, descr);                                                                                     \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            strcpy(buffer, #err);                                                                                      \
+        }                                                                                                              \
         break
 
     switch (err)
@@ -343,6 +332,11 @@ void setup()
     core2_wait_for_serial();
 
     core2_init();
+
+    core2_flash_init();
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
     core2_print_status();
 
     // pinMode(SDCARD_PIN_CS, OUTPUT);
@@ -358,12 +352,11 @@ void setup()
     core2_mcp320x_init();
     // run_tests();
 
-    core2_flash_init();
     core2_gpio_init();
     core2_oled_init();
     core2_wifi_init();
     // core2_clock_init();
-    
+
     // core2_wifi_yield_until_connected();
 
     // char cur_time[21];
@@ -371,11 +364,9 @@ void setup()
     // dprintf("Current date time: %s\n", cur_time);
 
     core2_shell_init();
-    core2_shell_register("int0", [](core2_shell_func_params_t *params)
-                         { core2_gpio_set_interrupt0(); });
-                         
-    core2_shell_register("esp_restart", [](core2_shell_func_params_t *params)
-                         { esp_restart(); });
+    core2_shell_register("int0", [](core2_shell_func_params_t *params) { core2_gpio_set_interrupt0(); });
+
+    core2_shell_register("esp_restart", [](core2_shell_func_params_t *params) { esp_restart(); });
 
     dprintf("init() done\n");
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);

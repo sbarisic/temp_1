@@ -16,11 +16,11 @@ core2_shell_cmd_t shell_commands[64];
 core2_array_t *shell_cvars; // array of core2_shell_cvar_t*
 
 #ifndef DISABLE_TELNET
-#define tprintfln(...)              \
-    do                              \
-    {                               \
-        telnet.printf(__VA_ARGS__); \
-        telnet.print("\r\n");       \
+#define tprintfln(...)                                                                                                 \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        telnet.printf(__VA_ARGS__);                                                                                    \
+        telnet.print("\r\n");                                                                                          \
     } while (false)
 #endif
 
@@ -43,11 +43,17 @@ void core2_shell_register(const char *func_name, core2_shell_func func)
     }
 }
 
-void core2_shell_register_var(core2_shell_cvar_t *cvar, const char *var_name, void *var_ptr, core2_cvar_type var_type)
+void core2_shell_cvar_register(core2_shell_cvar_t *cvar, const char *var_name, void *var_ptr, core2_cvar_type var_type)
 {
     if (cvar == NULL)
     {
         dprintf("core2_shell_register_var(\"%s\", cvar) fail, cvar is NULL", var_name);
+        return;
+    }
+
+    if (core2_shell_cvar_find(var_name) != NULL)
+    {
+        eprintf("core2_shell_register_var() - cvar \"%s\" already exists\n", var_name);
         return;
     }
 
@@ -72,22 +78,52 @@ core2_shell_cvar_t *core2_shell_cvar_get(int idx)
     return *cvar;
 }
 
-/*bool core2_shell_cvar_tostring(core2_shell_cvar_t *cvar, char *buf)
+core2_shell_cvar_t *core2_shell_cvar_find(const char *var_name)
 {
+    size_t len = core2_shell_cvar_count();
+
+    for (size_t i = 0; i < len; i++)
+    {
+        core2_shell_cvar_t *cvar = core2_shell_cvar_get(i);
+
+        if (!strcmp(cvar->name, var_name))
+            return cvar;
+    }
+
+    return NULL;
+}
+
+bool core2_shell_cvar_tostring(core2_shell_cvar_t *cvar, char *buf)
+{
+    if (cvar == NULL)
+    {
+        eprintf("core2_shell_cvar_tostring() - cvar is NULL\n");
+        return false;
+    }
+
+    if (buf == NULL)
+    {
+        eprintf("core2_shell_cvar_tostring() - buf is NULL\n");
+        return false;
+    }
+
     switch (cvar->var_type)
     {
-    case core2_cvar_type::STRING:
-        sprintf(buf, "%s", cvar->var_ptr);
+    case CORE2_CVAR_STRING:
+        sprintf(buf, "%s = \"%s\"", cvar->name, cvar->var_ptr);
         return true;
 
-    case core2_cvar_type::INT32:
-        sprintf(buf, "%d", (int32_t)cvar->var_ptr);
+    case CORE2_CVAR_INT32:
+        sprintf(buf, "%s = %d", cvar->name, (int32_t)cvar->var_ptr);
         return true;
 
     default:
+        eprintf("core2_shell_cvar_tostring() - unkown var_type %d\n", cvar->var_type);
         return false;
     }
-}*/
+
+    return true;
+}
 
 void core2_shellcmd_help(core2_shell_func_params_t *params)
 {
@@ -140,6 +176,16 @@ bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *par
 void core2_shell_init_cvars()
 {
     shell_cvars = core2_array_create(sizeof(core2_shell_cvar_t *));
+}
+
+void core2_shell_save_cvars()
+{
+    int len = core2_shell_cvar_count();
+    for (size_t i = 0; i < len; i++)
+    {
+        core2_shell_cvar_t *cvar = core2_shell_cvar_get(i);
+        core2_flash_cvar_store(cvar);
+    }
 }
 
 // ================================================================================
