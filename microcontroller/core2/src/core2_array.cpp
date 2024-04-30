@@ -3,7 +3,9 @@
 
 core2_array_t *core2_array_create(size_t element_size)
 {
+#ifdef CORE2_DEBUG_ARRAY
     dprintf("core2_array_create(%d)\n", element_size);
+#endif
 
     core2_array_t *array = (core2_array_t *)core2_malloc(sizeof(core2_array_t));
     array->element_size = element_size;
@@ -14,21 +16,26 @@ core2_array_t *core2_array_create(size_t element_size)
 
 void core2_array_realloc(core2_array_t *array, size_t new_length)
 {
-    dprintf("core2_array_realloc(array, %d)\n", new_length);
+    size_t new_byte_len = array->element_size * new_length;
+
+#ifdef CORE2_DEBUG_ARRAY
+    dprintf("core2_array_realloc(array, %d) - (%d bytes)\n", new_length, new_byte_len);
+#endif
 
     if (new_length <= 0)
     {
-        dprintf("core2_array_realloc(array, %d) - ERROR, new_length <= 0!\n", new_length);
+        eprintf("core2_array_realloc(array, %d) - new_length <= 0!\n", new_length);
         return;
     }
 
+    array->memory = core2_realloc(array->memory, new_byte_len);
+
     if (array->memory == NULL)
     {
-        array->memory = core2_malloc(array->element_size * new_length);
-    }
-    else
-    {
-        core2_realloc(array->memory, array->element_size * new_length);
+        array->length = 0;
+
+        eprintf("core2_array_realloc failed with NULL\n");
+        return;
     }
 
     array->length = new_length;
@@ -36,7 +43,9 @@ void core2_array_realloc(core2_array_t *array, size_t new_length)
 
 void core2_array_delete(core2_array_t *array)
 {
+#ifdef CORE2_DEBUG_ARRAY
     dprintf("core2_array_delete(array)\n");
+#endif
 
     if (array->memory != NULL)
     {
@@ -51,7 +60,7 @@ bool c2_array_index_check(core2_array_t *array, int index)
 {
     if (index < 0 || index >= array->length)
     {
-        dprintf("c2_array_index_check() - ERROR, out of bounds array access, index %d\n", index);
+        eprintf("c2_array_index_check() - out of bounds array access, index %d\n", index);
         return false;
     }
 
@@ -60,7 +69,9 @@ bool c2_array_index_check(core2_array_t *array, int index)
 
 void core2_array_get(core2_array_t *array, int index, void *element_ptr)
 {
+#ifdef CORE2_DEBUG_ARRAY
     dprintf("core2_array_get(array, %d, %p)\n", index, element_ptr);
+#endif
 
     if (!c2_array_index_check(array, index))
     {
@@ -74,20 +85,26 @@ void core2_array_get(core2_array_t *array, int index, void *element_ptr)
 
 void core2_array_set(core2_array_t *array, int index, void *element_ptr)
 {
+#ifdef CORE2_DEBUG_ARRAY
     dprintf("core2_array_set(array, %d, %p)\n", index, element_ptr);
+#endif
 
     if (!c2_array_index_check(array, index))
     {
         return;
     }
 
+    char *dst_buf = (char *)array->memory;
     size_t offset = index * array->element_size;
-    memcpy((void *)((size_t)array->memory + offset), element_ptr, array->element_size);
+
+    memcpy(dst_buf + offset, element_ptr, array->element_size);
 }
 
 void core2_array_insert_end(core2_array_t *array, void *element_ptr)
 {
+#ifdef CORE2_DEBUG_ARRAY
     dprintf("core2_array_insert_end(array, %p)\n", element_ptr);
+#endif
 
     core2_array_realloc(array, array->length + 1);
     core2_array_set(array, array->length - 1, element_ptr);
@@ -110,6 +127,14 @@ void core2_array_run_tests()
 
     test_struct ts2 = {.str = "Second Element", .num = 69};
     core2_array_insert_end(arr, &ts2);
+
+    for (size_t i = 0; i < 10; i++)
+    {
+        test_struct ts3;
+        ts3.num = i;
+        ts3.str = "for loop test";
+        core2_array_insert_end(arr, &ts3);
+    }
 
     printf("Array length = %d\n", arr->length);
 

@@ -18,7 +18,7 @@ void core2_json_concat(core2_json_t *json, const char *str)
         json->buffer = (char *)core2_realloc(json->buffer, json->buffer_len);
     }
 
-    strcat(json->buffer, str);
+    strncat(json->buffer, str, str_len);
     json->buffer_content_len = strlen(json->buffer);
 }
 
@@ -137,7 +137,7 @@ void core2_json_begin_field(core2_json_t *json, const char *field_name, core2_js
     core2_json_add(json, data_type);
 }
 
-void core2_json_add_field(core2_json_t *json, const char *field_name, void *data, size_t len,
+void core2_json_add_field(core2_json_t *json, const char *field_name, const void *data, size_t len,
                           core2_json_fieldtype_t data_type)
 {
     char temp_buffer[64];
@@ -164,9 +164,8 @@ void core2_json_add_field(core2_json_t *json, const char *field_name, void *data
         }
         else
         {
-            core2_json_concat(json, "\"");
-            core2_json_concat(json, core2_json_escape_string((char *)data));
-            core2_json_concat(json, "\"");
+            sprintf(temp_buffer, "\"%s\"", core2_json_escape_string((char *)data));
+            core2_json_concat(json, temp_buffer);
         }
 
         json->need_comma = true;
@@ -215,7 +214,7 @@ void core2_json_add_field(core2_json_t *json, const char *field_name, void *data
 
 void core2_json_add_field_string(core2_json_t *json, const char *field_name, const char *str)
 {
-    core2_json_add_field(json, field_name, (void *)str, 0, CORE2_JSON_STRING);
+    core2_json_add_field(json, field_name, str, 0, CORE2_JSON_STRING);
 }
 
 void core2_json_add_field_int(core2_json_t *json, const char *field_name, int num)
@@ -240,36 +239,30 @@ void core2_json_serialize(core2_json_t *json, char **dest_buffer, size_t *json_l
     }
 }
 
-void core2_json_end(char **dest_buffer, size_t *json_length)
-{
-    core2_free(*dest_buffer);
-    *dest_buffer = NULL;
-    *json_length = 0;
-}
-
-#ifndef CORE2_OMIT_TESTS
 void core2_json_test()
 {
     char *json_buffer;
     size_t json_len;
-
-    core2_json_begin();
+    core2_json_t *json = core2_json_create();
 
     const char *field1 = "Ayy lmao";
-    core2_json_add_field("field1", &field1, 0, CORE2_JSON_STRING);
+    core2_json_add_field_string(json, "field1", field1);
+
+    const char *field1_5 = "Test field 1.5";
+    core2_json_add_field_string(json, "field1_5", field1_5);
 
     float field2 = 42.69f;
-    core2_json_add_field("field2", &field2, 0, CORE2_JSON_FLOAT);
+    core2_json_add_field(json, "field2", &field2, 0, CORE2_JSON_FLOAT);
 
     float field3[] = {1.23f, 2.34f, 3, 4, 5};
-    core2_json_add_field("field3", &field3, sizeof(field3) / sizeof(*field3), CORE2_JSON_FLOAT_ARRAY);
+    core2_json_add_field(json, "field3", &field3, sizeof(field3) / sizeof(*field3), CORE2_JSON_FLOAT_ARRAY);
 
-    core2_json_serialize(&json_buffer, &json_len);
+    core2_json_serialize(json, &json_buffer, &json_len);
 
     printf("======= core2_json_test =======\n");
     printf("%s\n", json_buffer);
     printf("===============================\n");
 
-    core2_json_end(&json_buffer, &json_len);
+    core2_free(json_buffer);
+    core2_json_delete(json);
 }
-#endif

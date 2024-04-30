@@ -138,9 +138,10 @@ void core2_main()
     core2_shell_cvar_register(&cvar_testString, "testString", (void *)"Test string value", CORE2_CVAR_STRING);
     core2_shell_cvar_register(&cvar_testInt, "testInt", 0, CORE2_CVAR_INT32);
     core2_shell_cvar_register(&cvar_getvar_count, "getvar_count", 0, CORE2_CVAR_INT32);
+    core2_shell_load_cvars();
 
     core2_shell_register("get_variables", core2_shellcmd_get_variables);
-    core2_shell_save_cvars();
+    //core2_shell_save_cvars();
 
     // TODO: Make handlebars local
     core2_http_start();

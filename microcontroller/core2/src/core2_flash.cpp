@@ -11,7 +11,11 @@
 
 void core2_flash_cvar_store(core2_shell_cvar_t *cvar)
 {
+    if (cvar == NULL)
+        return;
+
     nvs_handle_t nvs_handle;
+    dprintf("core2_flash_cvar_store(\"%s\")\n", cvar->name);
 
     esp_err_t err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK)
@@ -43,7 +47,11 @@ void core2_flash_cvar_store(core2_shell_cvar_t *cvar)
 
 void core2_flash_cvar_load(core2_shell_cvar_t *cvar)
 {
+    if (cvar == NULL)
+        return;
+
     nvs_handle_t nvs_handle;
+    dprintf("core2_flash_cvar_load(\"%s\")\n", cvar->name);
 
     esp_err_t err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK)
@@ -55,7 +63,7 @@ void core2_flash_cvar_load(core2_shell_cvar_t *cvar)
     switch (cvar->var_type)
     {
     case CORE2_CVAR_STRING:
-        eprintf("core2_flash_cvar_load() for strings not implemented!");
+        eprintf("core2_flash_cvar_load() for strings not implemented!\n");
         break;
 
     case CORE2_CVAR_INT32:

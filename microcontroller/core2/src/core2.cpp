@@ -280,6 +280,18 @@ char *core2_string_concat(const char *a, const char *b)
     return res;
 }
 
+char *core2_string_copy_len(const char *str, size_t len)
+{
+    char *mem = (char *)core2_malloc(len + 1);
+    memcpy(mem, str, len);
+    return mem;
+}
+
+char *core2_string_copy(const char *str)
+{
+    return core2_string_copy_len(str, strlen(str));
+}
+
 uint32_t core2_random()
 {
     return esp_random();
@@ -333,6 +345,17 @@ void setup()
 
     core2_init();
 
+#ifdef CORE2_RUN_TESTS
+    core2_array_run_tests();
+    core2_json_test();
+
+    dprintf("[TESTS] Done\n");
+    while (1)
+    {
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+#endif
+
     core2_flash_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -366,7 +389,7 @@ void setup()
     core2_shell_init();
     core2_shell_register("int0", [](core2_shell_func_params_t *params) { core2_gpio_set_interrupt0(); });
 
-    core2_shell_register("esp_restart", [](core2_shell_func_params_t *params) { esp_restart(); });
+    // core2_shell_register("esp_restart", [](core2_shell_func_params_t *params) { esp_restart(); });
 
     dprintf("init() done\n");
     xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);

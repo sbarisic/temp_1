@@ -1,13 +1,15 @@
 #include <core2.h>
+#include <driver/adc.h>
 #include <driver/gpio.h>
-xQueueHandle q_gpio0 = NULL;
 
+xQueueHandle q_gpio0 = NULL;
 volatile bool GPIO_INT0_ENABLED;
 
 bool core2_gpio_enable_interrupt0(bool enable)
 {
     bool last_state = GPIO_INT0_ENABLED;
     GPIO_INT0_ENABLED = enable;
+
     return last_state;
 }
 
@@ -19,9 +21,7 @@ bool core2_gpio_get_interrupt0()
     int num;
 
     if (core2_queue_receive(q_gpio0, &num))
-    {
         return true;
-    }
 
     return false;
 }
@@ -33,6 +33,7 @@ bool core2_gpio_set_interrupt0()
 
     int num = 1;
     core2_queue_send(q_gpio0, &num);
+
     return true;
 }
 
@@ -72,6 +73,32 @@ void CreateInterrupt(gpio_num_t INPUT_PIN)
     gpio_set_intr_type(INPUT_PIN, GPIO_INTR_POSEDGE);
 
     gpio_isr_handler_add(INPUT_PIN, gpio_interrupt_handler, (void *)INPUT_PIN);
+}
+
+int core2_gpio_hall_read()
+{
+#if CONFIG_IDF_TARGET_ESP32
+    esp_err_t err = adc1_config_width(ADC_WIDTH_12Bit);
+
+    if (err != ESP_OK)
+        return 0;
+
+    int sleep_ms = 1;
+    size_t samples = 10;
+    int sample_sum = 0;
+
+    for (size_t i = 0; i < samples; i++)
+    {
+        sample_sum += hall_sensor_read();
+
+        if (i < samples - 1)
+            vTaskDelay(pdMS_TO_TICKS(5));
+    }
+
+    return sample_sum / samples;
+#endif
+
+    return 0;
 }
 
 bool core2_gpio_init()

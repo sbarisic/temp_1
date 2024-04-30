@@ -15,15 +15,16 @@
 
 #define CORE2_DEBUG
 #define CORE2_DEBUG_WIFI
+//#define CORE2_DEBUG_ARRAY
 
-#define CORE2_AP_MODE_ONLY // Start wifi in access mode only
+//#define CORE2_AP_MODE_ONLY // Start wifi in access mode only
 
 // Uncomment to disable compilation of modules
 #define CORE2_DISABLE_MCP320X
 #define CORE2_DISABLE_OLED
 
-// Uncomment to disable complilation and calling of test functions
-#define CORE2_OMIT_TESTS
+// Uncomment to run tests only
+//#define CORE2_RUN_TESTS
 
 #ifdef CORE2_DEBUG
 #define dprintf printf
@@ -102,6 +103,8 @@ void *core2_realloc(void *ptr, size_t sz);
 void core2_free(void *ptr);
 char *core2_string_concat(const char *a, const char *b); // Should call core2_free() on result
 bool core2_string_ends_with(const char *str, const char *end);
+char* core2_string_copy_len(const char* str, size_t len);
+char* core2_string_copy(const char* str);
 
 typedef struct
 {
@@ -122,6 +125,51 @@ void core2_array_run_tests();
 
 bool core2_oled_init();
 void core2_oled_print(const char *txt);
+
+// Shell
+// =================================================================================================
+
+typedef void (*core2_shell_print_func)(void *self, const char *str);
+
+typedef struct
+{
+    core2_shell_print_func print;
+    void *ud1;
+    void *ud2;
+    void *ud3;
+} core2_shell_func_params_t;
+
+typedef void (*core2_shell_func)(core2_shell_func_params_t *params);
+
+typedef struct
+{
+    const char *name;
+    core2_shell_func func;
+} core2_shell_cmd_t;
+
+typedef enum
+{
+    CORE2_CVAR_INT32,
+    CORE2_CVAR_STRING
+} core2_cvar_type;
+
+typedef struct
+{
+    const char *name;
+    core2_cvar_type var_type;
+    void *var_ptr;
+} core2_shell_cvar_t;
+
+void core2_shell_register(const char *func_name, core2_shell_func func);
+bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *params);
+void core2_shell_init();
+
+void core2_shell_cvar_register(core2_shell_cvar_t *cvar, const char *var_name, void *var_ptr, core2_cvar_type var_type);
+size_t core2_shell_cvar_count();
+core2_shell_cvar_t *core2_shell_cvar_get(int idx);
+core2_shell_cvar_t *core2_shell_cvar_find(const char *var_name);
+void core2_shell_save_cvars();
+void core2_shell_load_cvars();
 
 // Wifi
 // =================================================================================================
@@ -152,6 +200,7 @@ bool core2_gpio_get_interrupt0();
 bool core2_gpio_set_interrupt0();
 void core2_gpio_clear_interrupt0();
 bool core2_gpio_enable_interrupt0(bool enable);
+int core2_gpio_hall_read();
 
 // Flash
 // =================================================================================================
@@ -212,7 +261,7 @@ typedef enum
     CORE2_JSON_INT = 4,
     CORE2_JSON_FLOAT_DEC2 = 5,
     CORE2_JSON_FLOAT_ARRAY_DEC2 = 6,
-    
+
     // core2_json_add
     CORE2_JSON_BEGIN_ARRAY = 100,
     CORE2_JSON_END_ARRAY = 101,
@@ -228,13 +277,14 @@ typedef struct
     bool need_comma;
 } core2_json_t;
 
+void core2_json_test();
 core2_json_t *core2_json_create();
 void core2_json_delete(core2_json_t *json);
 
 void core2_json_add(core2_json_t *json, core2_json_fieldtype_t data_type);
 void core2_json_begin_field(core2_json_t *json, const char *field_name, core2_json_fieldtype_t data_type);
 
-void core2_json_add_field(core2_json_t *json, const char *field_name, void *data, size_t len,
+void core2_json_add_field(core2_json_t *json, const char *field_name, const void *data, size_t len,
                           core2_json_fieldtype_t data_type);
 void core2_json_add_field_string(core2_json_t *json, const char *field_name, const char *str);
 void core2_json_add_field_int(core2_json_t *json, const char *field_name, int num);
@@ -245,50 +295,6 @@ void core2_json_serialize(core2_json_t *json, char **dest_buffer, size_t *json_l
 // =================================================================================================
 
 bool core2_web_json_post(const char *server_name, const char *json_txt, size_t json_txt_len);
-
-// Shell & Telnet
-// =================================================================================================
-
-typedef void (*core2_shell_print_func)(void *self, const char *str);
-
-typedef struct
-{
-    core2_shell_print_func print;
-    void *ud1;
-    void *ud2;
-    void *ud3;
-} core2_shell_func_params_t;
-
-typedef void (*core2_shell_func)(core2_shell_func_params_t *params);
-
-typedef struct
-{
-    const char *name;
-    core2_shell_func func;
-} core2_shell_cmd_t;
-
-typedef enum
-{
-    CORE2_CVAR_INT32,
-    CORE2_CVAR_STRING
-} core2_cvar_type;
-
-typedef struct
-{
-    const char *name;
-    core2_cvar_type var_type;
-    void *var_ptr;
-} core2_shell_cvar_t;
-
-void core2_shell_register(const char *func_name, core2_shell_func func);
-bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *params);
-void core2_shell_init();
-
-void core2_shell_cvar_register(core2_shell_cvar_t *cvar, const char *var_name, void *var_ptr, core2_cvar_type var_type);
-size_t core2_shell_cvar_count();
-core2_shell_cvar_t *core2_shell_cvar_get(int idx);
-core2_shell_cvar_t *core2_shell_cvar_find(const char *var_name);
-void core2_shell_save_cvars();
 
 // HTTP
 // =================================================================================================
