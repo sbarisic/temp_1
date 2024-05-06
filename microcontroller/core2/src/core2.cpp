@@ -292,6 +292,13 @@ char *core2_string_copy(const char *str)
     return core2_string_copy_len(str, strlen(str));
 }
 
+void core2_strncpyz(char *dest, const char *src, int destsize)
+{
+    dprintf("core2_strncpyz(\"%s\")\n", src);
+    strncpy(dest, src, destsize - 1);
+    dest[destsize - 1] = 0;
+}
+
 uint32_t core2_random()
 {
     return esp_random();
@@ -387,12 +394,12 @@ void setup()
     // dprintf("Current date time: %s\n", cur_time);
 
     core2_shell_init();
-    core2_shell_register("int0", [](core2_shell_func_params_t *params) { core2_gpio_set_interrupt0(); });
+    core2_shell_register("int0", [](core2_shell_func_params_t *params, int argc, char** argv) { core2_gpio_set_interrupt0(); });
 
     // core2_shell_register("esp_restart", [](core2_shell_func_params_t *params) { esp_restart(); });
 
     dprintf("init() done\n");
-    xTaskCreate(core2_main_impl, "core2_main", 1024 * 16, NULL, 1, NULL);
+    xTaskCreate(core2_main_impl, "core2_main", 1024 * 32, NULL, 1, NULL);
 
     // vTaskDelay(pdMS_TO_TICKS(1000 * 20));
     // core2_wifi_ap_stop();

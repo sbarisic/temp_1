@@ -73,7 +73,7 @@ void interrupt_read_voltage()
     }*/
 }
 
-void core2_shellcmd_get_variables(core2_shell_func_params_t *params)
+void core2_shellcmd_get_variables(core2_shell_func_params_t *params, int argc, char **argv)
 {
     core2_json_t *json = core2_json_create();
     core2_json_begin_field(json, "vars", CORE2_JSON_BEGIN_ARRAY);
@@ -122,6 +122,11 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t *params)
     cvar_getvar_count.var_ptr = (void *)cnt;
 }
 
+void core2_print(void *self, const char *str)
+{
+    dprintf("%s", str);
+}
+
 void core2_main()
 {
     printf("Hello World!\n");
@@ -141,15 +146,21 @@ void core2_main()
     core2_shell_load_cvars();
 
     core2_shell_register("get_variables", core2_shellcmd_get_variables);
-    //core2_shell_save_cvars();
+    // core2_shell_save_cvars();
+
+    core2_shell_func_params_t *params = (core2_shell_func_params_t *)core2_malloc(sizeof(core2_shell_func_params_t));
+    params->print = core2_print;
+
+    // core2_shell_invoke("set testString \"Hello CVar World!\"", &params);
+    core2_shell_invoke("help", params);
 
     // TODO: Make handlebars local
     core2_http_start();
 
     // core2_wifi_ap_start();
 
-    // core2_wifi_try_connect("Tst", "123456789");
-    core2_wifi_try_connect("Serengeti", "srgt#2018");
+    core2_wifi_try_connect("Tst", "123456789");
+    // core2_wifi_try_connect("Serengeti", "srgt#2018");
 
     // core2_wifi_ap_start();
 

@@ -1,10 +1,13 @@
 #pragma once
 
-#include "driver/sdmmc_host.h"
-#include <WiFi.h>
+#include <string.h>
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
+
+#include "driver/sdmmc_host.h"
+#include <WiFi.h>
 
 #ifdef CORE2_TDECK
 #include "core2_tdeck.h"
@@ -15,16 +18,16 @@
 
 #define CORE2_DEBUG
 #define CORE2_DEBUG_WIFI
-//#define CORE2_DEBUG_ARRAY
+// #define CORE2_DEBUG_ARRAY
 
-//#define CORE2_AP_MODE_ONLY // Start wifi in access mode only
+// #define CORE2_AP_MODE_ONLY // Start wifi in access mode only
 
 // Uncomment to disable compilation of modules
 #define CORE2_DISABLE_MCP320X
 #define CORE2_DISABLE_OLED
 
 // Uncomment to run tests only
-//#define CORE2_RUN_TESTS
+// #define CORE2_RUN_TESTS
 
 #ifdef CORE2_DEBUG
 #define dprintf printf
@@ -103,8 +106,9 @@ void *core2_realloc(void *ptr, size_t sz);
 void core2_free(void *ptr);
 char *core2_string_concat(const char *a, const char *b); // Should call core2_free() on result
 bool core2_string_ends_with(const char *str, const char *end);
-char* core2_string_copy_len(const char* str, size_t len);
-char* core2_string_copy(const char* str);
+char *core2_string_copy_len(const char *str, size_t len);
+char *core2_string_copy(const char *str);
+void core2_strncpyz(char *dest, const char *src, int destsize);
 
 typedef struct
 {
@@ -129,6 +133,17 @@ void core2_oled_print(const char *txt);
 // Shell
 // =================================================================================================
 
+#define MAX_STRING_TOKENS 2048
+#define BIG_INFO_STRING 2048
+
+typedef struct tokenize_info
+{
+    int cmd_argc;
+    char *cmd_argv[MAX_STRING_TOKENS];                       // points into cmd_tokenized
+    char cmd_tokenized[BIG_INFO_STRING + MAX_STRING_TOKENS]; // will have 0 bytes inserted
+    char cmd_cmd[BIG_INFO_STRING];                           // the original command we received (no token processing)
+} tokenize_info_t;
+
 typedef void (*core2_shell_print_func)(void *self, const char *str);
 
 typedef struct
@@ -139,7 +154,7 @@ typedef struct
     void *ud3;
 } core2_shell_func_params_t;
 
-typedef void (*core2_shell_func)(core2_shell_func_params_t *params);
+typedef void (*core2_shell_func)(core2_shell_func_params_t *params, int argc, char** argv);
 
 typedef struct
 {

@@ -69,6 +69,9 @@ void core2_shell_cvar_register(core2_shell_cvar_t *cvar, const char *var_name, v
     cvar->var_ptr = var_ptr;
     cvar->var_type = var_type;
 
+    if (var_type == CORE2_CVAR_STRING)
+        cvar->var_ptr = core2_string_copy((char *)var_ptr);
+
     core2_array_insert_end(shell_cvars, cvar);
 }
 
@@ -131,11 +134,148 @@ bool core2_shell_cvar_tostring(core2_shell_cvar_t *cvar, char *buf)
     return true;
 }
 
+void Cmd_TokenizeString(const char *text_in, tokenize_info_t *tok_info)
+{
+    dprintf("Cmd_TokenizeString(\"%s\")\n", text_in);
+
+    const char *text;
+    char *textOut;
+
+    // clear previous args
+    tok_info->cmd_argc = 0;
+
+    if (!text_in)
+    {
+        return;
+    }
+
+    core2_strncpyz(tok_info->cmd_cmd, text_in, sizeof(tok_info->cmd_cmd));
+
+    text = text_in;
+    textOut = tok_info->cmd_tokenized;
+
+    while (1)
+    {
+        if (tok_info->cmd_argc == MAX_STRING_TOKENS)
+        {
+            return; // this is usually something malicious
+        }
+
+        while (1)
+        {
+            // skip whitespace
+            while (*text && *text <= ' ')
+            {
+                text++;
+            }
+            if (!*text)
+            {
+                return; // all tokens parsed
+            }
+
+            // skip // comments
+            if (text[0] == '/' && text[1] == '/')
+            {
+                return; // all tokens parsed
+            }
+
+            // skip /* */ comments
+            if (text[0] == '/' && text[1] == '*')
+            {
+                while (*text && (text[0] != '*' || text[1] != '/'))
+                {
+                    text++;
+                }
+                if (!*text)
+                {
+                    return; // all tokens parsed
+                }
+                text += 2;
+            }
+            else
+            {
+                break; // we are ready to parse a token
+            }
+        }
+
+        // handle quoted strings
+        // NOTE TTimo this doesn't handle \" escaping
+        if (*text == '"')
+        {
+            tok_info->cmd_argv[tok_info->cmd_argc] = textOut;
+            tok_info->cmd_argc++;
+            text++;
+            while (*text && *text != '"')
+            {
+                *textOut++ = *text++;
+            }
+            *textOut++ = 0;
+            if (!*text)
+            {
+                return; // all tokens parsed
+            }
+            text++;
+            continue;
+        }
+
+        // regular token
+        tok_info->cmd_argv[tok_info->cmd_argc] = textOut;
+        tok_info->cmd_argc++;
+
+        // skip until whitespace, quote, or command
+        while (*text > ' ')
+        {
+            if (text[0] == '"')
+            {
+                break;
+            }
+
+            if (text[0] == '/' && text[1] == '/')
+            {
+                break;
+            }
+
+            // skip /* */ comments
+            if (text[0] == '/' && text[1] == '*')
+            {
+                break;
+            }
+
+            *textOut++ = *text++;
+        }
+
+        *textOut++ = 0;
+
+        if (!*text)
+        {
+            return; // all tokens parsed
+        }
+    }
+}
+
 bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *params)
 {
     dprintf("core2_shell_invoke(\"%s\")\n", full_command);
 
-    const char *func_name = full_command; // TODO: Parse properly
+    tokenize_info_t *tok_info = (tokenize_info_t *)core2_malloc(sizeof(tokenize_info_t));
+    Cmd_TokenizeString(full_command, tok_info);
+    dprintf("argc %d\n", tok_info->cmd_argc);
+
+    // params->tok_info = &tok_info;
+
+    if (tok_info->cmd_argc == 0)
+    {
+        core2_free(tok_info);
+        return false;
+    }
+
+    /*for (size_t i = 0; i < tok_info.cmd_argc; i++)
+    {
+        dprintf("argc(%d) = %s\n", i, tok_info.cmd_argv[i]);
+    }*/
+
+    const char *func_name = tok_info->cmd_argv[0]; // TODO: Parse properly
+    dprintf("invoking %s\n", func_name);
 
     size_t cmd_count = core2_shell_cmd_count();
     for (size_t i = 0; i < cmd_count; i++)
@@ -146,11 +286,17 @@ bool core2_shell_invoke(const char *full_command, core2_shell_func_params_t *par
         {
             dprintf(">> Executing '%s'\n", func_name);
 
-            cmd->func(params);
+            if (cmd->func == NULL)
+                eprintf("cmd->func is NULL\n");
+            else
+                cmd->func(params, tok_info->cmd_argc, tok_info->cmd_argv);
+
+            core2_free(tok_info);
             return true;
         }
     }
 
+    core2_free(tok_info);
     return false;
 }
 
@@ -176,7 +322,7 @@ void core2_shell_load_cvars()
 
 //================ Console functions =========================================================
 
-void shell_help(core2_shell_func_params_t *params)
+void shell_help(core2_shell_func_params_t *params, int argc, char **argv)
 {
     dprintf("shell_help!\n");
 
@@ -201,7 +347,7 @@ void shell_help(core2_shell_func_params_t *params)
     core2_free(buf);
 }
 
-void shell_list_cvar(core2_shell_func_params_t *params)
+void shell_list_cvar(core2_shell_func_params_t *params, int argc, char **argv)
 {
     dprintf("shell_list_cvar!\n");
 
@@ -231,6 +377,40 @@ void shell_list_cvar(core2_shell_func_params_t *params)
     core2_free(buf);
 }
 
+void shell_set(core2_shell_func_params_t *params, int argc, char **argv)
+{
+    dprintf("shell_set!\n");
+
+    if (argc < 3)
+    {
+        eprintf("shell_set argc < 3\n");
+        return;
+    }
+
+    dprintf("set %s %s\n", argv[1], argv[2]);
+
+    core2_shell_cvar_t *cvar = core2_shell_cvar_find(argv[1]);
+    dprintf("Found: %s, %d\n", cvar->name, cvar->var_type);
+
+    switch (cvar->var_type)
+    {
+    case CORE2_CVAR_INT32: {
+        int num = atoi(argv[2]);
+        cvar->var_ptr = (void *)num;
+        break;
+    }
+
+    case CORE2_CVAR_STRING:
+        core2_free(cvar->var_ptr);
+        cvar->var_ptr = core2_string_copy(argv[2]);
+        break;
+
+    default:
+        eprintf("set cvar type not implemented: %d\n", cvar->var_type);
+        break;
+    }
+}
+
 void core2_shell_init()
 {
     dprintf("core2_shell_init()\n");
@@ -240,4 +420,5 @@ void core2_shell_init()
 
     core2_shell_register("help", shell_help);
     core2_shell_register("list_cvar", shell_list_cvar);
+    core2_shell_register("set", shell_set);
 }
