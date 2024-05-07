@@ -31,9 +31,7 @@ void core2_print(void* self, const char* str) {
 	dprintf("%s", str);
 }
 
-void main(int argc, const char** argv) {
-	core2_shell_init();
-
+void core2_main() {
 	core2_shell_cvar_register(&cvar_testString, "testString", (void*)"Test string value", CORE2_CVAR_STRING);
 	core2_shell_cvar_register(&cvar_testInt, "testInt", 0, CORE2_CVAR_INT32);
 	core2_shell_load_cvars();

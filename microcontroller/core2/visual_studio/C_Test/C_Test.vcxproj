@@ -70,6 +70,26 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(SolutionDir)..\include\;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)src\;$(SolutionDir)..\src\;$(SourcePath)</SourcePath>
+    <ExternalIncludePath>$(SolutionDir)include\;$(ExternalIncludePath)</ExternalIncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(SolutionDir)..\include\;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)src\;$(SolutionDir)..\src\;$(SourcePath)</SourcePath>
+    <ExternalIncludePath>$(SolutionDir)include\;$(ExternalIncludePath)</ExternalIncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)..\include\;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)src\;$(SolutionDir)..\src\;$(SourcePath)</SourcePath>
+    <ExternalIncludePath>$(SolutionDir)include\;$(ExternalIncludePath)</ExternalIncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)..\include\;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)src\;$(SolutionDir)..\src\;$(SourcePath)</SourcePath>
+    <ExternalIncludePath>$(SolutionDir)include\;$(ExternalIncludePath)</ExternalIncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -92,6 +112,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -122,6 +144,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,11 +155,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="core2.cpp" />
+    <ClCompile Include="..\..\src\core2.cpp" />
+    <ClCompile Include="..\..\src\core2_array.cpp" />
+    <ClCompile Include="..\..\src\core2_clock.cpp" />
+    <ClCompile Include="..\..\src\core2_filesystem.cpp" />
+    <ClCompile Include="..\..\src\core2_shell.cpp" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="core2.h" />
+    <ClInclude Include="..\..\include\core2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
