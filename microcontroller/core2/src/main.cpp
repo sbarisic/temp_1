@@ -1,10 +1,10 @@
 #include <core2.h>
 #include <esp_http_server.h>
 
-core2_shell_cvar_t cvar_testString;
-core2_shell_cvar_t cvar_testString2;
-core2_shell_cvar_t cvar_testInt;
-core2_shell_cvar_t cvar_getvar_count;
+core2_shell_cvar_t *cvar_testString;
+core2_shell_cvar_t *cvar_testString2;
+core2_shell_cvar_t *cvar_testInt;
+core2_shell_cvar_t *cvar_getvar_count;
 
 float Volts[200];
 
@@ -117,14 +117,9 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t *params, int argc, c
 
     core2_free(json_buffer);
 
-    int cnt = (int)cvar_getvar_count.var_ptr;
+    int cnt = (int)cvar_getvar_count->var_ptr;
     cnt++;
-    cvar_getvar_count.var_ptr = (void *)cnt;
-}
-
-void core2_print(void *self, const char *str)
-{
-    dprintf("%s", str);
+    cvar_getvar_count->var_ptr = (void *)cnt;
 }
 
 void core2_main()
@@ -148,8 +143,7 @@ void core2_main()
     core2_shell_register("get_variables", core2_shellcmd_get_variables);
     // core2_shell_save_cvars();
 
-    core2_shell_func_params_t *params = (core2_shell_func_params_t *)core2_malloc(sizeof(core2_shell_func_params_t));
-    params->print = core2_print;
+    core2_shell_func_params_t *params = core2_shell_create_default_params();
 
     // core2_shell_invoke("set testString \"Hello CVar World!\"", &params);
     core2_shell_invoke("help", params);

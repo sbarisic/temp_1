@@ -16,6 +16,25 @@
 
 #define printlogo dprintf
 
+void core2_print(void* self, const char* str) {
+	dprintf("%s", str);
+}
+
+void core2_printf(void* self, const char* fmt, ...) {
+	va_list argptr;
+	va_start(argptr, fmt);
+
+	size_t req_len = vsnprintf(NULL, 0, fmt, argptr);
+	char* buf = (char*)core2_malloc(req_len + 1);
+
+	vsprintf(buf, fmt, argptr);
+
+	va_end(argptr);
+
+	((core2_shell_func_params_t*)self)->print(self, buf);
+	core2_free(buf);
+}
+
 void core2_init()
 {
 	printlogo("  _____             ___ \n");
@@ -234,7 +253,7 @@ void core2_resetreason_tostr(esp_reset_reason_t err, char* buffer, bool desc)
 	default:
 		strcpy(buffer, "UNKNOWN");
 		break;
-	}
+}
 }
 #endif
 
@@ -299,7 +318,7 @@ char* core2_string_copy(const char* str)
 
 void core2_strncpyz(char* dest, const char* src, int destsize)
 {
-	dprintf("core2_strncpyz(\"%s\")\n", src);
+	//dprintf("core2_strncpyz(\"%s\")\n", src);
 	strncpy(dest, src, destsize - 1);
 	dest[destsize - 1] = 0;
 }
@@ -358,7 +377,7 @@ void core2_wait_for_serial()
 
 	Serial.flush();
 #endif
-}
+	}
 
 void loop()
 {

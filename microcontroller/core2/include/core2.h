@@ -6,7 +6,7 @@
 #define CORE2_WINDOWS
 #endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && defined(CORE2_WINDOWS)
 extern "C" {
 #endif
 
@@ -19,7 +19,7 @@ extern "C" {
 
 #ifdef CORE2_WINDOWS
 	// Windows specifics here
-#define IDF_VER "Windows"
+#define IDF_VER "Windows\n"
 
 #include <Windows.h>
 #pragma comment(lib, "Shlwapi.lib")
@@ -124,6 +124,9 @@ extern "C" {
 // Core
 // =================================================================================================
 
+	void core2_print(void* self, const char* str);
+	void core2_printf(void* self, const char* fmt, ...);
+
 	void core2_init();
 	void core2_print_status();
 	uint32_t core2_random();
@@ -187,10 +190,12 @@ extern "C" {
 	} tokenize_info_t;
 
 	typedef void (*core2_shell_print_func)(void* self, const char* str);
+	typedef void (*core2_shell_printf_func)(void* self, const char* fmt, ...);
 
 	typedef struct
 	{
 		core2_shell_print_func print;
+		core2_shell_printf_func printf;
 		void* ud1;
 		void* ud2;
 		void* ud3;
@@ -217,11 +222,13 @@ extern "C" {
 		void* var_ptr;
 	} core2_shell_cvar_t;
 
+	core2_shell_func_params_t* core2_shell_create_default_params();
 	void core2_shell_register(const char* func_name, core2_shell_func func);
 	bool core2_shell_invoke(const char* full_command, core2_shell_func_params_t* params);
+	void core2_shell_exec(const char* script, core2_shell_func_params_t* params);
 	void core2_shell_init();
 
-	void core2_shell_cvar_register(core2_shell_cvar_t* cvar, const char* var_name, void* var_ptr, core2_cvar_type var_type);
+	void core2_shell_cvar_register(core2_shell_cvar_t** cvar, const char* var_name, void* var_ptr, core2_cvar_type var_type);
 	size_t core2_shell_cvar_count();
 	core2_shell_cvar_t* core2_shell_cvar_get(int idx);
 	core2_shell_cvar_t* core2_shell_cvar_find(const char* var_name);
@@ -364,6 +371,6 @@ extern "C" {
 	void core2_update_start();
 
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && defined(CORE2_WINDOWS)
 }
 #endif

@@ -110,6 +110,8 @@ esp_err_t shell_post_handler(httpd_req_t *req)
         *printbuf_idx_p = (*printbuf_idx_p) + len;
     };
 
+    params.printf = core2_printf;
+
     if (!core2_shell_invoke(buffer, &params))
     {
         httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Shell command not found");

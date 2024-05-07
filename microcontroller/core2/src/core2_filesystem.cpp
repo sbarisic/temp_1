@@ -63,6 +63,10 @@ bool core2_file_close(FILE* f)
 }
 
 const char* core2_basename(const char* pth) {
+#ifndef MAX_PATH
+#define MAX_PATH 128
+#endif
+
 	char* fname = (char*)core2_malloc(MAX_PATH);
 	strcpy(fname, pth);
 
