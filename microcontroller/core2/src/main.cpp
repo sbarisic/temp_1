@@ -1,11 +1,6 @@
 #include <core2.h>
 #include <esp_http_server.h>
 
-core2_shell_cvar_t *cvar_testString;
-core2_shell_cvar_t *cvar_testString2;
-core2_shell_cvar_t *cvar_testInt;
-core2_shell_cvar_t *cvar_getvar_count;
-
 float Volts[200];
 
 bool send_data_to_server(char *json_buffer, size_t json_len)
@@ -116,10 +111,6 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t *params, int argc, c
     params->print(params, json_buffer);
 
     core2_free(json_buffer);
-
-    int cnt = (int)cvar_getvar_count->var_ptr;
-    cnt++;
-    cvar_getvar_count->var_ptr = (void *)cnt;
 }
 
 void core2_main()
@@ -135,9 +126,12 @@ void core2_main()
     }*/
 
     // TODO: Load varijabli iz flash memorije ili sa SD kartice
-    core2_shell_cvar_register(&cvar_testString, "testString", (void *)"Test string value", CORE2_CVAR_STRING);
+    /*core2_shell_cvar_register(&cvar_testString, "testString", (void *)"Test string value", CORE2_CVAR_STRING);
     core2_shell_cvar_register(&cvar_testInt, "testInt", 0, CORE2_CVAR_INT32);
-    core2_shell_cvar_register(&cvar_getvar_count, "getvar_count", 0, CORE2_CVAR_INT32);
+    core2_shell_cvar_register(&cvar_getvar_count, "getvar_count", 0, CORE2_CVAR_INT32);*/
+
+    core2_shell_cvar_register("wifi_ssid", (void *)"Test", CORE2_CVAR_STRING);
+    core2_shell_cvar_register("wifi_pass", (void *)"123456", CORE2_CVAR_STRING);
     core2_shell_load_cvars();
 
     core2_shell_register("get_variables", core2_shellcmd_get_variables);
@@ -145,16 +139,17 @@ void core2_main()
 
     core2_shell_func_params_t *params = core2_shell_create_default_params();
 
-    // core2_shell_invoke("set testString \"Hello CVar World!\"", &params);
-    core2_shell_invoke("help", params);
+    /*core2_shell_invoke("set testString \"Hello CVar World!\"", params);
+    core2_shell_invoke("list_cvar", params);
+    core2_shell_invoke("set testString \"Some other test string\"", params);
+    core2_shell_save_cvars();*/
 
-    // TODO: Make handlebars local
     core2_http_start();
 
     // core2_wifi_ap_start();
 
-    core2_wifi_try_connect("Tst", "123456789");
-    // core2_wifi_try_connect("Serengeti", "srgt#2018");
+    // core2_wifi_try_connect("Tst", "123456789");
+    core2_wifi_try_connect("Serengeti", "srgt#2018");
 
     // core2_wifi_ap_start();
 

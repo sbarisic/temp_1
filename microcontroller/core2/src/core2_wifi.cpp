@@ -15,8 +15,11 @@ int32_t NextConnectWaitTime;
 
 bool IsInAccessPointMode;
 
-const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti", "Tst", "Optima-34d393"};
-const char *PASSs[] = {"123456789", "123456789", "srgt#2018", "123456789", "OPTIMA2701002212"};
+// const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti", "Tst", "Optima-34d393"};
+// const char *PASSs[] = {"123456789", "123456789", "srgt#2018", "123456789", "OPTIMA2701002212"};
+
+const char *SSIDs[16];
+const char *PASSs[16];
 
 bool ConnectionContains(const char *SSID, const char **PASS)
 {
@@ -24,9 +27,26 @@ bool ConnectionContains(const char *SSID, const char **PASS)
 
     for (size_t i = 0; i < (sizeof(SSIDs) / sizeof(*SSIDs)); i++)
     {
+        if (SSIDs[i] == NULL)
+            continue;
+
         if (strcmp(SSID, SSIDs[i]) == 0)
         {
             *PASS = PASSs[i];
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool core2_wifi_add_network(const char *ssid, const char *pass)
+{
+    for (size_t i = 0; i < (sizeof(SSIDs) / sizeof(*SSIDs)); i++)
+    {
+        if (SSIDs[i] == NULL) {
+            SSIDs[i] = core2_string_copy(ssid);
+            PASSs[i] = core2_string_copy(pass);
             return true;
         }
     }

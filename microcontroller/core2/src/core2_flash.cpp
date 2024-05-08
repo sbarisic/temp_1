@@ -38,8 +38,10 @@ void core2_flash_cvar_store(core2_shell_cvar_t *cvar)
         break;
     }
 
-    if (err != ESP_OK)
-        eprintf("core2_flash_cvar_store() nvs_set_*(\"%s\") - %d\n", cvar->name, err);
+    /*if (err != ESP_OK)
+    {
+        eprintf("core2_flash_cvar_store() nvs_set_*(\"%s\") - %p\n", cvar->name, err);
+    }*/
 
     nvs_commit(nvs_handle);
     nvs_close(nvs_handle);
@@ -62,9 +64,27 @@ void core2_flash_cvar_load(core2_shell_cvar_t *cvar)
 
     switch (cvar->var_type)
     {
-    case CORE2_CVAR_STRING:
-        eprintf("core2_flash_cvar_load() for strings not implemented!\n");
+    case CORE2_CVAR_STRING: {
+        size_t req_len = 0;
+        err = nvs_get_str(nvs_handle, cvar->name, NULL, &req_len);
+
+        if (err == ESP_OK)
+        {
+            if (cvar->var_ptr != NULL)
+            {
+                core2_free(cvar->var_ptr);
+                cvar->var_ptr = NULL;
+            }
+
+            if (req_len > 0)
+            {
+                cvar->var_ptr = core2_malloc(req_len);
+                err = nvs_get_str(nvs_handle, cvar->name, (char *)cvar->var_ptr, &req_len);
+            }
+        }
+
         break;
+    }
 
     case CORE2_CVAR_INT32:
         err = nvs_get_i32(nvs_handle, cvar->name, (int32_t *)(&(cvar->var_ptr)));
@@ -74,8 +94,10 @@ void core2_flash_cvar_load(core2_shell_cvar_t *cvar)
         break;
     }
 
-    if (err != ESP_OK)
-        eprintf("core2_flash_cvar_load() nvs_get_*(\"%s\") - %d\n", cvar->name, err);
+    /*if (err != ESP_OK)
+    {
+        eprintf("core2_flash_cvar_load() nvs_get_*(\"%s\") - %p\n", cvar->name, err);
+    }*/
 
     nvs_close(nvs_handle);
 }

@@ -39,7 +39,7 @@ void core2_main() {
 	core2_shell_invoke("set testString \"Hello CVar World!\"", params);
 	core2_shell_invoke("get_variables", params);*/
 
-	core2_shell_exec("cmd1\ncmd2\ncmd3", params);
+	core2_shell_exec("help", params);
 
 
 	core2_free(params);

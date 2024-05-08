@@ -16,38 +16,35 @@ function core2_post(location, cmd) {
 
 //=============================================================================
 
+var shell_variables = [];
+var generated_content = [];
+
 function core2_js_main() {
     console.log("Core2 JS Main();");
 
-    let generated_content = [];
+    shell_var = [];
+    generated_content = [];
 
     core2_post("/shell", "get_variables").then((val) => val.json()).then((val) => {
         val.vars.forEach(element => {
-            generated_content.push(core2_generate("#input_temp", {
+            let shell_var = {
                 variable_name: element.variable_name,
                 input_type: "text",
                 value: element.value ??= ""
-            }));
+            };
+
+            shell_variables.push(shell_var);
+            generated_content.push(core2_generate("#input_temp", shell_var));
 
             document.querySelector("#generated_content").innerHTML = generated_content.join("");
         });
     });
-
-    /*generated_content.push(core2_generate("#input_temp", {
-        variable_name: "Variable 1",
-        input_type: "text",
-        value: "Variable Value"
-    }));
-
-    generated_content.push(core2_generate("#input_temp", {
-        variable_name: "Variable 2",
-        input_type: "password",
-        value: "123456"
-    }));*/
-
-    
 }
 
 function core2_onSave() {
+    shell_variables.forEach(element => {
+        console.log(element);
+    });
+
     alert("Save!");
 }
