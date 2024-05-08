@@ -41,6 +41,11 @@ extern "C"
 #include "core2_tdeck.h"
 #endif
 
+// Cvar names
+// =================================================================================================
+#define CORE2_CVAR_wifi_ap_ssid "wifi_ap_ssid"
+#define CORE2_CVAR_wifi_ap_pass "wifi_ap_pass"
+
     // Default defines
     // =================================================================================================
 
@@ -63,12 +68,12 @@ extern "C"
 #define dprintf(...)
 #endif
 
-#define eprintf(...)                                                                                                   \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        printf("[ERROR] ");                                                                                            \
-        printf(__VA_ARGS__);                                                                                           \
-        printf("\n");                                                                                                  \
+#define eprintf(...)         \
+    do                       \
+    {                        \
+        printf("[ERROR] ");  \
+        printf(__VA_ARGS__); \
+        printf("\n");        \
     } while (0)
 
 // #define CORE2_FILESYSTEM_VERBOSE_OUTPUT // Prints very long debug outputs to the output stream
@@ -118,7 +123,8 @@ extern "C"
 
     // GPIO config
 
-#define INTERRUPT0_PIN GPIO_NUM_15
+#define CORE2_GPIO_INT0_PIN GPIO_NUM_15
+#define CORE2_GPIO_SETUP_BUTTON_PIN GPIO_NUM_0
 
     // Core
     // =================================================================================================
@@ -185,7 +191,7 @@ extern "C"
         int cmd_argc;
         char *cmd_argv[MAX_STRING_TOKENS];                       // points into cmd_tokenized
         char cmd_tokenized[BIG_INFO_STRING + MAX_STRING_TOKENS]; // will have 0 bytes inserted
-        char cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
+        char cmd_cmd[BIG_INFO_STRING];                           // the original command we received (no token processing)
     } tokenize_info_t;
 
     typedef void (*core2_shell_print_func)(void *self, const char *str);
@@ -233,6 +239,8 @@ extern "C"
     void core2_shell_save_cvars();
     void core2_shell_load_cvars();
 
+    const char *core2_shell_cvar_get_string(const char *var_name);
+
     // Wifi
     // =================================================================================================
 
@@ -264,6 +272,8 @@ extern "C"
     void core2_gpio_clear_interrupt0();
     bool core2_gpio_enable_interrupt0(bool enable);
     int core2_gpio_hall_read();
+    void core2_gpio_set_input(gpio_num_t pin);
+    bool core2_gpio_read(gpio_num_t pin);
 
     // Flash
     // =================================================================================================

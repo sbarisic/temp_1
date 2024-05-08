@@ -117,43 +117,70 @@ void core2_main()
 {
     printf("Hello World!\n");
 
-    /*core2_array_run_tests();
+    // Read pin on boot
+    core2_gpio_set_input(CORE2_GPIO_SETUP_BUTTON_PIN);
+    bool enter_ap_mode = false;
 
-    printf("Done!\n");
-    while (true)
+    for (size_t i = 0; i < 20; i++)
     {
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }*/
+        if (!core2_gpio_read(CORE2_GPIO_SETUP_BUTTON_PIN))
+        {
+            enter_ap_mode = true;
+        }
 
-    // TODO: Load varijabli iz flash memorije ili sa SD kartice
-    /*core2_shell_cvar_register(&cvar_testString, "testString", (void *)"Test string value", CORE2_CVAR_STRING);
-    core2_shell_cvar_register(&cvar_testInt, "testInt", 0, CORE2_CVAR_INT32);
-    core2_shell_cvar_register(&cvar_getvar_count, "getvar_count", 0, CORE2_CVAR_INT32);*/
+        core2_sleep(100);
+    }
 
     core2_shell_cvar_register("wifi_ssid", (void *)"Test", CORE2_CVAR_STRING);
     core2_shell_cvar_register("wifi_pass", (void *)"123456", CORE2_CVAR_STRING);
-    core2_shell_load_cvars();
+
+    core2_shell_cvar_register(CORE2_CVAR_wifi_ap_ssid, (void *)"core2_wifi_devtest", CORE2_CVAR_STRING);
+    core2_shell_cvar_register(CORE2_CVAR_wifi_ap_pass, (void *)"core21234", CORE2_CVAR_STRING);
 
     core2_shell_register("get_variables", core2_shellcmd_get_variables);
-    // core2_shell_save_cvars();
+    core2_shell_load_cvars();
 
-    core2_shell_func_params_t *params = core2_shell_create_default_params();
+    if (enter_ap_mode)
+    {
+        dprintf("Entering AP setup mode...\n");
 
-    /*core2_shell_invoke("set testString \"Hello CVar World!\"", params);
-    core2_shell_invoke("list_cvar", params);
-    core2_shell_invoke("set testString \"Some other test string\"", params);
-    core2_shell_save_cvars();*/
+        core2_wifi_ap_start();
+        core2_http_start();
+
+        for (;;)
+        {
+            core2_sleep(10);
+        }
+
+        return;
+    }
+    else
+    {
+        dprintf("Skipping AP mode...\n");
+    }
+
+    // TODO: remove defaults
+    // core2_wifi_add_network("Barisic", "123456789");
+    // core2_wifi_add_network("Tst", "123456789");
+
+    core2_sleep(1000);
+
+    // core2_shell_func_params_t *params = core2_shell_create_default_params();
+
+    const char *wifi_ssid = core2_shell_cvar_get_string("wifi_ssid");
+    const char *wifi_pass = core2_shell_cvar_get_string("wifi_pass");
+
+    if (wifi_ssid != NULL && wifi_pass != NULL)
+    {
+        dprintf("Found wifi_ssid in cvars, \"%s\"\n", wifi_ssid);
+        core2_wifi_try_connect(wifi_ssid, wifi_pass);
+    }
+    else
+    {
+        core2_wifi_try_connect("Barisic", "123456789");
+    }
 
     core2_http_start();
-
-    // core2_wifi_ap_start();
-
-    // core2_wifi_try_connect("Tst", "123456789");
-    core2_wifi_try_connect("Serengeti", "srgt#2018");
-
-    // core2_wifi_ap_start();
-
-    // core2_gpio_set_interrupt0();
 
     for (;;)
     {
@@ -168,6 +195,6 @@ void core2_main()
             core2_gpio_enable_interrupt0(true);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+        core2_sleep(10);
     }
 }

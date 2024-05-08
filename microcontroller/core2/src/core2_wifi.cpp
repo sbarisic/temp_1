@@ -44,7 +44,8 @@ bool core2_wifi_add_network(const char *ssid, const char *pass)
 {
     for (size_t i = 0; i < (sizeof(SSIDs) / sizeof(*SSIDs)); i++)
     {
-        if (SSIDs[i] == NULL) {
+        if (SSIDs[i] == NULL)
+        {
             SSIDs[i] = core2_string_copy(ssid);
             PASSs[i] = core2_string_copy(pass);
             return true;
@@ -56,6 +57,8 @@ bool core2_wifi_add_network(const char *ssid, const char *pass)
 
 bool core2_wifi_try_connect(const char *ssid, const char *pass)
 {
+    dprintf("core2_wifi_try_connect(\"%s\")\n", ssid);
+
     LastBeginConnect = core2_clock_bootseconds();
 
     WiFi.mode(WIFI_STA);
@@ -70,8 +73,9 @@ bool c2_wifi_begin_connect(int32_t NextConnectWaitTime)
         return false;
 
     LastBeginConnect = core2_clock_bootseconds();
+    dprintf("Scanning for networks...\n");
 
-    int found = WiFi.scanNetworks();
+    int found = WiFi.scanNetworks(false, false, false, 600);
     for (int i = 0; i < found; i++)
     {
         String ssid = WiFi.SSID(i);
@@ -106,8 +110,17 @@ bool core2_wifi_ap_start()
         return false;
     }
 
+    const char *ssid = core2_shell_cvar_get_string(CORE2_CVAR_wifi_ap_ssid);
+    const char *pass = core2_shell_cvar_get_string(CORE2_CVAR_wifi_ap_pass);
+
+    if (ssid == NULL || pass == NULL)
+    {
+        ssid = "core2_wifi_ap";
+        pass = "core21234";
+    }
+
     // TODO: Move to separate config
-    if (!WiFi.softAP("core2_wifi_devtest", "core21234"))
+    if (!WiFi.softAP(ssid, pass))
     {
         dprintf("core2_wifi_ap_start() - WiFi Access Point FAIL\n");
         return false;

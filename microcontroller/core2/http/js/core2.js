@@ -44,7 +44,15 @@ function core2_js_main() {
 function core2_onSave() {
     shell_variables.forEach(element => {
         console.log(element);
+
+        let in_field = document.querySelector("#" + element.variable_name);
+        core2_post("/shell", "set " + element.variable_name + " \"" + in_field.value + "\"").catch(console.error);
     });
 
     alert("Save!");
+}
+
+function core2_reboot() {
+    core2_post("/shell", "reboot").catch(console.error);
+    alert("Rebooting!");
 }

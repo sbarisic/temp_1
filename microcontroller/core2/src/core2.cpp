@@ -187,9 +187,9 @@ void core2_queue_reset(xQueueHandle q)
 // @brief Expects 30 byte buffer
 void core2_err_tostr(esp_err_t err, char *buffer)
 {
-#define MAKE_CASE(err)                                                                                                 \
-    case err:                                                                                                          \
-        strcpy(buffer, #err);                                                                                          \
+#define MAKE_CASE(err)        \
+    case err:                 \
+        strcpy(buffer, #err); \
         break
 
     switch (err)
@@ -226,16 +226,16 @@ void core2_err_tostr(esp_err_t err, char *buffer)
 void core2_resetreason_tostr(esp_reset_reason_t err, char *buffer, bool desc)
 {
 #undef MAKE_CASE
-#define MAKE_CASE(err, descr)                                                                                          \
-    case err:                                                                                                          \
-        if (desc)                                                                                                      \
-        {                                                                                                              \
-            strcpy(buffer, descr);                                                                                     \
-        }                                                                                                              \
-        else                                                                                                           \
-        {                                                                                                              \
-            strcpy(buffer, #err);                                                                                      \
-        }                                                                                                              \
+#define MAKE_CASE(err, descr)      \
+    case err:                      \
+        if (desc)                  \
+        {                          \
+            strcpy(buffer, descr); \
+        }                          \
+        else                       \
+        {                          \
+            strcpy(buffer, #err);  \
+        }                          \
         break
 
     switch (err)
@@ -411,6 +411,7 @@ void setup()
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     core2_print_status();
+    core2_gpio_init();
 
     // pinMode(SDCARD_PIN_CS, OUTPUT);
     // digitalWrite(SDCARD_PIN_CS, LOW);
@@ -419,7 +420,11 @@ void setup()
     sdmmc_host_t sdcard_host;
     if (core2_spi_create_sdmmc_host(&sdcard_host, SDCARD_PIN_MOSI, SDCARD_PIN_MISO, SDCARD_PIN_CLK))
     {
-        core2_filesystem_init(&sdcard_host, SDCARD_PIN_CS);
+        if (!core2_filesystem_init(&sdcard_host, SDCARD_PIN_CS))
+        {
+            dprintf("SD Card failed to init, switching to AP mode\n");
+            dprintf("TODO!\n");
+        }
     }
 
 #endif
@@ -428,12 +433,12 @@ void setup()
 
 #ifndef CORE2_WINDOWS
     core2_shell_register("int0",
-                         [](core2_shell_func_params_t *params, int argc, char **argv) { core2_gpio_set_interrupt0(); });
+                         [](core2_shell_func_params_t *params, int argc, char **argv)
+                         { core2_gpio_set_interrupt0(); });
 
     core2_mcp320x_init();
     // run_tests();
 
-    core2_gpio_init();
     core2_oled_init();
     core2_wifi_init();
     // core2_clock_init();

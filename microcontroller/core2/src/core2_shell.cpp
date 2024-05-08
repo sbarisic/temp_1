@@ -131,6 +131,18 @@ core2_shell_cvar_t *core2_shell_cvar_find(const char *var_name)
     return NULL;
 }
 
+const char *core2_shell_cvar_get_string(const char *var_name)
+{
+    core2_shell_cvar_t *cvar = core2_shell_cvar_find(var_name);
+
+    if (cvar != NULL && cvar->var_type == CORE2_CVAR_STRING)
+    {
+        return (const char *)cvar->var_ptr;
+    }
+
+    return NULL;
+}
+
 bool core2_shell_cvar_tostring(core2_shell_cvar_t *cvar, char *buf)
 {
     // dprintf("core2_shell_cvar_tostring(\"%s\")\n", cvar->name);
@@ -436,7 +448,8 @@ void shell_set(core2_shell_func_params_t *params, int argc, char **argv)
 
     switch (cvar->var_type)
     {
-    case CORE2_CVAR_INT32: {
+    case CORE2_CVAR_INT32:
+    {
         int num = atoi(argv[2]);
         cvar->var_ptr = (void *)num;
         break;
@@ -485,20 +498,24 @@ void shell_get(core2_shell_func_params_t *params, int argc, char **argv)
     }
 }
 
-void shell_cvars_load(core2_shell_func_params_t *params, int argc, char **argv)
+void shell_reboot(core2_shell_func_params_t *params, int argc, char **argv)
 {
+    core2_shell_save_cvars();
+
 #ifdef CORE2_WINDOWS
 #else
-    core2_shell_load_cvars();
+    esp_restart();
 #endif
+}
+
+void shell_cvars_load(core2_shell_func_params_t *params, int argc, char **argv)
+{
+    core2_shell_load_cvars();
 }
 
 void shell_cvars_save(core2_shell_func_params_t *params, int argc, char **argv)
 {
-#ifdef CORE2_WINDOWS
-#else
     core2_shell_save_cvars();
-#endif
 }
 
 core2_shell_func_params_t *core2_shell_create_default_params()
@@ -528,6 +545,7 @@ void core2_shell_init()
     core2_shell_register("list_cvar", shell_list_cvar);
     core2_shell_register("set", shell_set);
     core2_shell_register("get", shell_get);
+    core2_shell_register("reboot", shell_reboot);
 
     core2_shell_register("cvars_load", shell_cvars_load);
     core2_shell_register("cvars_save", shell_cvars_save);
