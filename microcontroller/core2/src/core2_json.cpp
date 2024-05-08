@@ -222,6 +222,11 @@ void core2_json_add_field_int(core2_json_t *json, const char *field_name, int nu
     core2_json_add_field(json, field_name, &num, 0, CORE2_JSON_INT);
 }
 
+void core2_json_add_field_float(core2_json_t *json, const char *field_name, float num)
+{
+    core2_json_add_field(json, field_name, &num, 0, CORE2_JSON_FLOAT);
+}
+
 void core2_json_serialize(core2_json_t *json, char **dest_buffer, size_t *json_length)
 {
     core2_json_concat(json, " }");

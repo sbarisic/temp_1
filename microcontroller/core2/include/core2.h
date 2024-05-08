@@ -56,7 +56,7 @@ extern "C"
 // #define CORE2_AP_MODE_ONLY // Start wifi in access mode only
 
 // Uncomment to disable compilation of modules
-#define CORE2_DISABLE_MCP320X
+//#define CORE2_DISABLE_MCP320X
 #define CORE2_DISABLE_OLED
 
     // Uncomment to run tests only
@@ -68,12 +68,12 @@ extern "C"
 #define dprintf(...)
 #endif
 
-#define eprintf(...)         \
-    do                       \
-    {                        \
-        printf("[ERROR] ");  \
-        printf(__VA_ARGS__); \
-        printf("\n");        \
+#define eprintf(...)                                                                                                   \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        printf("[ERROR] ");                                                                                            \
+        printf(__VA_ARGS__);                                                                                           \
+        printf("\n");                                                                                                  \
     } while (0)
 
 // #define CORE2_FILESYSTEM_VERBOSE_OUTPUT // Prints very long debug outputs to the output stream
@@ -191,7 +191,7 @@ extern "C"
         int cmd_argc;
         char *cmd_argv[MAX_STRING_TOKENS];                       // points into cmd_tokenized
         char cmd_tokenized[BIG_INFO_STRING + MAX_STRING_TOKENS]; // will have 0 bytes inserted
-        char cmd_cmd[BIG_INFO_STRING];                           // the original command we received (no token processing)
+        char cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
     } tokenize_info_t;
 
     typedef void (*core2_shell_print_func)(void *self, const char *str);
@@ -361,7 +361,7 @@ extern "C"
                               core2_json_fieldtype_t data_type);
     void core2_json_add_field_string(core2_json_t *json, const char *field_name, const char *str);
     void core2_json_add_field_int(core2_json_t *json, const char *field_name, int num);
-
+    void core2_json_add_field_float(core2_json_t *json, const char *field_name, float num);
     void core2_json_serialize(core2_json_t *json, char **dest_buffer, size_t *json_length);
 
     // Web

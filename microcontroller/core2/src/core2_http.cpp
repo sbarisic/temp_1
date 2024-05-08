@@ -35,10 +35,19 @@ esp_err_t root_get_handler(httpd_req_t *req)
     sprintf(buffer, "/sd/http/%s", uri_normalized);
 
     size_t index_len = 0;
-    void *index_buf = core2_file_read_all(buffer, &index_len);
+    // void *index_buf = core2_file_read_all(buffer, &index_len);
 
-    if (index_buf != NULL)
+    FILE *f = NULL;
+    size_t file_len = 0;
+
+    if (core2_file_exists(buffer))
     {
+        f = core2_file_open(buffer, "r");
+        file_len = core2_file_length(f);
+
+        size_t chunk_size = 1024;
+        char *temp_buf = (char *)core2_malloc(chunk_size);
+
         if (core2_string_ends_with(req->uri, ".css"))
             httpd_resp_set_type(req, "text/css");
         else if (core2_string_ends_with(req->uri, ".js"))
@@ -50,8 +59,24 @@ esp_err_t root_get_handler(httpd_req_t *req)
         else
             httpd_resp_set_type(req, "text/plain");
 
-        httpd_resp_send(req, (const char *)index_buf, index_len);
-        core2_free(index_buf);
+        // httpd_resp_send(req, (const char *)index_buf, index_len);
+        // core2_free(index_buf);
+
+        // TODO: error checking
+        while (true)
+        {
+            size_t read_len = fread(temp_buf, 1, chunk_size, f);
+            httpd_resp_send_chunk(req, temp_buf, read_len);
+
+            if (read_len != chunk_size)
+            {
+                break;
+            }
+        }
+
+        httpd_resp_send_chunk(req, NULL, 0);
+        core2_free(temp_buf);
+        core2_file_close(f);
         return ESP_OK;
     }
 
@@ -99,8 +124,7 @@ esp_err_t shell_post_handler(httpd_req_t *req)
     params.ud2 = print_buffer;
     params.ud3 = &printbuf_idx;
 
-    params.print = [](void *self, const char *str)
-    {
+    params.print = [](void *self, const char *str) {
         core2_shell_func_params_t *self_params = (core2_shell_func_params_t *)self;
         size_t *printbuf_idx_p = (size_t *)self_params->ud3;
         size_t len = strlen(str);

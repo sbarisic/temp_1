@@ -28,6 +28,15 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t* params, int argc, c
 }
 
 void core2_main() {
+
+	//FILE* f = core2_file_open("C:\\Projects\\temp_1\\microcontroller\\Core2\\http\\js\\handlebars.js", NULL);
+
+
+
+
+	while (true) {
+
+	}
 	core2_shell_cvar_register(&cvar_testString, "testString", (void*)"Test string value", CORE2_CVAR_STRING);
 	core2_shell_cvar_register(&cvar_testInt, "testInt", 0, CORE2_CVAR_INT32);
 	core2_shell_load_cvars();

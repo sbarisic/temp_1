@@ -76,7 +76,7 @@ void core2_gpio_set_input(gpio_num_t pin)
 bool core2_gpio_read(gpio_num_t pin)
 {
     int lvl = gpio_get_level(pin);
-    dprintf("core2_gpio_read(%d) = %d\n", pin, lvl);
+    //dprintf("core2_gpio_read(%d) = %d\n", pin, lvl);
 
     return lvl > 0;
 }
