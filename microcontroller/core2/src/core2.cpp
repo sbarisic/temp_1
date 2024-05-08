@@ -359,7 +359,11 @@ void core2_sleep(int32_t ms)
 
 void core2_main_impl(void *args)
 {
+#ifdef CORE2_CAN
+    core2_can_main();
+#else
     core2_main();
+#endif
 
     for (;;)
     {
@@ -431,7 +435,7 @@ void setup()
 
     core2_shell_init();
 
-#ifndef CORE2_WINDOWS
+#if !defined(CORE2_CAN) && !defined(CORE2_WINDOWS)
     core2_shell_register("int0",
                          [](core2_shell_func_params_t *params, int argc, char **argv)
                          { core2_gpio_set_interrupt0(); });
@@ -440,7 +444,11 @@ void setup()
     // run_tests();
 
     core2_oled_init();
+#endif
+
+#ifndef CORE2_WINDOWS
     core2_wifi_init();
+#endif
     // core2_clock_init();
 
     // core2_wifi_yield_until_connected();
@@ -448,7 +456,6 @@ void setup()
     // char cur_time[21];
     // core2_clock_time_now(cur_time);
     // dprintf("Current date time: %s\n", cur_time);
-#endif
 
     // core2_shell_register("esp_restart", [](core2_shell_func_params_t *params) { esp_restart(); });
 

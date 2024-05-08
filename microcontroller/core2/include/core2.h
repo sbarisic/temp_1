@@ -56,7 +56,7 @@ extern "C"
 // #define CORE2_AP_MODE_ONLY // Start wifi in access mode only
 
 // Uncomment to disable compilation of modules
-//#define CORE2_DISABLE_MCP320X
+// #define CORE2_DISABLE_MCP320X
 #define CORE2_DISABLE_OLED
 
     // Uncomment to run tests only
@@ -68,21 +68,39 @@ extern "C"
 #define dprintf(...)
 #endif
 
-#define eprintf(...)                                                                                                   \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        printf("[ERROR] ");                                                                                            \
-        printf(__VA_ARGS__);                                                                                           \
-        printf("\n");                                                                                                  \
+#define eprintf(...)         \
+    do                       \
+    {                        \
+        printf("[ERROR] ");  \
+        printf(__VA_ARGS__); \
+        printf("\n");        \
     } while (0)
 
 // #define CORE2_FILESYSTEM_VERBOSE_OUTPUT // Prints very long debug outputs to the output stream
 #define CORE2_FILESYSTEM_SIMPLE_OUTPUT // Prints simple debug outputs to the output stream
 
+#if defined(CORE2_CAN)
+#define PIN_5V_EN GPIO_NUM_16
+
+#define CAN_TX_PIN GPIO_NUM_26
+#define CAN_RX_PIN GPIO_NUM_27
+#define CAN_SE_PIN GPIO_NUM_23
+
+#define RS485_EN_PIN GPIO_NUM_17 // 17 /RE
+#define RS485_TX_PIN GPIO_NUM_22 // 21
+#define RS485_RX_PIN GPIO_NUM_21 // 22
+#define RS485_SE_PIN GPIO_NUM_19 // 22 /SHDN
+
+#define SDCARD_PIN_MISO GPIO_NUM_2
+#define SDCARD_PIN_MOSI GPIO_NUM_15
+#define SDCARD_PIN_CLK GPIO_NUM_14
+#define SDCARD_PIN_CS GPIO_NUM_13
+
+#define WS2812_PIN 4
     // SD SPI pin config
     // =================================================================================================
 
-#if defined(CORE2_TDECK)
+#elif defined(CORE2_TDECK)
 #define SDCARD_PIN_MOSI BOARD_SPI_MOSI
 #define SDCARD_PIN_MISO BOARD_SPI_MISO
 #define SDCARD_PIN_CLK BOARD_SPI_SCK
@@ -191,7 +209,7 @@ extern "C"
         int cmd_argc;
         char *cmd_argv[MAX_STRING_TOKENS];                       // points into cmd_tokenized
         char cmd_tokenized[BIG_INFO_STRING + MAX_STRING_TOKENS]; // will have 0 bytes inserted
-        char cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
+        char cmd_cmd[BIG_INFO_STRING];                           // the original command we received (no token processing)
     } tokenize_info_t;
 
     typedef void (*core2_shell_print_func)(void *self, const char *str);
@@ -274,7 +292,8 @@ extern "C"
     int core2_gpio_hall_read();
     void core2_gpio_set_input(gpio_num_t pin);
     bool core2_gpio_read(gpio_num_t pin);
-
+    void core2_gpio_set_output(gpio_num_t pin);
+    void core2_gpio_write(gpio_num_t pin, int state);
     // Flash
     // =================================================================================================
 
@@ -378,6 +397,15 @@ extern "C"
     // =================================================================================================
 
     void core2_update_start();
+
+#if defined(CORE2_CAN)
+    // CAN
+    // =================================================================================================
+    void core2_can_main();
+
+    void core2_can_init();
+    void core2_can_send(uint32_t msg_id, uint8_t dlc, uint8_t *arr);
+#endif
 
 #if defined(__cplusplus) && defined(CORE2_WINDOWS)
 }

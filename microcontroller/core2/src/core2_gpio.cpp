@@ -73,12 +73,28 @@ void core2_gpio_set_input(gpio_num_t pin)
     gpio_pullup_en(pin);
 }
 
+void core2_gpio_set_output(gpio_num_t pin)
+{
+    gpio_pad_select_gpio(pin);
+    gpio_intr_disable(pin);
+
+    gpio_pulldown_dis(pin);
+    gpio_pullup_dis(pin);
+
+    gpio_set_direction(pin, GPIO_MODE_OUTPUT);
+}
+
 bool core2_gpio_read(gpio_num_t pin)
 {
     int lvl = gpio_get_level(pin);
-    //dprintf("core2_gpio_read(%d) = %d\n", pin, lvl);
+    // dprintf("core2_gpio_read(%d) = %d\n", pin, lvl);
 
     return lvl > 0;
+}
+
+void core2_gpio_write(gpio_num_t pin, int state)
+{
+    gpio_set_level(pin, state);
 }
 
 void CreateInterrupt(gpio_num_t INPUT_PIN)
