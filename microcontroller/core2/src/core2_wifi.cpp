@@ -8,11 +8,13 @@
 #define PRF "c2_wifi_task() "
 #define PRF_STAT "WiFi.Status ="
 
+// TODO: Rewrite wifi using ESP API
+// https://github.com/espressif/esp-idf/tree/v5.2.1/examples/wifi
+
 IPAddress IP;
 bool ConnectionValid;
 int32_t LastBeginConnect;
 int32_t NextConnectWaitTime;
-
 bool IsInAccessPointMode;
 
 // const char *SSIDs[] = {"Barisic", "TEST69", "Serengeti", "Tst", "Optima-34d393"};

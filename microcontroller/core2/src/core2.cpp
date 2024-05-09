@@ -106,8 +106,11 @@ void core2_print_status()
     dprintf("%lu MB %s flash\n", flash_size / (1024 * 1024),
             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
-    uint32_t free_heap = esp_get_minimum_free_heap_size();
-    dprintf("Minimum free heap size: %ld bytes (%ld kb)\n", free_heap, free_heap / 1024);
+    uint32_t free_heap = esp_get_free_heap_size();
+    dprintf("Free heap size: %ld bytes (%ld kb)\n", free_heap, free_heap / 1024);
+
+    uint32_t spiram_size = esp_spiram_get_size();
+    dprintf("SPI RAM size: %ld bytes (%ld kb)\n", spiram_size, spiram_size / 1024);
 
     esp_reset_reason_t reason = esp_reset_reason();
     char resetreason[64];
@@ -187,9 +190,9 @@ void core2_queue_reset(xQueueHandle q)
 // @brief Expects 30 byte buffer
 void core2_err_tostr(esp_err_t err, char *buffer)
 {
-#define MAKE_CASE(err)        \
-    case err:                 \
-        strcpy(buffer, #err); \
+#define MAKE_CASE(err)                                                                                                 \
+    case err:                                                                                                          \
+        strcpy(buffer, #err);                                                                                          \
         break
 
     switch (err)
@@ -226,16 +229,16 @@ void core2_err_tostr(esp_err_t err, char *buffer)
 void core2_resetreason_tostr(esp_reset_reason_t err, char *buffer, bool desc)
 {
 #undef MAKE_CASE
-#define MAKE_CASE(err, descr)      \
-    case err:                      \
-        if (desc)                  \
-        {                          \
-            strcpy(buffer, descr); \
-        }                          \
-        else                       \
-        {                          \
-            strcpy(buffer, #err);  \
-        }                          \
+#define MAKE_CASE(err, descr)                                                                                          \
+    case err:                                                                                                          \
+        if (desc)                                                                                                      \
+        {                                                                                                              \
+            strcpy(buffer, descr);                                                                                     \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            strcpy(buffer, #err);                                                                                      \
+        }                                                                                                              \
         break
 
     switch (err)
@@ -280,6 +283,32 @@ void *core2_realloc(void *ptr, size_t sz)
     if (new_ptr == NULL)
     {
         eprintf("realloc(%p ,%zu) failed", ptr, sz);
+    }
+
+    return new_ptr;
+}
+
+void *core2_malloc_ps(size_t sz)
+{
+    void *ptr = ps_malloc(sz);
+
+    if (ptr == NULL)
+    {
+        eprintf("ps_malloc(%zu) failed", sz);
+        return NULL;
+    }
+
+    memset(ptr, 0, sz);
+    return ptr;
+}
+
+void *core2_realloc_ps(void *ptr, size_t sz)
+{
+    void *new_ptr = ps_realloc(ptr, sz);
+
+    if (new_ptr == NULL)
+    {
+        eprintf("ps_realloc(%p ,%zu) failed", ptr, sz);
     }
 
     return new_ptr;
@@ -359,11 +388,7 @@ void core2_sleep(int32_t ms)
 
 void core2_main_impl(void *args)
 {
-#ifdef CORE2_CAN
-    core2_can_main();
-#else
     core2_main();
-#endif
 
     for (;;)
     {
@@ -394,7 +419,6 @@ void setup()
 {
     // vTaskDelay(pdMS_TO_TICKS(10000));
     core2_wait_for_serial();
-
     core2_init();
 
 #ifdef CORE2_RUN_TESTS
@@ -430,25 +454,39 @@ void setup()
             dprintf("TODO!\n");
         }
     }
-
 #endif
 
     core2_shell_init();
-
-#if !defined(CORE2_CAN) && !defined(CORE2_WINDOWS)
-    core2_shell_register("int0",
-                         [](core2_shell_func_params_t *params, int argc, char **argv)
-                         { core2_gpio_set_interrupt0(); });
-
-    core2_mcp320x_init();
-    // run_tests();
-
-    core2_oled_init();
-#endif
-
-#ifndef CORE2_WINDOWS
     core2_wifi_init();
+
+#if defined(CORE2_TR_MOD)
+    {
+        core2_shell_register(
+            "int0", [](core2_shell_func_params_t *params, int argc, char **argv) { core2_gpio_set_interrupt0(); });
+
+        core2_mcp320x_init();
+        // run_tests();
+
+        core2_oled_init();
+        // core2_wifi_init();
+        core2_main_impl();
+    }
+#elif defined(CORE2_TDECK)
+    {
+        core2_tdeck_main();
+    }
+#elif defined(CORE2_CAN)
+    {
+        core2_can_main();
+    }
+#elif defined(CORE2_WINDOWS)
+    {
+        core2_main_impl();
+    }
+#else
+#error "Platform not defined"
 #endif
+
     // core2_clock_init();
 
     // core2_wifi_yield_until_connected();
@@ -457,21 +495,13 @@ void setup()
     // core2_clock_time_now(cur_time);
     // dprintf("Current date time: %s\n", cur_time);
 
-    // core2_shell_register("esp_restart", [](core2_shell_func_params_t *params) { esp_restart(); });
+    // dprintf("init() done\n");
 
-    dprintf("init() done\n");
-
-#ifndef CORE2_WINDOWS
-    xTaskCreate(core2_main_impl, "core2_main", 1024 * 32, NULL, 1, NULL);
-
-    // vTaskDelay(pdMS_TO_TICKS(1000 * 20));
-    // core2_wifi_ap_stop();
-
-    // Stop arduino task, job done
-    vTaskDelete(NULL);
-#else
-    core2_main_impl(NULL);
-#endif
+    /*
+    #ifndef CORE2_WINDOWS
+        xTaskCreate(core2_main_impl, "core2_main", 1024 * 32, NULL, 1, NULL);
+        vTaskDelete(NULL);
+    #endif*/
 }
 
 #ifdef CORE2_WINDOWS

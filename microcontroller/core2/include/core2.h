@@ -57,7 +57,7 @@ extern "C"
 
 // Uncomment to disable compilation of modules
 // #define CORE2_DISABLE_MCP320X
-#define CORE2_DISABLE_OLED
+//#define CORE2_DISABLE_OLED
 
     // Uncomment to run tests only
     // #define CORE2_RUN_TESTS
@@ -68,12 +68,12 @@ extern "C"
 #define dprintf(...)
 #endif
 
-#define eprintf(...)         \
-    do                       \
-    {                        \
-        printf("[ERROR] ");  \
-        printf(__VA_ARGS__); \
-        printf("\n");        \
+#define eprintf(...)                                                                                                   \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        printf("[ERROR] ");                                                                                            \
+        printf(__VA_ARGS__);                                                                                           \
+        printf("\n");                                                                                                  \
     } while (0)
 
 // #define CORE2_FILESYSTEM_VERBOSE_OUTPUT // Prints very long debug outputs to the output stream
@@ -171,7 +171,14 @@ extern "C"
 
     void *core2_malloc(size_t sz);
     void *core2_realloc(void *ptr, size_t sz);
+
+#ifdef BOARD_HAS_PSRAM
+    void *core2_malloc_ps(size_t sz);
+    void* core2_realloc_ps(size_t sz);
+#endif
+
     void core2_free(void *ptr);
+
     char *core2_string_concat(const char *a, const char *b); // Should call core2_free() on result
     bool core2_string_ends_with(const char *str, const char *end);
     char *core2_string_copy_len(const char *str, size_t len);
@@ -209,7 +216,7 @@ extern "C"
         int cmd_argc;
         char *cmd_argv[MAX_STRING_TOKENS];                       // points into cmd_tokenized
         char cmd_tokenized[BIG_INFO_STRING + MAX_STRING_TOKENS]; // will have 0 bytes inserted
-        char cmd_cmd[BIG_INFO_STRING];                           // the original command we received (no token processing)
+        char cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
     } tokenize_info_t;
 
     typedef void (*core2_shell_print_func)(void *self, const char *str);

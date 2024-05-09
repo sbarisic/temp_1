@@ -1,6 +1,8 @@
 #include <core2.h>
-#include <WS2812FX.h>
+
+#ifdef CORE2_CAN
 #include <ESP32CAN.h>
+#include <WS2812FX.h>
 
 #define LED_PIN WS2812_PIN // digital pin used to drive the LED strip
 #define LED_COUNT 1        // number of LEDs on the strip
@@ -135,3 +137,5 @@ void core2_can_main()
         core2_sleep(1000);
     }
 }
+
+#endif

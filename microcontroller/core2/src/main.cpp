@@ -193,10 +193,6 @@ void core2_main()
         dprintf("Found wifi_ssid in cvars, \"%s\"\n", wifi_ssid);
         core2_wifi_try_connect(wifi_ssid, wifi_pass);
     }
-    else
-    {
-        core2_wifi_try_connect("Barisic", "123456789");
-    }
 
     core2_http_start();
 
