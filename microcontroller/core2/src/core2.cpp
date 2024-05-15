@@ -109,8 +109,9 @@ void core2_print_status()
     uint32_t free_heap = esp_get_free_heap_size();
     dprintf("Free heap size: %ld bytes (%ld kb)\n", free_heap, free_heap / 1024);
 
-    uint32_t spiram_size = esp_spiram_get_size();
-    dprintf("SPI RAM size: %ld bytes (%ld kb)\n", spiram_size, spiram_size / 1024);
+    // TODO: spi ram not initialized
+    // uint32_t spiram_size = esp_spiram_get_size();
+    // dprintf("SPI RAM size: %ld bytes (%ld kb)\n", spiram_size, spiram_size / 1024);
 
     esp_reset_reason_t reason = esp_reset_reason();
     char resetreason[64];
@@ -398,6 +399,10 @@ void core2_main_impl(void *args)
 
 void core2_wait_for_serial()
 {
+#if defined(CORE2_DOOR_CONTROLLER)
+    return;
+#endif
+
 #ifndef CORE2_WINDOWS
     fflush(stdout);
     fpurge(stdin);
@@ -417,6 +422,10 @@ void loop()
 
 void setup()
 {
+#if defined(CORE2_DOOR_CONTROLLER)
+    core2_door_controller_setup();
+#endif
+
     // vTaskDelay(pdMS_TO_TICKS(10000));
     core2_wait_for_serial();
     core2_init();
@@ -444,7 +453,9 @@ void setup()
     // pinMode(SDCARD_PIN_CS, OUTPUT);
     // digitalWrite(SDCARD_PIN_CS, LOW);
 
-    core2_spi_init();
+    //core2_spi_init();
+
+#ifndef CORE2_DISABLE_SDCARD
     sdmmc_host_t sdcard_host;
     if (core2_spi_create_sdmmc_host(&sdcard_host, SDCARD_PIN_MOSI, SDCARD_PIN_MISO, SDCARD_PIN_CLK))
     {
@@ -455,9 +466,13 @@ void setup()
         }
     }
 #endif
+#endif
 
     core2_shell_init();
+
+#ifndef CORE2_DISABLE_WIFI
     core2_wifi_init();
+#endif
 
 #if defined(CORE2_TR_MOD)
     {
@@ -482,6 +497,10 @@ void setup()
 #elif defined(CORE2_WINDOWS)
     {
         core2_main_impl();
+    }
+#elif defined(CORE2_DOOR_CONTROLLER)
+    {
+        core2_door_controller_main();
     }
 #else
 #error "Platform not defined"

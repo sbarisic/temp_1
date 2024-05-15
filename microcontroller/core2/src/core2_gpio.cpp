@@ -62,7 +62,7 @@ QueueHandle_t CreateInterruptQueue()
     return q;
 }
 
-void core2_gpio_set_input(gpio_num_t pin)
+void core2_gpio_set_input(gpio_num_t pin, core2_gpio_mode_t mode)
 {
     gpio_pad_select_gpio(pin);
     gpio_intr_disable(pin);
@@ -70,18 +70,53 @@ void core2_gpio_set_input(gpio_num_t pin)
     gpio_set_direction(pin, GPIO_MODE_INPUT);
 
     gpio_pulldown_dis(pin);
-    gpio_pullup_en(pin);
+    gpio_pullup_dis(pin);
+
+    switch (mode)
+    {
+    case CORE2_GPIO_MODE_NONE:
+        break;
+
+    case CORE2_GPIO_MODE_PULLDOWN:
+        gpio_pulldown_en(pin);
+        break;
+
+    case CORE2_GPIO_MODE_PULLUP:
+        gpio_pullup_en(pin);
+        break;
+
+    default:
+        eprintf("core2_gpio_set_input(%d, %d) - Unknown out mode %d\n", pin, mode, mode);
+        break;
+    }
 }
 
-void core2_gpio_set_output(gpio_num_t pin)
+void core2_gpio_set_output(gpio_num_t pin, core2_gpio_mode_t mode)
 {
     gpio_pad_select_gpio(pin);
     gpio_intr_disable(pin);
+    gpio_set_direction(pin, GPIO_MODE_OUTPUT);
 
     gpio_pulldown_dis(pin);
     gpio_pullup_dis(pin);
 
-    gpio_set_direction(pin, GPIO_MODE_OUTPUT);
+    switch (mode)
+    {
+    case CORE2_GPIO_MODE_NONE:
+        break;
+
+    case CORE2_GPIO_MODE_PULLDOWN:
+        gpio_pulldown_en(pin);
+        break;
+
+    case CORE2_GPIO_MODE_PULLUP:
+        gpio_pullup_en(pin);
+        break;
+
+    default:
+        eprintf("core2_gpio_set_output(%d, %d) - Unknown out mode %d\n", pin, mode, mode);
+        break;
+    }
 }
 
 bool core2_gpio_read(gpio_num_t pin)

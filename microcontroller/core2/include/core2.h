@@ -51,13 +51,13 @@ extern "C"
 
 #define CORE2_DEBUG
 #define CORE2_DEBUG_WIFI
-// #define CORE2_DEBUG_ARRAY
+    // #define CORE2_DEBUG_ARRAY
 
-// #define CORE2_AP_MODE_ONLY // Start wifi in access mode only
+    // #define CORE2_AP_MODE_ONLY // Start wifi in access mode only
 
-// Uncomment to disable compilation of modules
-// #define CORE2_DISABLE_MCP320X
-//#define CORE2_DISABLE_OLED
+    // Uncomment to disable compilation of modules
+    // #define CORE2_DISABLE_MCP320X
+    // #define CORE2_DISABLE_OLED
 
     // Uncomment to run tests only
     // #define CORE2_RUN_TESTS
@@ -120,6 +120,11 @@ extern "C"
     // ========= Entry Point ===========================================================================
     void core2_main();
 
+#if defined(CORE2_DOOR_CONTROLLER)
+    void core2_door_controller_setup();
+    void core2_door_controller_main();
+#endif
+
     // MCP320X SPI pin config
     // =================================================================================================
 
@@ -174,7 +179,7 @@ extern "C"
 
 #ifdef BOARD_HAS_PSRAM
     void *core2_malloc_ps(size_t sz);
-    void* core2_realloc_ps(size_t sz);
+    void *core2_realloc_ps(size_t sz);
 #endif
 
     void core2_free(void *ptr);
@@ -291,15 +296,21 @@ extern "C"
     // GPIO
     // =================================================================================================
 
+typedef enum {
+    CORE2_GPIO_MODE_NONE,
+    CORE2_GPIO_MODE_PULLDOWN,
+    CORE2_GPIO_MODE_PULLUP,
+} core2_gpio_mode_t;
+
     bool core2_gpio_init();
     bool core2_gpio_get_interrupt0();
     bool core2_gpio_set_interrupt0();
     void core2_gpio_clear_interrupt0();
     bool core2_gpio_enable_interrupt0(bool enable);
     int core2_gpio_hall_read();
-    void core2_gpio_set_input(gpio_num_t pin);
+    void core2_gpio_set_input(gpio_num_t pin, core2_gpio_mode_t mode);
     bool core2_gpio_read(gpio_num_t pin);
-    void core2_gpio_set_output(gpio_num_t pin);
+    void core2_gpio_set_output(gpio_num_t pin, core2_gpio_mode_t mode);
     void core2_gpio_write(gpio_num_t pin, int state);
     // Flash
     // =================================================================================================

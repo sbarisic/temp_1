@@ -131,7 +131,7 @@ void core2_main()
     printf("Hello World!\n");
 
     // Read pin on boot
-    core2_gpio_set_input(CORE2_GPIO_SETUP_BUTTON_PIN);
+    core2_gpio_set_input(CORE2_GPIO_SETUP_BUTTON_PIN, CORE2_GPIO_MODE_PULLUP);
     bool enter_ap_mode = false;
 
     for (size_t i = 0; i < 200; i++)
