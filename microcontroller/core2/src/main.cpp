@@ -1,6 +1,6 @@
+#include <Wire.h>
 #include <core2.h>
 #include <esp_http_server.h>
-#include <Wire.h>
 
 volatile bool buzzer_enable = false;
 volatile bool leds_initialized = false;
@@ -59,9 +59,7 @@ void read_temp_pressure(float *Temp, float *Press)
     float gpressure;
     float gtemperature;
 
-    Wire.begin();
     Wire.beginTransmission(id);
-
     int stat = Wire.write(cmd, 3); // write command to the sensor
     stat |= Wire.endTransmission();
 
@@ -73,8 +71,7 @@ void read_temp_pressure(float *Temp, float *Press)
     {
         data[i] = Wire.read();
     }
-
-    Wire.end();
+    // Wire.end();
 
     // start read pressure & temperature
     press_counts = data[3] + data[2] * 256 + data[1] * 65536; // calculate digital pressure counts
@@ -244,6 +241,7 @@ void core2_main()
     xTaskCreate(buzzer_task, "buzzer_task", 1024, NULL, 0, NULL);
     led_enable(false, false, true);
 
+    Wire.begin();
     core2_buzz(250);
 
     // Read pin on boot
