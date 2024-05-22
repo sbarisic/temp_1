@@ -76,7 +76,7 @@ bool c2_wifi_begin_connect(int32_t NextConnectWaitTime)
         return false;
 
     LastBeginConnect = core2_clock_bootseconds();
-    dprintf("Scanning for networks...\n");
+    //dprintf("Scanning for networks...\n");
 
     int found = WiFi.scanNetworks(false, false, false, 600);
     for (int i = 0; i < found; i++)
@@ -85,7 +85,7 @@ bool c2_wifi_begin_connect(int32_t NextConnectWaitTime)
         const char *SSID = ssid.c_str();
         const char *PASS;
 
-        dprintf("c2_wifi_begin_connect - found '%s'\n", SSID);
+        //dprintf("c2_wifi_begin_connect - found '%s'\n", SSID);
 
         if (ConnectionContains(SSID, &PASS))
         {

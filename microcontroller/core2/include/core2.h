@@ -51,13 +51,13 @@ extern "C"
 
 #define CORE2_DEBUG
 #define CORE2_DEBUG_WIFI
-    // #define CORE2_DEBUG_ARRAY
+// #define CORE2_DEBUG_ARRAY
 
-    // #define CORE2_AP_MODE_ONLY // Start wifi in access mode only
+// #define CORE2_AP_MODE_ONLY // Start wifi in access mode only
 
-    // Uncomment to disable compilation of modules
-    // #define CORE2_DISABLE_MCP320X
-    // #define CORE2_DISABLE_OLED
+// Uncomment to disable compilation of modules
+// #define CORE2_DISABLE_MCP320X
+#define CORE2_DISABLE_OLED
 
     // Uncomment to run tests only
     // #define CORE2_RUN_TESTS
@@ -68,12 +68,12 @@ extern "C"
 #define dprintf(...)
 #endif
 
-#define eprintf(...)                                                                                                   \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        printf("[ERROR] ");                                                                                            \
-        printf(__VA_ARGS__);                                                                                           \
-        printf("\n");                                                                                                  \
+#define eprintf(...)         \
+    do                       \
+    {                        \
+        printf("[ERROR] ");  \
+        printf(__VA_ARGS__); \
+        printf("\n");        \
     } while (0)
 
 // #define CORE2_FILESYSTEM_VERBOSE_OUTPUT // Prints very long debug outputs to the output stream
@@ -221,7 +221,7 @@ extern "C"
         int cmd_argc;
         char *cmd_argv[MAX_STRING_TOKENS];                       // points into cmd_tokenized
         char cmd_tokenized[BIG_INFO_STRING + MAX_STRING_TOKENS]; // will have 0 bytes inserted
-        char cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
+        char cmd_cmd[BIG_INFO_STRING];                           // the original command we received (no token processing)
     } tokenize_info_t;
 
     typedef void (*core2_shell_print_func)(void *self, const char *str);
@@ -296,11 +296,12 @@ extern "C"
     // GPIO
     // =================================================================================================
 
-typedef enum {
-    CORE2_GPIO_MODE_NONE,
-    CORE2_GPIO_MODE_PULLDOWN,
-    CORE2_GPIO_MODE_PULLUP,
-} core2_gpio_mode_t;
+    typedef enum
+    {
+        CORE2_GPIO_MODE_NONE,
+        CORE2_GPIO_MODE_PULLDOWN,
+        CORE2_GPIO_MODE_PULLUP,
+    } core2_gpio_mode_t;
 
     bool core2_gpio_init();
     bool core2_gpio_get_interrupt0();
@@ -349,14 +350,13 @@ typedef enum {
     bool core2_mcp320x_init();
     bool core2_adc_lock();
     void core2_adc_unlock(bool was_locked);
-    // void core2_adc_read(float *Volt1, float *Volt2);
     void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch, bool UseLock);
-    void core2_adc_read(float *Volt1, float *Volt2);
+    void core2_adc_read(float *Volt1, float *Volt2, float *Current);
 
     // SPI
     // =================================================================================================
 
-    bool core2_spi_init();
+    //bool core2_spi_init();
     bool core2_spi_create_sdmmc_host(sdmmc_host_t *host, int MOSI, int MISO, int CLK);
 
     // JSON

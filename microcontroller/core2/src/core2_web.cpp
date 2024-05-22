@@ -21,17 +21,20 @@ bool core2_web_internet_available()
     return false;
 }
 
-void core2_web_json_post_begin() {
-
+void core2_web_json_post_begin()
+{
 }
 
-void core2_web_json_post_end() {
-
+void core2_web_json_post_end()
+{
 }
 
 bool core2_web_json_post(const char *server_name, const char *json_txt, size_t json_txt_len)
 {
     dprintf("core2_http_json_post @ \"%s\" - ", server_name);
+
+    if (!core2_wifi_isconnected())
+        return false;
 
     HTTPClient http;
     http.begin(server_name);

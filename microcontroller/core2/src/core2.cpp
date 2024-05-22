@@ -484,7 +484,7 @@ void setup()
 
         core2_oled_init();
         // core2_wifi_init();
-        core2_main_impl();
+        core2_main_impl(NULL);
     }
 #elif defined(CORE2_TDECK)
     {

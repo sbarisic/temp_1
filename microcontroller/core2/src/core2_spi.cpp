@@ -39,10 +39,10 @@ bool core2_spi_create_sdmmc_host(sdmmc_host_t *host, int MOSI, int MISO, int CLK
     return true;
 }
 
-bool core2_spi_init()
+/*bool core2_spi_init()
 {
     dprintf("core2_spi_init()\n");
     SPI.begin(MCP320X_PIN_CLK, MCP320X_PIN_MISO, MCP320X_PIN_MOSI, MCP320X_PIN_CS);
 
     return true;
-}
+}*/
