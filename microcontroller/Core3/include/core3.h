@@ -1,8 +1,12 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-#include <stdlib.h>
-#include <stdio.h>
+    int shitty_cpp_func();
 
-
-void core3_init();
+#ifdef __cplusplus
+}
+#endif
