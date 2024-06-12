@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "stdio.h": "c",
-        "core3.h": "c"
+        "core3.h": "c",
+        "memory.h": "c",
+        "string.h": "c"
     }
 }

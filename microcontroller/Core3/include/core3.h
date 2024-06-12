@@ -32,7 +32,7 @@ typedef struct core3_state_struct {
 	action_func main;
 } core3_state;
 
-void core3_init(core3_state state);
+void core3_init(alloc_func falloc, free_func ffree);
 core3_state* core3_get_state();
 
 #ifdef __cplusplus
