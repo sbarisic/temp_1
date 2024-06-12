@@ -129,6 +129,78 @@ Core3/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/build
 .PHONY : Core3/fast
 
+src/core3_array.o: src/core3_array.c.o
+.PHONY : src/core3_array.o
+
+# target to build an object file
+src/core3_array.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/core3_array.c.o
+.PHONY : src/core3_array.c.o
+
+src/core3_array.i: src/core3_array.c.i
+.PHONY : src/core3_array.i
+
+# target to preprocess a source file
+src/core3_array.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/core3_array.c.i
+.PHONY : src/core3_array.c.i
+
+src/core3_array.s: src/core3_array.c.s
+.PHONY : src/core3_array.s
+
+# target to generate assembly for a file
+src/core3_array.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/core3_array.c.s
+.PHONY : src/core3_array.c.s
+
+src/core3_bootstrap.o: src/core3_bootstrap.c.o
+.PHONY : src/core3_bootstrap.o
+
+# target to build an object file
+src/core3_bootstrap.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/core3_bootstrap.c.o
+.PHONY : src/core3_bootstrap.c.o
+
+src/core3_bootstrap.i: src/core3_bootstrap.c.i
+.PHONY : src/core3_bootstrap.i
+
+# target to preprocess a source file
+src/core3_bootstrap.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/core3_bootstrap.c.i
+.PHONY : src/core3_bootstrap.c.i
+
+src/core3_bootstrap.s: src/core3_bootstrap.c.s
+.PHONY : src/core3_bootstrap.s
+
+# target to generate assembly for a file
+src/core3_bootstrap.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/core3_bootstrap.c.s
+.PHONY : src/core3_bootstrap.c.s
+
+src/core3_object.o: src/core3_object.c.o
+.PHONY : src/core3_object.o
+
+# target to build an object file
+src/core3_object.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/core3_object.c.o
+.PHONY : src/core3_object.c.o
+
+src/core3_object.i: src/core3_object.c.i
+.PHONY : src/core3_object.i
+
+# target to preprocess a source file
+src/core3_object.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/core3_object.c.i
+.PHONY : src/core3_object.c.i
+
+src/core3_object.s: src/core3_object.c.s
+.PHONY : src/core3_object.s
+
+# target to generate assembly for a file
+src/core3_object.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/core3_object.c.s
+.PHONY : src/core3_object.c.s
+
 src/main.o: src/main.c.o
 .PHONY : src/main.o
 
@@ -153,30 +225,6 @@ src/main.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/main.c.s
 .PHONY : src/main.c.s
 
-src/yolo.o: src/yolo.cpp.o
-.PHONY : src/yolo.o
-
-# target to build an object file
-src/yolo.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/yolo.cpp.o
-.PHONY : src/yolo.cpp.o
-
-src/yolo.i: src/yolo.cpp.i
-.PHONY : src/yolo.i
-
-# target to preprocess a source file
-src/yolo.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/yolo.cpp.i
-.PHONY : src/yolo.cpp.i
-
-src/yolo.s: src/yolo.cpp.s
-.PHONY : src/yolo.s
-
-# target to generate assembly for a file
-src/yolo.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Core3.dir/build.make CMakeFiles/Core3.dir/src/yolo.cpp.s
-.PHONY : src/yolo.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -186,12 +234,18 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... Core3"
+	@echo "... src/core3_array.o"
+	@echo "... src/core3_array.i"
+	@echo "... src/core3_array.s"
+	@echo "... src/core3_bootstrap.o"
+	@echo "... src/core3_bootstrap.i"
+	@echo "... src/core3_bootstrap.s"
+	@echo "... src/core3_object.o"
+	@echo "... src/core3_object.i"
+	@echo "... src/core3_object.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
-	@echo "... src/yolo.o"
-	@echo "... src/yolo.i"
-	@echo "... src/yolo.s"
 .PHONY : help
 
 

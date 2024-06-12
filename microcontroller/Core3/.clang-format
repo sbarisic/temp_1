@@ -3,3 +3,7 @@ BasedOnStyle: Google
 IndentWidth: 4
 TabWidth: 4
 UseTab: Always
+AllowShortFunctionsOnASingleLine: None
+SeparateDefinitionBlocks: Always
+MaxEmptyLinesToKeep: 5
+ColumnLimit: 0

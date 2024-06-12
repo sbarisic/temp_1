@@ -6,12 +6,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY build/)
 
 include_directories(include src)
 
-file(GLOB_RECURSE SOURCES src/*.c src/*.cpp)
+file(GLOB_RECURSE SOURCES src/*)
 
 # target_compile_options(Core3 -Wall -Werror)
 
 
-add_compile_options("-Wall" )
+add_compile_options("-Wall" "-Wno-unused-variable" "-Werror=return-type")
 add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu99>)
 
 
