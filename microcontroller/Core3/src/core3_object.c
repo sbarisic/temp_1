@@ -46,6 +46,7 @@ bool ref_release(core3_object obj) {
 
 void core3_ref_cleanup(core3_object* objptr) {
 	ref_release(*objptr);
+	*objptr = NULL;
 }
 
 void obj_destructor(core3_object obj, dtor_func dtor) {
