@@ -68,12 +68,12 @@ extern "C"
 #define dprintf(...)
 #endif
 
-#define eprintf(...)         \
-    do                       \
-    {                        \
-        printf("[ERROR] ");  \
-        printf(__VA_ARGS__); \
-        printf("\n");        \
+#define eprintf(...)                                                                                                   \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        printf("[ERROR] ");                                                                                            \
+        printf(__VA_ARGS__);                                                                                           \
+        printf("\n");                                                                                                  \
     } while (0)
 
 // #define CORE2_FILESYSTEM_VERBOSE_OUTPUT // Prints very long debug outputs to the output stream
@@ -221,7 +221,7 @@ extern "C"
         int cmd_argc;
         char *cmd_argv[MAX_STRING_TOKENS];                       // points into cmd_tokenized
         char cmd_tokenized[BIG_INFO_STRING + MAX_STRING_TOKENS]; // will have 0 bytes inserted
-        char cmd_cmd[BIG_INFO_STRING];                           // the original command we received (no token processing)
+        char cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
     } tokenize_info_t;
 
     typedef void (*core2_shell_print_func)(void *self, const char *str);
@@ -424,6 +424,9 @@ extern "C"
     void core2_can_init();
     void core2_can_send(uint32_t msg_id, uint8_t dlc, uint8_t *arr);
 #endif
+
+    void core2_adc_init2();
+    void core2_adc_read2(float *voltage1, float *voltage2, float *current);
 
 #if defined(__cplusplus) && defined(CORE2_WINDOWS)
 }

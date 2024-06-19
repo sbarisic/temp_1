@@ -39,95 +39,6 @@ void core2_printf(void *self, const char *fmt, ...)
     core2_free(buf);
 }
 
-void ABC()
-{
-    uint8_t id = 0x28;                   // i2c address
-    uint8_t data[7];                     // holds output data
-    uint8_t cmd[3] = {0xAA, 0x00, 0x00}; // command to be sent
-    double press_counts = 0;             // digital pressure reading [counts]
-    double temp_counts = 0;              // digital temperature reading [counts]
-    double pressure = 0;                 // pressure reading [bar, psi, kPa, etc.]
-    double temperature = 0;              // temperature reading in deg C
-    double outputmax = 15099494;         // output at maximum pressure [counts]
-    double outputmin = 1677722;          // output at minimum pressure [counts]
-    double pmax = 1;                     // maximum value of pressure range [bar, psi, kPa, etc.]
-    double pmin = 0;                     // minimum value of pressure range [bar, psi, kPa, etc.]
-    double percentage = 0;               // holds percentage of full scale data
-    char printBuffer[200], cBuff[20], percBuff[20], pBuff[20], tBuff[20];
-
-    // Wire.begin((int)GPIO_NUM_21, (int)GPIO_NUM_22);
-    // Wire.begin((int)GPIO_NUM_22, (int)GPIO_NUM_21);
-
-    Wire.begin();
-
-    while (true)
-    {
-        Wire.write(0xAA);
-        Wire.write(0x00);
-        Wire.write(0x00);
-        Wire.flush();
-
-        delay(10);
-
-        uint8_t request_from = Wire.requestFrom(id, (uint8_t)7, (uint8_t)1); // read back Sensor data 7 bytes
-        dprintf("Wire.requestFrom returned %d\n", request_from);
-
-        for (int i = 0; i < 7; i++)
-        {
-            data[i] = Wire.read();
-        }
-
-        press_counts = data[3] + data[2] * 256 + data[1] * 65536;                                 // calculate digital pressure counts
-        temp_counts = data[6] + data[5] * 256 + data[4] * 65536;                                  // calculate digital temperature counts
-        temperature = (temp_counts * 200 / 16777215) - 50;                                        // calculate temperature in deg c
-        percentage = (press_counts / 16777215) * 100;                                             // calculate pressure as percentage of full scale
-        pressure = ((press_counts - outputmin) * (pmax - pmin)) / (outputmax - outputmin) + pmin; // calculation of pressure value according to equation 2 of datasheet
-
-        dtostrf(press_counts, 4, 1, cBuff);
-        dtostrf(percentage, 4, 3, percBuff);
-        dtostrf(pressure, 4, 3, pBuff);
-        dtostrf(temperature, 4, 3, tBuff);
-
-        /*
-        The below code prints the raw data as well as the processed data
-        Data format : Status Register, 24-bit Sensor Data, Digital Counts, percentage of full scale
-        pressure,
-        pressure output, temperature
-        */
-
-        sprintf(printBuffer, " % x\t % 2x % 2x % 2x\t % s\t % s\t % s\t % s \n", data[0], data[1], data[2], data[3], cBuff, percBuff, pBuff, tBuff);
-
-        dprintf("%s", printBuffer);
-        delay(100);
-    }
-}
-
-void ABC2()
-{
-    /*#define DATA_LENGTH 100
-        i2c_master_bus_config_t i2c_mst_config = {
-            .clk_source = I2C_CLK_SRC_DEFAULT,
-            .i2c_port = I2C_PORT_NUM_0,
-            .scl_io_num = I2C_MASTER_SCL_IO,
-            .sda_io_num = I2C_MASTER_SDA_IO,
-            .glitch_ignore_cnt = 7,
-        };
-        i2c_master_bus_handle_t bus_handle;
-
-        ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_mst_config, &bus_handle));
-
-        i2c_device_config_t dev_cfg = {
-            .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-            .device_address = 0x58,
-            .scl_speed_hz = 100000,
-        };
-
-        i2c_master_dev_handle_t dev_handle;
-        ESP_ERROR_CHECK(i2c_master_bus_add_device(bus_handle, &dev_cfg, &dev_handle));
-
-        ESP_ERROR_CHECK(i2c_master_transmit(dev_handle, data_wr, DATA_LENGTH, -1));*/
-}
-
 void core2_init()
 {
     printlogo("  _____             ___ \n");
@@ -157,8 +68,6 @@ void core2_init()
 #endif
 
     dprintf("\n");
-
-    ABC();
 }
 
 #define FEATURE_SPACE "   "

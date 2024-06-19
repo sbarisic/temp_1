@@ -11,9 +11,9 @@ SemaphoreHandle_t lock = NULL;
 // MCP3201 adc(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL1); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
 // MCP3201 adc1(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL2);
 
-MCP3201 adc(ADC_VREF, 5); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
-MCP3201 adc1(ADC_VREF, 17);
-MCP3201 adcc(ADC_VREF, 4);
+//MCP3201 adc(ADC_VREF, 5); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
+//MCP3201 adc1(ADC_VREF, 17);
+//MCP3201 adcc(ADC_VREF, 4);
 
 #endif
 
@@ -124,10 +124,47 @@ void core2_adc_read_ex(float *VoltArray, float *Factors, core2_adc_channel_t Ch,
 }
 */
 
+#define ADC_VREF 3299   // 3.3V Vref
+#define ADC_CLK 1600000 // 1600000  // SPI clock 1.6MHz
+SPISettings settings(ADC_CLK, MSBFIRST, SPI_MODE0);
+
+MCP3201 adc(ADC_VREF, 5); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
+MCP3201 adc1(ADC_VREF, 17);
+MCP3201 adcc(ADC_VREF, 4);
+
+void core2_adc_init2()
+{
+    SPI.begin();
+    SPI.beginTransaction(settings);
+}
+
+void core2_adc_read2(float *voltage1, float *voltage2, float *current)
+{
+    uint16_t raw = adc.read(MCP3201::Channel::SINGLE_0);
+    uint16_t raw1 = adc1.read(MCP3201::Channel::SINGLE_0);
+
+    // get analog value
+    uint16_t val = adc.toAnalog(raw);
+    uint16_t val1 = adc1.toAnalog(raw1);
+
+    int voltagesum = 0;
+    for (int i = 0; i < 50; i++)
+    {
+        uint16_t raw2 = adcc.read(MCP3201::Channel::SINGLE_0);
+        uint16_t valc = adcc.toAnalog(raw2);
+        voltagesum = voltagesum + int(valc);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+
+    *voltage1 = val * 7.34 / 1000;
+    *voltage2 = val1 * 13.75 / 1000 - val * 7.34 / 1000;
+    *current = (voltagesum / 50) * 2;
+}
+
 void core2_adc_read(float *Volt1, float *Volt2, float *Current)
 {
 #if !defined(CORE2_DISABLE_MCP320X)
-    // dprintf("core2_adc_read()\n");
+    dprintf("core2_adc_read()\n");
 
     if (Volt1 == NULL || Volt2 == NULL || Current == NULL)
     {
@@ -187,12 +224,13 @@ bool core2_mcp320x_init()
     dprintf("core2_mcp320x_init()\n");
     lock = core2_lock_create();
 
+    pinMode(MCP320X_CS_CHANNEL1, OUTPUT);
+    pinMode(MCP320X_CS_CHANNEL2, OUTPUT);
+
     spi_settings = SPISettings(MCP320X_ADC_CLK, MSBFIRST, SPI_MODE0);
     SPI.begin(MCP320X_PIN_CLK, MCP320X_PIN_MISO, MCP320X_PIN_MOSI, MCP320X_PIN_CS);
 
     // configure PIN mode
-    pinMode(MCP320X_CS_CHANNEL1, OUTPUT);
-    pinMode(MCP320X_CS_CHANNEL2, OUTPUT);
 
     return true;
 #endif

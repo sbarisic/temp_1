@@ -62,7 +62,6 @@ void read_temp_pressure(float *Temp, float *Press)
     int stat = Wire.write(cmd, 3); // write command to the sensor
     stat |= Wire.endTransmission();
 
-    dprintf("Wire.endTransmission() - %d\n", stat);
 
     delay(10);
 
@@ -78,7 +77,7 @@ void read_temp_pressure(float *Temp, float *Press)
     // start read pressure & temperature
     press_counts = data[3] + data[2] * 256 + data[1] * 65536; // calculate digital pressure counts
     temp_counts = data[6] + data[5] * 256 + data[4] * 65536;  // calculate digital temperature counts
-    gtemperature = (temp_counts * -140 / 16777215) - 95;      // calculate temperature in deg c
+    gtemperature = (temp_counts * -140 / 16777215) + 95;      // calculate temperature in deg c
 
     // calculation of pressure value according to equation 2 of datasheet
     gpressure = ((press_counts - outputmin) * (pmax - pmin)) / (outputmax - outputmin) + pmin;
@@ -97,7 +96,7 @@ void interrupt_read_data()
     float v1 = 0;
     float v2 = 0;
     float cur = 0;
-    core2_adc_read(&v1, &v2, &cur);
+    core2_adc_read2(&v1, &v2, &cur);
     dprintf("OK\n");
 
     dprintf("[!] interrupt_read_data() read_temp_pressure - ");
@@ -128,8 +127,8 @@ void interrupt_read_data()
     core2_json_add_field_float(json, "ACCvoltage1", v1);
     core2_json_add_field_float(json, "ACCvoltage2", v2);
     core2_json_add_field_float(json, "ACCcurrent", cur);
-    core2_json_add_field_float(json, "Tlak", temp);
-    core2_json_add_field_float(json, "Temperatura", press);
+    core2_json_add_field_float(json, "Tlak", press);
+    core2_json_add_field_float(json, "Temperatura", temp);
 
     char time_now[32] = {0};
     core2_clock_time_now(time_now);
@@ -315,6 +314,10 @@ void core2_main()
 
     core2_wifi_yield_until_connected();
     dprintf("[!] Main loop\n");
+
+    core2_adc_init2();
+
+    Wire.begin();
 
     for (;;)
     {
