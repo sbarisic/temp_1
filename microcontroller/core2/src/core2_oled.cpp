@@ -302,8 +302,8 @@ bool core2_oled_init()
 #else
     dprintf("core2_oled_init()\n");
 
+    //Wire.begin(5, 4); // Start I2C Communication SDA = 5 and SCL = 4 on Wemos Lolin32 ESP32 with built-in SSD1306 OLED
     display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-    Wire.begin(5, 4); // Start I2C Communication SDA = 5 and SCL = 4 on Wemos Lolin32 ESP32 with built-in SSD1306 OLED
 
     if (!display->begin(SSD1306_SWITCHCAPVCC, 0x3C, false, false))
     {

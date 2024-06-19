@@ -46,7 +46,6 @@ void trigger_solenoid()
 void read_temp_pressure(float *Temp, float *Press)
 {
     uint8_t id = 0x28;                   // i2c address
-    uint8_t data[7];                     // holds output data
     uint8_t cmd[3] = {0xAA, 0x00, 0x00}; // command to be sent
 
     double press_counts = 0;     // digital pressure reading [counts]
@@ -63,10 +62,13 @@ void read_temp_pressure(float *Temp, float *Press)
     int stat = Wire.write(cmd, 3); // write command to the sensor
     stat |= Wire.endTransmission();
 
-    core2_sleep(10);
+    dprintf("Wire.endTransmission() - %d\n", stat);
+
+    delay(10);
 
     Wire.requestFrom(id, (uint8_t)7); // read back Sensor data 7 bytes
 
+    uint8_t data[7] = {0}; // holds output data
     for (int i = 0; i < 7; i++)
     {
         data[i] = Wire.read();
@@ -76,7 +78,7 @@ void read_temp_pressure(float *Temp, float *Press)
     // start read pressure & temperature
     press_counts = data[3] + data[2] * 256 + data[1] * 65536; // calculate digital pressure counts
     temp_counts = data[6] + data[5] * 256 + data[4] * 65536;  // calculate digital temperature counts
-    gtemperature = (temp_counts * 200 / 16777215) - 50;       // calculate temperature in deg c
+    gtemperature = (temp_counts * -140 / 16777215) - 95;      // calculate temperature in deg c
 
     // calculation of pressure value according to equation 2 of datasheet
     gpressure = ((press_counts - outputmin) * (pmax - pmin)) / (outputmax - outputmin) + pmin;

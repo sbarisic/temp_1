@@ -51,12 +51,12 @@ extern "C"
 
 #define CORE2_DEBUG
 #define CORE2_DEBUG_WIFI
-// #define CORE2_DEBUG_ARRAY
+    // #define CORE2_DEBUG_ARRAY
 
-// #define CORE2_AP_MODE_ONLY // Start wifi in access mode only
+    // #define CORE2_AP_MODE_ONLY // Start wifi in access mode only
 
-// Uncomment to disable compilation of modules
-// #define CORE2_DISABLE_MCP320X
+    // Uncomment to disable compilation of modules
+    // #define CORE2_DISABLE_MCP320X
 #define CORE2_DISABLE_OLED
 
     // Uncomment to run tests only
@@ -356,7 +356,7 @@ extern "C"
     // SPI
     // =================================================================================================
 
-    //bool core2_spi_init();
+    // bool core2_spi_init();
     bool core2_spi_create_sdmmc_host(sdmmc_host_t *host, int MOSI, int MISO, int CLK);
 
     // JSON
