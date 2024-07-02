@@ -246,14 +246,21 @@ extern "C"
 
     typedef enum
     {
-        CORE2_CVAR_INT32,
+        CORE2_CVAR_INT32 = -10,
         CORE2_CVAR_STRING
     } core2_cvar_type;
+
+    typedef enum
+    {
+        CORE2_CVAR_PERM_ROOT,
+        CORE2_CVAR_PERM_USER
+    } core2_cvar_permission;
 
     typedef struct
     {
         const char *name;
         core2_cvar_type var_type;
+        core2_cvar_permission var_perm;
         void *var_ptr;
     } core2_shell_cvar_t;
 

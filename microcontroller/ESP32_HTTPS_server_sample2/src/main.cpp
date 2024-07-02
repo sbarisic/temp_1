@@ -222,7 +222,7 @@ void task2(void *parameters)
         // start read pressure & temperature
         press_counts = data[3] + data[2] * 256 + data[1] * 65536; // calculate digital pressure counts
         temp_counts = data[6] + data[5] * 256 + data[4] * 65536;  // calculate digital temperature counts
-        gtemperature = (temp_counts * 200 / 16777215) - 50;       // calculate temperature in deg c
+        gtemperature = (temp_counts * -140 / 16777215) + 95;       // calculate temperature in deg c
 
         // calculation of pressure value according to equation 2 of datasheet
         gpressure = ((press_counts - outputmin) * (pmax - pmin)) / (outputmax - outputmin) + pmin;
