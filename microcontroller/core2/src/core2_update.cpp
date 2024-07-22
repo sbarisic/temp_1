@@ -13,10 +13,20 @@
 
 #define CORE2_WEB_USER_AGENT "Core2_ESP32"
 
+core2_update_callback_func callback = NULL;
+
+void core2_update_callback(core2_update_callback_func func)
+{
+    callback = func;
+}
+
 esp_ota_handle_t update_handle;
 esp_err_t ota_write(const void *data, size_t size)
 {
     // dprintf("esp_ota_write(update_handle, data, %d)", size);
+
+    if (callback != NULL)
+        callback(CORE2_EVENT_OTA_WRITE);
 
     esp_err_t err = esp_ota_write(update_handle, data, size);
     core2_sleep(1);
@@ -186,6 +196,9 @@ esp_err_t core2_update_start(core2_write_flash write_func, size_t size)
     }
 
     dprintf("esp_ota_begin\n");
+    if (callback != NULL)
+        callback(CORE2_EVENT_OTA_BEGIN);
+
     esp_err_t err = esp_ota_begin(update_partition, size, &update_handle);
 
     if (err != ESP_OK)
@@ -204,6 +217,9 @@ esp_err_t core2_update_start(core2_write_flash write_func, size_t size)
     }
 
     err = esp_ota_end(update_handle);
+
+    if (callback != NULL)
+        callback(CORE2_EVENT_OTA_END);
 
     if (err != ESP_OK)
     {

@@ -18,6 +18,11 @@ int32_t core2_clock_bootseconds()
 #endif
 }
 
+int64_t core2_clock_bootms()
+{
+    return (int64_t)(esp_timer_get_time() / 1000);
+}
+
 // @brief Seconds since lastTime
 int32_t core2_clock_seconds_since(int32_t lastTime)
 {

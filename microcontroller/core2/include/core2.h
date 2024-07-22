@@ -313,6 +313,7 @@ extern "C"
 
     bool core2_clock_init();
     int32_t core2_clock_bootseconds();
+    int64_t core2_clock_bootms();
     int32_t core2_clock_seconds_since(int32_t lastTime);
     void core2_clock_time_now(char *strftime_buf);
     void core2_clock_time_fmt(char *strftime_buf, size_t max_size, const char *fmt);
