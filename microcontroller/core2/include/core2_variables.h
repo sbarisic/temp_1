@@ -42,6 +42,8 @@ CORE2_EXTERN core2_shell_cvar_t *cvar_cor_temp;
 CORE2_EXTERN core2_shell_cvar_t *cvar_cor_press;
 CORE2_EXTERN core2_shell_cvar_t *cvar_buzzer_enabled;
 CORE2_EXTERN core2_shell_cvar_t *cvar_solenoid_trigger_time;
+CORE2_EXTERN core2_shell_cvar_t *cvar_firmware_info_url;
+CORE2_EXTERN core2_shell_cvar_t *cvar_firmware_bin_url;
 
 
 void variables_init();

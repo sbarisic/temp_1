@@ -1,4 +1,5 @@
 #include <core2.h>
+#include <core2_update.h>
 
 #ifdef CORE2_CAN
 #include <ESP32CAN.h>
@@ -14,6 +15,8 @@ volatile bool color_ready;
 
 void core2_ws2812fx_service(void *args)
 {
+    dprintf("Beginning LED task\n");
+
     ws2812fx.init();
     ws2812fx.setBrightness(50);
 
@@ -61,7 +64,7 @@ void core2_can_send(uint32_t msg_id, uint8_t dlc, uint8_t *arr)
 
 void core2_can_task(void *args)
 {
-    core2_gpio_set_output(CAN_SE_PIN);
+    core2_gpio_set_output(CAN_SE_PIN, CORE2_GPIO_MODE_NONE);
     gpio_set_level(CAN_SE_PIN, LOW);
 
     for (;;)
@@ -100,11 +103,14 @@ void core2_can_task(void *args)
     }
 }
 
+void variables_init();
+
 void core2_can_main()
 {
     dprintf("Hello CAN World!\n");
+    variables_init();
 
-    core2_gpio_set_output(PIN_5V_EN);
+    core2_gpio_set_output(PIN_5V_EN, CORE2_GPIO_MODE_NONE);
     gpio_set_level(PIN_5V_EN, HIGH);
 
     core2_wifi_add_network("Barisic", "123456789");
@@ -114,8 +120,24 @@ void core2_can_main()
     color_ready = false;
     xTaskCreate(core2_ws2812fx_service, "ws2812fx.service", 1024 * 16, NULL, 10, NULL);
 
+    // core2_update_start_from_file("/sd/firmware.bin");
+    // dprintf("Firmware flash successful!\n");
+
+    core2_http_start();
+
     for (;;)
     {
+        if (core2_wifi_isconnected())
+        {
+            // core2_update_start_from_server("1.0.0");
+            ws2812fx.setSegment(0, 0, LED_COUNT - 1, FX_MODE_STATIC, COLORS(RGB(100, 0, 100)), 0, NO_OPTIONS);
+
+            while (1)
+            {
+                core2_sleep(1000);
+            }
+        }
+
         if (color_ready)
         {
             color_ready = false;

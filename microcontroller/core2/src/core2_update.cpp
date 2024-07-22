@@ -1,68 +1,224 @@
 #include <core2.h>
+#include <core2_variables.h>
 
 #include <string.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
-
 #include <core2_update.h>
-#include <esp_ghota.h>
 
-static void ghota_event_callback(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+#include "esp_ota_ops.h"
+
+#include <WiFi.h>
+#include <HTTPClient.h>
+
+#define CORE2_WEB_USER_AGENT "Core2_ESP32"
+
+esp_ota_handle_t update_handle;
+esp_err_t ota_write(const void *data, size_t size)
 {
-    ghota_client_handle_t *client = (ghota_client_handle_t *)handler_args;
-    ESP_LOGI(TAG, "Got Update Callback: %s", ghota_get_event_str(id));
-    if (id == GHOTA_EVENT_START_STORAGE_UPDATE)
-    {
-        ESP_LOGI(TAG, "Starting storage update");
+    // dprintf("esp_ota_write(update_handle, data, %d)", size);
 
-        // Mount storage here
-    }
-    else if (id == GHOTA_EVENT_FINISH_STORAGE_UPDATE)
-    {
-        ESP_LOGI(TAG, "Ending storage update");
+    esp_err_t err = esp_ota_write(update_handle, data, size);
+    core2_sleep(1);
+    // dprintf(" - %d\n", err);
 
-        // Remount storage now?
-    }
-    else if (id == GHOTA_EVENT_FIRMWARE_UPDATE_PROGRESS)
+    if (err != ESP_OK)
     {
-        /* display some progress with the firmware update */
-        ESP_LOGI(TAG, "Firmware Update Progress: %d%%", *((int *)event_data));
+        dprintf("esp_ota_write(update_handle, data, %d)", size);
+        dprintf(" - %d\n", err);
     }
-    else if (id == GHOTA_EVENT_STORAGE_UPDATE_PROGRESS)
-    {
-        /* display some progress with the spiffs partition update */
-        ESP_LOGI(TAG, "Storage Update Progress: %d%%", *((int *)event_data));
-    }
-    (void)client;
-    return;
+
+    return err;
 }
 
-void core2_update_start(void)
-{
-    /* initialize our ghota config */
-    ghota_config_t ghconfig = {
-        .filenamematch = "esp_ghota-esp32.bin",
-        .storagenamematch = "storage-esp32.bin",
-        .storagepartitionname = "storage",
-        /* 1 minute as a example, but in production you should pick something larger (remember, Github has ratelimites on the API! )*/
-        .updateInterval = 1,
-    };
+FILE *f = NULL;
+size_t len;
 
-    /* initialize ghota. */
-    ghota_client_handle_t *ghota_client = ghota_init(&ghconfig);
-    if (ghota_client == NULL)
+esp_err_t core2_write_flash_from_file(ota_write_func ota_write)
+{
+    size_t chunk_size = 4096;
+    void *buffer = core2_malloc(chunk_size);
+
+    int counter = 0;
+    int last_print_percent = -1;
+
+    while (true)
     {
-        dprintf("ghota_client_init failed\n");
+        size_t read = fread(buffer, 1, chunk_size, f);
+
+        int percent = (counter * chunk_size * 100) / len;
+        counter++;
+
+        if (last_print_percent != percent)
+        {
+            last_print_percent = percent;
+            dprintf("ota_write(...) (%d %%)\n", percent);
+        }
+
+        ota_write(buffer, read);
+
+        if (read < chunk_size)
+        {
+            dprintf("ota_write(...) (100 %%)\n");
+            break;
+        }
+    }
+
+    core2_free(buffer);
+    return ESP_OK;
+}
+
+void core2_update_start_from_file(const char *file_name)
+{
+    f = core2_file_open(file_name, "r");
+    if (f == NULL)
+    {
+        dprintf("File not found: %s\n", file_name);
         return;
     }
-    /* register for events relating to the update progress */
-    esp_event_handler_register(GHOTA_EVENTS, ESP_EVENT_ANY_ID, &ghota_event_callback, ghota_client);
-    ESP_ERROR_CHECK(ghota_start_update_task(ghota_client));
 
-    while (1)
+    len = core2_file_length(f);
+    core2_update_start(core2_write_flash_from_file, len);
+
+    core2_file_close(f);
+    f = NULL;
+
+    core2_file_delete(file_name);
+}
+
+void core2_update_start_from_server(const char *current_version)
+{
+    dprintf("core2_update_start_from_server()\n");
+
+    const char *url_info = core2_shell_cvar_get_string_ex(cvar_firmware_info_url);
+    const char *url_firm = core2_shell_cvar_get_string_ex(cvar_firmware_bin_url);
+    dprintf("URL Info: %s\n", url_info);
+    dprintf("URL Firm: %s\n", url_firm);
+
+    HTTPClient http;
+    http.begin(url_info);
+    http.addHeader("Content-Type", "text/plain");
+    http.addHeader("User-Agent", CORE2_WEB_USER_AGENT);
+
+    int getResult = http.GET();
+    dprintf("%d\n", getResult);
+
+    if (getResult == HTTP_CODE_OK)
     {
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "This is where we do other things. Memory Dump Below to see the memory usage");
-        ESP_LOGI(TAG, "Memory: Free %dKiB Low: %dKiB\n", (int)xPortGetFreeHeapSize() / 1024, (int)xPortGetMinimumEverFreeHeapSize() / 1024);
+        String resp = http.getString();
+        dprintf("Server version: '%s'\n", resp.c_str());
+        dprintf("Current version: '%s'\n", current_version);
+
+        if (strcmp(current_version, resp.c_str()) != 0)
+        {
+            dprintf("Updating\n");
+            http.end();
+
+            http.begin(url_firm);
+            http.addHeader("Content-Type", "application/octet-stream");
+            http.addHeader("User-Agent", CORE2_WEB_USER_AGENT);
+
+            getResult = http.GET();
+            dprintf("%d\n", getResult);
+
+            if (getResult == HTTP_CODE_OK)
+            {
+                WiFiClient &cli = http.getStream();
+
+                f = core2_file_open("/sd/firmware.bin", "w");
+                if (f == NULL)
+                {
+                    dprintf("Unable to open /sd/firmware.bin for writing\n");
+                    return;
+                }
+
+                size_t buffer_size = 4096;
+                void *buffer = core2_malloc(buffer_size);
+                dprintf("Writing /sd/firmware.bin\n");
+
+                while (true)
+                {
+                    size_t bytes_read = cli.readBytes((char *)buffer, buffer_size);
+                    fwrite(buffer, 1, bytes_read, f);
+                    core2_sleep(1);
+
+                    if (bytes_read < buffer_size)
+                    {
+                        break;
+                    }
+                }
+
+                core2_file_close(f);
+                http.end();
+                core2_free(buffer);
+                dprintf("Write complete\n");
+
+                core2_update_start_from_file("/sd/firmware.bin");
+            }
+        }
+        else
+        {
+            dprintf("Skipping update\n");
+        }
     }
+}
+
+esp_err_t core2_update_start(core2_write_flash write_func, size_t size)
+{
+    dprintf("Starting flash (%ld bytes)\n", size);
+
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    dprintf("Running partition: %s\n", running->label);
+
+    if (!running)
+    {
+        dprintf("esp_ota_get_running_partition() - FAIL\n");
+        return ESP_FAIL;
+    }
+
+    const esp_partition_t *update_partition = esp_ota_get_next_update_partition(running);
+    dprintf("Update partition: %s\n", update_partition->label);
+
+    if (update_partition == NULL)
+    {
+        dprintf("esp_ota_get_next_update_partition(running) returned NULL\n");
+        return ESP_FAIL;
+    }
+
+    dprintf("esp_ota_begin\n");
+    esp_err_t err = esp_ota_begin(update_partition, size, &update_handle);
+
+    if (err != ESP_OK)
+    {
+        dprintf("esp_ota_begin(update_partition, size, &update_handle) - %d\n", err);
+        return err;
+    }
+
+    dprintf("write_func(ota_write)\n");
+    err = write_func(ota_write);
+
+    if (err != ESP_OK)
+    {
+        dprintf("write_func(ota_write) - %d\n", err);
+        return err;
+    }
+
+    err = esp_ota_end(update_handle);
+
+    if (err != ESP_OK)
+    {
+        dprintf("esp_ota_end(update_handle) - %d\n", err);
+        return err;
+    }
+
+    err = esp_ota_set_boot_partition(update_partition);
+
+    if (err != ESP_OK)
+    {
+        dprintf("esp_ota_set_boot_partition(update_partition) - %d\n", err);
+        return err;
+    }
+
+    dprintf("Flash complete\n");
+    return ESP_OK;
 }

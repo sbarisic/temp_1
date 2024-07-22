@@ -34,5 +34,8 @@ void variables_init()
     cvar_buzzer_enabled = core2_shell_cvar_register_int32("hw_buzz_enabled", 1);
     cvar_solenoid_trigger_time = core2_shell_cvar_register_int32("hw_solenoid_trig_time", 300);
 
+    cvar_firmware_info_url = core2_shell_cvar_register_string("firmware_info_url", "https://demo.sbarisic.com/firmware/version.txt");
+    cvar_firmware_bin_url = core2_shell_cvar_register_string("firmware_bin_url", "https://demo.sbarisic.com/firmware/firmware.bin");
+
     core2_shell_load_cvars();
 }

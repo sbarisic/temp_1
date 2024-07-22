@@ -12,7 +12,8 @@
         "typeinfo": "cpp",
         "sstream": "cpp",
         "core2_update.h": "c",
-        "esp_crt_bundle.h": "c"
+        "esp_crt_bundle.h": "c",
+        "utility": "cpp"
     },
     "cmake.configureOnOpen": false
 }

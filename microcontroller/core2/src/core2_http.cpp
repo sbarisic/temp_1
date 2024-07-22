@@ -1,4 +1,5 @@
 #include <core2.h>
+#include <core2_update.h>
 
 #include <esp_http_server.h>
 #include <esp_netif.h>
@@ -11,10 +12,13 @@
 httpd_handle_t http_server = NULL;
 
 esp_err_t root_get_handler(httpd_req_t *req);
+esp_err_t firmware_post_handler2(httpd_req_t *req);
+esp_err_t firmware_post_handler(httpd_req_t *req);
 esp_err_t shell_post_handler(httpd_req_t *req);
 
 const httpd_uri_t root_handler = {.uri = "*", .method = HTTP_GET, .handler = root_get_handler};
 const httpd_uri_t shell_handler = {.uri = "/shell", .method = HTTP_POST, .handler = shell_post_handler};
+const httpd_uri_t firmware_handler = {.uri = "/firmware", .method = HTTP_POST, .handler = firmware_post_handler2};
 
 esp_err_t root_get_handler(httpd_req_t *req)
 {
@@ -84,6 +88,166 @@ esp_err_t root_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+void restart_task(void *a)
+{
+    core2_sleep(1000);
+    esp_restart();
+    vTaskDelete(NULL);
+}
+
+httpd_req_t *request;
+
+esp_err_t write_from_http(ota_write_func ota_write)
+{
+    dprintf("Receiving firmware (%ld bytes)\n", request->content_len);
+
+    /* Temporary buffer */
+    const size_t buf_size = 4096;
+    char *buf = (char *)core2_malloc(buf_size);
+    int received;
+
+    size_t len = request->content_len;
+    size_t remaining = request->content_len; // Content length of the request gives the size of the file being uploaded
+    int last_print_percent = -1;
+
+    while (remaining > 0)
+    {
+        if ((received = httpd_req_recv(request, buf, min(remaining, buf_size))) <= 0)
+        {
+            if (received == HTTPD_SOCK_ERR_TIMEOUT)
+                continue;
+
+            core2_free(buf);
+            dprintf("firmware reception failed!\n");
+            httpd_resp_send_err(request, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to receive firmware");
+            return ESP_FAIL;
+        }
+
+        // Write buffer content to file on storage
+        if (received)
+        {
+            int percent = ((len - remaining) * 100) / len;
+            if (last_print_percent != percent)
+            {
+                last_print_percent = percent;
+                dprintf("ota_write (%d %%)\n", percent);
+            }
+
+            esp_err_t err = ota_write(buf, received);
+
+            if (err != ESP_OK)
+            {
+                core2_free(buf);
+                return err;
+            }
+        }
+
+        remaining -= received;
+    }
+
+    dprintf("ota_write (%d %%)\n", 100);
+    core2_free(buf);
+    return ESP_OK;
+}
+
+#define MAX_FILE_SIZE_STR "2 mb"
+esp_err_t firmware_post_handler2(httpd_req_t *req)
+{
+    const int MAX_FILE_SIZE = 2000000;
+    const char *filepath = "/sd/firmware.bin";
+
+    if (req->content_len > MAX_FILE_SIZE)
+    {
+        dprintf("File too large: %d bytes\n", req->content_len);
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File size must be less than " MAX_FILE_SIZE_STR "!");
+        return ESP_FAIL;
+    }
+
+    request = req;
+    if (core2_update_start(write_from_http, req->content_len) != ESP_OK)
+    {
+        dprintf("core2_update_start failed\n");
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "core2_update_start failed");
+        return ESP_FAIL;
+    }
+
+    // core2_update_start_from_file("/sd/firmware.bin");
+
+    xTaskCreate(restart_task, "restart_task", 1024, NULL, 0, NULL);
+
+    httpd_resp_send(req, "Firmware OK", HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+esp_err_t firmware_post_handler(httpd_req_t *req)
+{
+    size_t len = req->content_len;
+    dprintf("/firmware - Content length: %d\n", len);
+
+    if (len > 3000000 || len <= 0)
+    {
+        httpd_resp_send_500(req);
+        return ESP_OK;
+    }
+
+    FILE *f = core2_file_open("/sd/firmware.bin", "w");
+    if (f == NULL)
+    {
+        httpd_resp_send_500(req);
+        return ESP_OK;
+    }
+
+    size_t buffer_len = 4096;
+    size_t read_len = 0;
+    char *buffer = (char *)core2_malloc(buffer_len);
+    dprintf("Writing /sd/firmware.bin\n");
+
+    size_t written_len = 0;
+    size_t remaining = len;
+
+    while (true)
+    {
+        read_len = httpd_req_recv(req, buffer, min(remaining, buffer_len));
+
+        if (read_len == HTTPD_SOCK_ERR_TIMEOUT)
+            continue;
+
+        if (read_len < 0)
+            break;
+
+        written_len += fwrite(buffer, 1, read_len, f);
+        fflush(f);
+
+        remaining -= read_len;
+
+        if (read_len < buffer_len)
+            break;
+    }
+
+    if (read_len < 0)
+    {
+        dprintf("httpd_req_recv - %d\n", read_len);
+    }
+
+    dprintf("Write complete, written %ld bytes\n", written_len);
+    core2_file_close(f);
+    core2_free(buffer);
+
+    if (written_len != len)
+    {
+        dprintf("Written length != content length - FAIL\n");
+        core2_file_delete("/sd/firmware.bin");
+
+        httpd_resp_send_500(req);
+        return ESP_OK;
+    }
+
+    core2_update_start_from_file("/sd/firmware.bin");
+
+    httpd_resp_send(req, "Firmware OK", HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
 esp_err_t shell_post_handler(httpd_req_t *req)
 {
     size_t len = req->content_len;
@@ -124,7 +288,8 @@ esp_err_t shell_post_handler(httpd_req_t *req)
     params.ud2 = print_buffer;
     params.ud3 = &printbuf_idx;
 
-    params.print = [](void *self, const char *str) {
+    params.print = [](void *self, const char *str)
+    {
         core2_shell_func_params_t *self_params = (core2_shell_func_params_t *)self;
         size_t *printbuf_idx_p = (size_t *)self_params->ud3;
         size_t len = strlen(str);
@@ -165,6 +330,7 @@ bool core2_http_start()
     {
         httpd_register_uri_handler(http_server, &root_handler);
         httpd_register_uri_handler(http_server, &shell_handler);
+        httpd_register_uri_handler(http_server, &firmware_handler);
     }
     else
     {

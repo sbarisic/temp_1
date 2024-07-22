@@ -18,10 +18,15 @@ extern "C"
 {
 #endif
 
+    typedef esp_err_t (*ota_write_func)(const void *data, size_t size);
+    typedef esp_err_t (*core2_write_flash)(ota_write_func ota_write);
+
     // Updates
     // =================================================================================================
 
-    void core2_update_start();
+    void core2_update_start_from_file(const char *file_name);
+    void core2_update_start_from_server(const char* current_version);
+    esp_err_t core2_update_start(core2_write_flash write_func, size_t size);
 
 #if defined(__cplusplus) && defined(CORE2_WINDOWS)
 }
