@@ -60,6 +60,9 @@
     <Reference Include="nanoFramework.WebServer">
       <HintPath>..\packages\nanoFramework.WebServer.FileSystem.1.2.52\lib\nanoFramework.WebServer.dll</HintPath>
     </Reference>
+    <Reference Include="NF.AwesomeLib">
+      <HintPath>..\..\..\..\nanoframework_Samples\Samples\samples\Interop\awesome-library\bin\Release\NF.AwesomeLib.dll</HintPath>
+    </Reference>
     <Reference Include="System.Device.Gpio">
       <HintPath>..\packages\nanoFramework.System.Device.Gpio.1.1.41\lib\System.Device.Gpio.dll</HintPath>
     </Reference>

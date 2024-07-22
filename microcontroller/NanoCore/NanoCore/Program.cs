@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using nanoFramework.Hardware.Esp32;
-using nanoFramework.System.IO.FileSystem;
 using System.Device.Gpio;
 using Iot.Device.Ws28xx;
 using Iot.Device.Ws28xx.Esp32;
@@ -16,9 +15,8 @@ using nanoFramework.Networking;
 using nanoFramework.Runtime.Native;
 using Windows.Storage.Devices;
 using System.Device.Spi;
-using SDCard = nanoFramework.System.IO.FileSystem.SDCard;
 using Windows.Storage;
-
+using NF.AwesomeLib;
 
 namespace NanoCore {
 	public class Program {
@@ -36,22 +34,62 @@ namespace NanoCore {
 			Configuration.SetPinFunction(14, DeviceFunction.SPI1_CLOCK);
 			Configuration.SetPinFunction(15, DeviceFunction.SPI1_MOSI);
 			Configuration.SetPinFunction(02, DeviceFunction.SPI1_MISO);
+
+			//SDCard.MountSpi("SPI1", 13);
 		}
 
 		public static void Main() {
 			SetupPins_LILYGO_CAN();
-			Debug.WriteLine("Setting up FS");
 
-			StorageFolder[] Folders = KnownFolders.RemovableDevices.GetFolders();
+			if (Can.Init(26, 27, CanMode.Normal, CanTiming.CAN500KBIT))
+				Debug.WriteLine("Can.Init - OK");
+			else
+				Debug.WriteLine("Can.Init - FAIL");
 
-			foreach (StorageFolder F1 in Folders) {
-				PrintFolder(F1, 0);
+			//CanSend();
+			CanListen();
+		}
+
+		static void CanSend() {
+			Ws28xx Neo = new Ws2812c(4, 1);
+			Neo.Image.SetPixel(0, 0, Color.FromArgb(50, 0, 0));
+			Neo.Update();
+
+			byte[] Dat = new byte[8];
+			Random Rnd = new Random();
+
+			while (true) {
+				Thread.Sleep(500);
+
+				uint ID = (uint)(Rnd.Next(100) + 100);
+				byte Len = (byte)(Rnd.Next(7) + 1);
+				Rnd.NextBytes(Dat);
+
+				if (!Can.Send(ID, 1, Len, Dat))
+					Debug.WriteLine("Can.Send - FAIL");
 			}
+		}
 
+		static void CanListen() {
+			Ws28xx Neo = new Ws2812c(4, 1);
+			Neo.Image.SetPixel(0, 0, Color.FromArgb(0, 0, 50));
+			Neo.Update();
 
-			File.WriteAllText("D:\\test_dotnet.txt", "Hello World from .NET from ESP32!");
+			while (true) {
+				Debug.WriteLine("Listening for CAN traffic");
 
-			BlinkLEDs();
+				uint ID = 0;
+				uint Ext = 0;
+				uint RTR = 0;
+				byte DataLen = 0;
+				byte[] Data = null;
+
+				if (Can.Receive(1000, ref ID, ref Ext, ref RTR, ref DataLen, Data)) {
+					Debug.WriteLine("Can frame received!");
+				}
+
+				Thread.Sleep(0);
+			}
 		}
 
 		static void PrintFolder(StorageFolder F1, int Level) {
