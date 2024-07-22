@@ -14,7 +14,7 @@ typedef struct
 {
     CAN_frame_t frame;
     int64_t next_send;
-    int64_t send_interval;
+    int16_t send_interval;
 } core2_tx_can_frame_t;
 
 void variables_init();
@@ -23,8 +23,8 @@ WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ400);
 volatile bool update_anim = false;
 volatile bool color_ready = false;
 
-core2_tx_can_frame_t tx_frames[16];
-int tx_frames_count = 0;
+volatile core2_tx_can_frame_t tx_frames[16];
+volatile int tx_frames_count = 0;
 
 void core2_ws2812fx_service(void *args)
 {
@@ -50,13 +50,11 @@ void core2_ws2812fx_service(void *args)
 
 // CAN stuff =============================================================
 
-CAN_device_t CAN_cfg;             // CAN Config
-unsigned long previousMillis = 0; // will store last time a CAN Message was send
-const int interval = 1000;        // interval at which send CAN Messages (milliseconds)
-const int rx_queue_size = 10;     // Receive Queue size
+CAN_device_t CAN_cfg;         // CAN Config
+const int rx_queue_size = 10; // Receive Queue size
 
-emu_data_t emu_data;
-int64_t emu_tstp[8];
+volatile emu_data_t emu_data;
+volatile int64_t emu_tstp[8];
 
 int64_t timestamp_get(uint32_t can_id)
 {
@@ -73,6 +71,19 @@ int64_t timestamp_get_last(uint32_t can_id)
     return core2_clock_bootms() - timestamp_get(can_id);
 }
 
+bool emu_online()
+{
+    int64_t ms = core2_clock_bootms();
+
+    for (size_t i = 0; i < 8; i++)
+    {
+        if ((ms - timestamp_get(EMU_BASE + i)) < 100)
+            return true;
+    }
+
+    return false;
+}
+
 bool emu_cel_on()
 {
     const uint16_t EFLG_ERRORMASK = ERR_CLT | ERR_IAT | ERR_MAP | ERR_WBO | ERR_EGT1 | ERR_EGT2 | EGT_ALARM | KNOCKING;
@@ -83,12 +94,14 @@ bool emu_cel_on()
     return false;
 }
 
-bool emu_flag(FLAGS1 flag) {
+bool emu_flag(FLAGS1 flag)
+{
     return (emu_data.flags1 & flag) != 0;
 }
 
-bool emu_errorflag(ERRORFLAG flag) {
-  return (emu_data.cel & flag) != 0;
+bool emu_errorflag(ERRORFLAG flag)
+{
+    return (emu_data.cel & flag) != 0;
 }
 
 bool decode_emu_frame(CAN_frame_t *frame)
@@ -235,7 +248,7 @@ void core2_can_init()
     ESP32Can.CANInit();
 }
 
-void core2_can_send(CAN_frame_t *tx_frame)
+void core2_can_send_frame(const CAN_frame_t *tx_frame)
 {
     ESP32Can.CANWriteFrame(tx_frame);
 }
@@ -248,7 +261,7 @@ void core2_can_send(uint32_t msg_id, uint8_t dlc, uint8_t *arr)
     tx_frame.FIR.B.DLC = dlc;
     memcpy(tx_frame.data.u8, arr, dlc);
 
-    core2_can_send(&tx_frame);
+    core2_can_send_frame(&tx_frame);
 }
 
 void core2_can_recv_task(void *args)
@@ -293,6 +306,8 @@ void core2_can_recv_task(void *args)
 
         vPortYield();
     }
+
+    vTaskDelete(NULL);
 }
 
 void core2_can_send_task(void *args)
@@ -305,13 +320,29 @@ void core2_can_send_task(void *args)
         {
             if (tx_frames[i].next_send < ms)
             {
-                tx_frames[i].next_send = ms + tx_frames[i].send_interval;
-                core2_can_send(&tx_frames[i].frame);
+                tx_frames[i].next_send = ms + (int64_t)tx_frames[i].send_interval;
+                core2_can_send_frame((const CAN_frame_t *)&tx_frames[i].frame);
             }
         }
 
-        vPortYield();
+        core2_sleep(1);
     }
+
+    vTaskDelete(NULL);
+}
+
+void core2_ecu_main(void *args)
+{
+    for (;;)
+    {
+        if (emu_online())
+        {
+        }
+
+        core2_sleep(1);
+    }
+
+    vTaskDelete(NULL);
 }
 
 void on_update(core2_update_event_t e)
@@ -331,14 +362,15 @@ void core2_can_main()
     gpio_set_level(PIN_5V_EN, HIGH);
 
     core2_can_init();
-    xTaskCreate(core2_can_recv_task, "core2_can_recv", 1024 * 8, NULL, 11, NULL);
-    xTaskCreate(core2_can_send_task, "core2_can_send", 1024 * 8, NULL, 11, NULL);
+    xTaskCreate(core2_can_recv_task, "core2_can_recv", 1024 * 4, NULL, 10, NULL);
+    xTaskCreate(core2_can_send_task, "core2_can_send", 1024 * 4, NULL, 10, NULL);
+    xTaskCreate(core2_ecu_main, "core2_ecu", 1024 * 8, NULL, 9, NULL);
 
     core2_wifi_add_network("Barisic", "123456789");
     core2_wifi_add_network("Serengeti", "srgt#2018");
     core2_wifi_add_network("Tst", "123456789");
 
-    xTaskCreate(core2_ws2812fx_service, "ws2812fx.service", 1024 * 8, NULL, 10, NULL);
+    xTaskCreate(core2_ws2812fx_service, "ws2812fx.service", 1024 * 8, NULL, 5, NULL);
     core2_update_callback(on_update);
 
     // core2_update_start_from_file("/sd/firmware.bin");
