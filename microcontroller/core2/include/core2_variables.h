@@ -8,30 +8,40 @@
 #endif
 
 #if defined(__cplusplus) && defined(CORE2_WINDOWS)
+#define EXTERNC extern "C"
+
 extern "C"
 {
+#else
+#define EXTERNC extern 
+#endif
+
+#if defined(CORE2_VARIABLES_IMPL)
+#define CORE2_EXTERN
+#else
+#define CORE2_EXTERN EXTERNC
 #endif
 
 
 // User variables
-core2_shell_cvar_t *cvar_vehicle_name;
-core2_shell_cvar_t *cvar_vehicle_number;
-core2_shell_cvar_t *cvar_network_ssid;
-core2_shell_cvar_t *cvar_network_password;
+CORE2_EXTERN core2_shell_cvar_t *cvar_vehicle_name;
+CORE2_EXTERN core2_shell_cvar_t *cvar_vehicle_number;
+CORE2_EXTERN core2_shell_cvar_t *cvar_network_ssid;
+CORE2_EXTERN core2_shell_cvar_t *cvar_network_password;
 
 
-core2_shell_cvar_t *cvar_ap_ssid;
-core2_shell_cvar_t *cvar_ap_password;
-core2_shell_cvar_t *cvar_host;
-core2_shell_cvar_t *cvar_port;
-core2_shell_cvar_t *cvar_api_key;
-core2_shell_cvar_t *cvar_cor_volt1;
-core2_shell_cvar_t *cvar_cor_volt2;
-core2_shell_cvar_t *cvar_cor_current;
-core2_shell_cvar_t *cvar_cor_temp;
-core2_shell_cvar_t *cvar_cor_press;
-core2_shell_cvar_t *cvar_buzzer_enabled;
-core2_shell_cvar_t *cvar_solenoid_trigger_time;
+CORE2_EXTERN core2_shell_cvar_t *cvar_ap_ssid;
+CORE2_EXTERN core2_shell_cvar_t *cvar_ap_password;
+CORE2_EXTERN core2_shell_cvar_t *cvar_host;
+CORE2_EXTERN core2_shell_cvar_t *cvar_port;
+CORE2_EXTERN core2_shell_cvar_t *cvar_api_key;
+CORE2_EXTERN core2_shell_cvar_t *cvar_cor_volt1;
+CORE2_EXTERN core2_shell_cvar_t *cvar_cor_volt2;
+CORE2_EXTERN core2_shell_cvar_t *cvar_cor_current;
+CORE2_EXTERN core2_shell_cvar_t *cvar_cor_temp;
+CORE2_EXTERN core2_shell_cvar_t *cvar_cor_press;
+CORE2_EXTERN core2_shell_cvar_t *cvar_buzzer_enabled;
+CORE2_EXTERN core2_shell_cvar_t *cvar_solenoid_trigger_time;
 
 
 void variables_init();

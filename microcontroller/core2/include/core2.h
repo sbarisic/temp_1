@@ -68,12 +68,12 @@ extern "C"
 #define dprintf(...)
 #endif
 
-#define eprintf(...)                                                                                                   \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        printf("[ERROR] ");                                                                                            \
-        printf(__VA_ARGS__);                                                                                           \
-        printf("\n");                                                                                                  \
+#define eprintf(...)         \
+    do                       \
+    {                        \
+        printf("[ERROR] ");  \
+        printf(__VA_ARGS__); \
+        printf("\n");        \
     } while (0)
 
 // #define CORE2_FILESYSTEM_VERBOSE_OUTPUT // Prints very long debug outputs to the output stream
@@ -221,7 +221,7 @@ extern "C"
         int cmd_argc;
         char *cmd_argv[MAX_STRING_TOKENS];                       // points into cmd_tokenized
         char cmd_tokenized[BIG_INFO_STRING + MAX_STRING_TOKENS]; // will have 0 bytes inserted
-        char cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
+        char cmd_cmd[BIG_INFO_STRING];                           // the original command we received (no token processing)
     } tokenize_info_t;
 
     typedef void (*core2_shell_print_func)(void *self, const char *str);
@@ -247,7 +247,8 @@ extern "C"
     typedef enum
     {
         CORE2_CVAR_INT32 = -10,
-        CORE2_CVAR_STRING
+        CORE2_CVAR_STRING,
+        CORE2_CVAR_FLOAT
     } core2_cvar_type;
 
     typedef enum
@@ -270,13 +271,30 @@ extern "C"
     void core2_shell_exec(const char *script, core2_shell_func_params_t *params);
     void core2_shell_init();
     core2_shell_cvar_t *core2_shell_cvar_register(const char *var_name, void *var_ptr, core2_cvar_type var_type);
+    core2_shell_cvar_t *core2_shell_cvar_register_float(const char *var_name, float val);
+    core2_shell_cvar_t *core2_shell_cvar_register_string(const char *var_name, const char *str);
+    core2_shell_cvar_t *core2_shell_cvar_register_int32(const char *var_name, int32_t val);
     size_t core2_shell_cvar_count();
     core2_shell_cvar_t *core2_shell_cvar_get(int idx);
     core2_shell_cvar_t *core2_shell_cvar_find(const char *var_name);
     void core2_shell_save_cvars();
     void core2_shell_load_cvars();
 
+    const char *core2_shell_cvar_get_string_ex(core2_shell_cvar_t *cvar);
+    int32_t core2_shell_cvar_get_int32_ex(core2_shell_cvar_t *cvar);
+    float core2_shell_cvar_get_float_ex(core2_shell_cvar_t *cvar);
+
     const char *core2_shell_cvar_get_string(const char *var_name);
+    int32_t core2_shell_cvar_get_int32(const char *var_name);
+    float core2_shell_cvar_get_float(const char *var_name);
+
+    void core2_shell_cvar_set_string_ex(core2_shell_cvar_t *cvar, const char *str);
+    void core2_shell_cvar_set_int32_ex(core2_shell_cvar_t *cvar, int32_t val);
+    void core2_shell_cvar_set_float_ex(core2_shell_cvar_t *cvar, float val);
+
+    void core2_shell_cvar_set_string(const char *var_name, const char *str);
+    void core2_shell_cvar_set_int32(const char *var_name, int32_t val);
+    void core2_shell_cvar_set_float(const char *var_name, float val);
 
     // Wifi
     // =================================================================================================
@@ -417,11 +435,6 @@ extern "C"
     // =================================================================================================
 
     bool core2_http_start();
-
-    // Updates
-    // =================================================================================================
-
-    void core2_update_start();
 
 #if defined(CORE2_CAN)
     // CAN

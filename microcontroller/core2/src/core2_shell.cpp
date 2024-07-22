@@ -101,6 +101,24 @@ core2_shell_cvar_t *core2_shell_cvar_register(const char *var_name, void *var_pt
     return cvar_ptr;
 }
 
+core2_shell_cvar_t *core2_shell_cvar_register_float(const char *var_name, float val)
+{
+    float *float_ptr = (float *)core2_malloc(sizeof(float));
+    *float_ptr = val;
+
+    return core2_shell_cvar_register(var_name, (void *)float_ptr, CORE2_CVAR_FLOAT);
+}
+
+core2_shell_cvar_t *core2_shell_cvar_register_string(const char *var_name, const char *str)
+{
+    return core2_shell_cvar_register(var_name, (void *)str, CORE2_CVAR_STRING);
+}
+
+core2_shell_cvar_t *core2_shell_cvar_register_int32(const char *var_name, int32_t val)
+{
+    return core2_shell_cvar_register(var_name, (void *)val, CORE2_CVAR_INT32);
+}
+
 size_t core2_shell_cvar_count()
 {
     // return shell_cvars->length;
@@ -131,16 +149,101 @@ core2_shell_cvar_t *core2_shell_cvar_find(const char *var_name)
     return NULL;
 }
 
+const char *core2_shell_cvar_get_string_ex(core2_shell_cvar_t *cvar)
+{
+    return (const char *)cvar->var_ptr;
+}
+
+int32_t core2_shell_cvar_get_int32_ex(core2_shell_cvar_t *cvar)
+{
+    return (int32_t)cvar->var_ptr;
+}
+
+float core2_shell_cvar_get_float_ex(core2_shell_cvar_t *cvar)
+{
+    return *(float *)cvar->var_ptr;
+}
+
 const char *core2_shell_cvar_get_string(const char *var_name)
 {
     core2_shell_cvar_t *cvar = core2_shell_cvar_find(var_name);
 
     if (cvar != NULL && cvar->var_type == CORE2_CVAR_STRING)
     {
-        return (const char *)cvar->var_ptr;
+        return core2_shell_cvar_get_string_ex(cvar);
     }
 
     return NULL;
+}
+
+int32_t core2_shell_cvar_get_int32(const char *var_name)
+{
+    core2_shell_cvar_t *cvar = core2_shell_cvar_find(var_name);
+
+    if (cvar != NULL && cvar->var_type == CORE2_CVAR_INT32)
+    {
+        return core2_shell_cvar_get_int32_ex(cvar);
+    }
+
+    return 0;
+}
+
+float core2_shell_cvar_get_float(const char *var_name)
+{
+    core2_shell_cvar_t *cvar = core2_shell_cvar_find(var_name);
+
+    if (cvar != NULL && cvar->var_type == CORE2_CVAR_FLOAT)
+    {
+        return core2_shell_cvar_get_float_ex(cvar);
+    }
+
+    return 0;
+}
+
+void core2_shell_cvar_set_string_ex(core2_shell_cvar_t *cvar, const char *str)
+{
+    core2_free(cvar->var_ptr);
+    cvar->var_ptr = core2_string_copy(str);
+}
+
+void core2_shell_cvar_set_string(const char *var_name, const char *str)
+{
+    core2_shell_cvar_t *cvar = core2_shell_cvar_find(var_name);
+
+    if (!(cvar != NULL && cvar->var_type == CORE2_CVAR_STRING))
+        return;
+
+    core2_shell_cvar_set_string_ex(cvar, str);
+}
+
+void core2_shell_cvar_set_int32_ex(core2_shell_cvar_t *cvar, int32_t val)
+{
+    cvar->var_ptr = (void *)val;
+}
+
+void core2_shell_cvar_set_int32(const char *var_name, int32_t val)
+{
+    core2_shell_cvar_t *cvar = core2_shell_cvar_find(var_name);
+
+    if (!(cvar != NULL && cvar->var_type == CORE2_CVAR_STRING))
+        return;
+
+    core2_shell_cvar_set_int32_ex(cvar, val);
+}
+
+void core2_shell_cvar_set_float_ex(core2_shell_cvar_t *cvar, float val)
+{
+    *(float *)(cvar->var_ptr) = val;
+}
+
+void core2_shell_cvar_set_float(const char *var_name, float val)
+{
+    core2_shell_cvar_t *cvar = core2_shell_cvar_find(var_name);
+
+    if (!(cvar != NULL && cvar->var_type == CORE2_CVAR_STRING))
+        return;
+
+    core2_shell_cvar_set_float_ex(cvar, val);
 }
 
 bool core2_shell_cvar_tostring(core2_shell_cvar_t *cvar, char *buf)
@@ -167,6 +270,10 @@ bool core2_shell_cvar_tostring(core2_shell_cvar_t *cvar, char *buf)
 
     case CORE2_CVAR_INT32:
         sprintf(buf, "%s = %d", cvar->name, (int32_t)cvar->var_ptr);
+        return true;
+
+    case CORE2_CVAR_FLOAT:
+        sprintf(buf, "%s = %f", cvar->name, *(float *)cvar->var_ptr);
         return true;
 
     default:

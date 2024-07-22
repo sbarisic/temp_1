@@ -9,7 +9,10 @@
         "initializer_list": "cpp",
         "fishglshader.h": "c",
         "stdint.h": "c",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "sstream": "cpp",
+        "core2_update.h": "c",
+        "esp_crt_bundle.h": "c"
     },
     "cmake.configureOnOpen": false
 }

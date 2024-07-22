@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <core2.h>
+#include <core2_variables.h>
 #include <esp_http_server.h>
 
 volatile bool buzzer_enable = false;
@@ -62,7 +63,6 @@ void read_temp_pressure(float *Temp, float *Press)
     int stat = Wire.write(cmd, 3); // write command to the sensor
     stat |= Wire.endTransmission();
 
-
     delay(10);
 
     Wire.requestFrom(id, (uint8_t)7); // read back Sensor data 7 bytes
@@ -120,7 +120,7 @@ void interrupt_read_data()
 
     core2_json_t *json = core2_json_create();
 
-    core2_json_add_field_string(json, "APIKey", "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw="); // TODO
+    core2_json_add_field_string(json, "APIKey", core2_shell_cvar_get_string_ex(cvar_api_key)); // TODO
     core2_json_add_field_int(json, "Action", 1);
     // core2_json_add_field(json, "Volts", &Volts, (sizeof(Volts) / sizeof(*Volts)), CORE2_JSON_FLOAT_ARRAY_DEC2);
 
@@ -163,6 +163,14 @@ void interrupt_read_data()
 void buzzer_task(void *a)
 {
     dprintf("[BUZZER] Setting up\n");
+
+    int is_buzzer_enabled = core2_shell_cvar_get_int32_ex(cvar_buzzer_enabled) != 0;
+    if (!is_buzzer_enabled)
+    {
+        dprintf("[BUZZER] Buzzer disabled, skipping\n");
+        vTaskDelete(NULL);
+        return;
+    }
 
     pinMode(GPIO_NUM_25, OUTPUT);
     digitalWrite(GPIO_NUM_25, LOW);
@@ -264,8 +272,8 @@ void core2_main()
         core2_sleep(10);
     }
 
-    core2_shell_cvar_register("wifi_ssid", (void *)"Test", CORE2_CVAR_STRING);
-    core2_shell_cvar_register("wifi_pass", (void *)"12345678910", CORE2_CVAR_STRING);
+    //core2_shell_cvar_register("wifi_ssid", (void *)"Test", CORE2_CVAR_STRING);
+    ///core2_shell_cvar_register("wifi_pass", (void *)"12345678910", CORE2_CVAR_STRING);
 
     core2_shell_cvar_register(CORE2_CVAR_wifi_ap_ssid, (void *)"core2_wifi_devtest", CORE2_CVAR_STRING);
     core2_shell_cvar_register(CORE2_CVAR_wifi_ap_pass, (void *)"core21234", CORE2_CVAR_STRING);
@@ -302,8 +310,8 @@ void core2_main()
 
     // core2_shell_func_params_t *params = core2_shell_create_default_params();
 
-    const char *wifi_ssid = core2_shell_cvar_get_string("wifi_ssid");
-    const char *wifi_pass = core2_shell_cvar_get_string("wifi_pass");
+    const char *wifi_ssid = core2_shell_cvar_get_string_ex(cvar_network_ssid);
+    const char *wifi_pass = core2_shell_cvar_get_string_ex(cvar_network_password);
 
     if (wifi_ssid != NULL && wifi_pass != NULL)
     {

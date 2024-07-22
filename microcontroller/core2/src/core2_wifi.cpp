@@ -1,5 +1,5 @@
 #include <core2.h>
-
+#include <core2_variables.h>
 
 #ifndef CORE2_DEBUG_WIFI
 #undef dprintf
@@ -76,7 +76,7 @@ bool c2_wifi_begin_connect(int32_t NextConnectWaitTime)
         return false;
 
     LastBeginConnect = core2_clock_bootseconds();
-    //dprintf("Scanning for networks...\n");
+    // dprintf("Scanning for networks...\n");
 
     int found = WiFi.scanNetworks(false, false, false, 600);
     for (int i = 0; i < found; i++)
@@ -85,7 +85,7 @@ bool c2_wifi_begin_connect(int32_t NextConnectWaitTime)
         const char *SSID = ssid.c_str();
         const char *PASS;
 
-        //dprintf("c2_wifi_begin_connect - found '%s'\n", SSID);
+        // dprintf("c2_wifi_begin_connect - found '%s'\n", SSID);
 
         if (ConnectionContains(SSID, &PASS))
         {
@@ -113,8 +113,8 @@ bool core2_wifi_ap_start()
         return false;
     }
 
-    const char *ssid = core2_shell_cvar_get_string(CORE2_CVAR_wifi_ap_ssid);
-    const char *pass = core2_shell_cvar_get_string(CORE2_CVAR_wifi_ap_pass);
+    const char *ssid = core2_shell_cvar_get_string_ex(cvar_network_ssid);
+    const char *pass = core2_shell_cvar_get_string_ex(cvar_network_password);
 
     if (ssid == NULL || pass == NULL)
     {
