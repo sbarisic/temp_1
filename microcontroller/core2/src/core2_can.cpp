@@ -1,6 +1,7 @@
 #include <core2.h>
 #include <core2_update.h>
 #include <core2_ecumaster.h>
+#include <core2_server_udp.h>
 
 #ifdef CORE2_CAN
 #include <ESP32CAN.h>
@@ -364,7 +365,7 @@ void core2_can_main()
     core2_can_init();
     xTaskCreate(core2_can_recv_task, "core2_can_recv", 1024 * 4, NULL, 10, NULL);
     xTaskCreate(core2_can_send_task, "core2_can_send", 1024 * 4, NULL, 10, NULL);
-    xTaskCreate(core2_ecu_main, "core2_ecu", 1024 * 8, NULL, 9, NULL);
+    xTaskCreate(core2_ecu_main, "core2_ecu", 1024 * 4, NULL, 9, NULL);
 
     core2_wifi_add_network("Barisic", "123456789");
     core2_wifi_add_network("Serengeti", "srgt#2018");
@@ -377,6 +378,7 @@ void core2_can_main()
     // dprintf("Firmware flash successful!\n");
 
     core2_http_start();
+    core2_server_udp_start();
 
     while (!color_ready)
         core2_sleep(1);
