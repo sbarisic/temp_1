@@ -151,7 +151,7 @@ core2_shell_cvar_t *core2_shell_cvar_find(const char *var_name)
 
 const char *core2_shell_cvar_get_string_ex(core2_shell_cvar_t *cvar)
 {
-    return (const char *)cvar->var_ptr;
+    return core2_string_copy((const char *)cvar->var_ptr);
 }
 
 int32_t core2_shell_cvar_get_int32_ex(core2_shell_cvar_t *cvar)

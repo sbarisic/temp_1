@@ -246,6 +246,8 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t *params, int argc, c
 
 void core2_main()
 {
+    variables_init();
+
     printf("Hello World!\n");
     xTaskCreate(buzzer_task, "buzzer_task", 1024, NULL, 0, NULL);
     led_enable(false, false, true);
@@ -272,11 +274,11 @@ void core2_main()
         core2_sleep(10);
     }
 
-    //core2_shell_cvar_register("wifi_ssid", (void *)"Test", CORE2_CVAR_STRING);
-    ///core2_shell_cvar_register("wifi_pass", (void *)"12345678910", CORE2_CVAR_STRING);
+    // core2_shell_cvar_register("wifi_ssid", (void *)"Test", CORE2_CVAR_STRING);
+    /// core2_shell_cvar_register("wifi_pass", (void *)"12345678910", CORE2_CVAR_STRING);
 
-    core2_shell_cvar_register(CORE2_CVAR_wifi_ap_ssid, (void *)"core2_wifi_devtest", CORE2_CVAR_STRING);
-    core2_shell_cvar_register(CORE2_CVAR_wifi_ap_pass, (void *)"core21234", CORE2_CVAR_STRING);
+    // core2_shell_cvar_register(CORE2_CVAR_wifi_ap_ssid, (void *)"core2_wifi_devtest", CORE2_CVAR_STRING);
+    // core2_shell_cvar_register(CORE2_CVAR_wifi_ap_pass, (void *)"core21234", CORE2_CVAR_STRING);
 
     core2_shell_register("get_variables", core2_shellcmd_get_variables);
     core2_shell_load_cvars();
@@ -310,8 +312,12 @@ void core2_main()
 
     // core2_shell_func_params_t *params = core2_shell_create_default_params();
 
-    const char *wifi_ssid = core2_shell_cvar_get_string_ex(cvar_network_ssid);
-    const char *wifi_pass = core2_shell_cvar_get_string_ex(cvar_network_password);
+    dprintf("Getting wifi credentials\n");
+    // const char *wifi_ssid = core2_shell_cvar_get_string_ex(cvar_network_ssid);
+    // const char *wifi_pass = core2_shell_cvar_get_string_ex(cvar_network_password);
+
+    const char *wifi_ssid = "Barisic";
+    const char *wifi_pass = "123456789";
 
     if (wifi_ssid != NULL && wifi_pass != NULL)
     {
@@ -320,6 +326,7 @@ void core2_main()
         // core2_wifi_try_connect(wifi_ssid, wifi_pass);
     }
 
+    dprintf("Connecting...\n");
     core2_wifi_yield_until_connected();
     dprintf("[!] Main loop\n");
 
