@@ -169,8 +169,7 @@ void buzzer_task(void *a)
 {
     dprintf("[BUZZER] Setting up\n");
 
-    int is_buzzer_enabled = core2_shell_cvar_get_int32_ex(cvar_buzzer_enabled) != 0;
-    if (!is_buzzer_enabled)
+    if (core2_shell_cvar_get_int32_ex(cvar_buzzer_enabled) == 0)
     {
         dprintf("[BUZZER] Buzzer disabled, skipping\n");
         vTaskDelete(NULL);

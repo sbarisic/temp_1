@@ -18,6 +18,59 @@
 #define CORE2_WEB_USER_AGENT "Core2_ESP32"
 #define PORT 5871
 
+int sck = 0;
+struct sockaddr_storage src_addr; // Large enough for both IPv4 or IPv6
+
+void send_response(struct sockaddr_storage *from, int fromlen, const char *cmd, const char *arg, int arglen)
+{
+    if (sck == 0)
+        return;
+
+    char buffer[1024] = {0};
+    int len2 = sprintf(buffer, "%s", cmd) + 1;
+
+    if (arglen > sizeof(buffer) - len2)
+    {
+        dprintf("arg too long, aborting\n");
+        return;
+    }
+
+    memcpy(buffer + len2, arg, arglen);
+    len2 += arglen;
+
+    int err = sendto(sck, buffer, len2, 0, (struct sockaddr *)from, fromlen);
+    if (err < 0)
+        dprintf("Error occurred during sending: errno %d", errno);
+}
+
+void run_command(const char *cmd, const char *arg, int arglen, int sock, const char *addr_from, struct sockaddr_storage *from, int fromlen)
+{
+    char buffer[256] = {0};
+    int len2 = 0;
+
+    if (strcmp(cmd, "esp32_init") == 0)
+    {
+        src_addr = *from;
+        sck = sock;
+
+        // len2 = sprintf(buffer, "ACK");
+        send_response(from, fromlen, "ACK", "aye123", 6);
+    }
+    else
+    {
+        // len2 = sprintf(buffer, "Unknown command");
+
+        send_response(from, fromlen, "Hey", "hurrdurr", 8);
+    }
+
+    if (len2 > 0)
+    {
+        int err = sendto(sock, buffer, len2, 0, (struct sockaddr *)from, fromlen);
+        if (err < 0)
+            dprintf("Error occurred during sending: errno %d", errno);
+    }
+}
+
 void udp_server_task(void *a)
 {
     dprintf("Starting UDP server\n");
@@ -101,7 +154,12 @@ void udp_server_task(void *a)
         // Error occurred during receiving
         if (len < 0)
         {
-            dprintf("recvfrom failed: errno %d\n", errno);
+            int eno = errno;
+
+            if (eno == EAGAIN)
+                continue;
+
+            dprintf("recvfrom failed: errno %d\n", eno);
             break;
         }
         // Data received
@@ -129,16 +187,25 @@ void udp_server_task(void *a)
                 inet6_ntoa_r(((struct sockaddr_in6 *)&source_addr)->sin6_addr, addr_str, sizeof(addr_str) - 1);
             }
 
-            rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string...
             dprintf("Received %d bytes from %s: ", len, addr_str);
-            dprintf("'%s'\n", rx_buffer);
+            // dprintf("'%s'\n", rx_buffer);
 
-            int err = sendto(sock, rx_buffer, len, 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
+            int cmdlen = strlen(rx_buffer);
+            const char *cmd = rx_buffer;
+
+            run_command(cmd, (rx_buffer + cmdlen + 1), len - cmdlen - 1, sock, addr_str, &source_addr, sizeof(source_addr));
+
+            // memset(rx_buffer, 0, sizeof(rx_buffer));
+            /*int len2 = sprintf(rx_buffer, "Hello from ESP!");
+
+            //rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string...
+
+            int err = sendto(sock, rx_buffer, len2, 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
             if (err < 0)
             {
                 dprintf("Error occurred during sending: errno %d", errno);
                 break;
-            }
+            }*/
         }
     }
 
