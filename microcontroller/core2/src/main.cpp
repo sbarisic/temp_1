@@ -249,7 +249,7 @@ void core2_main()
     variables_init();
 
     printf("Hello World!\n");
-    xTaskCreate(buzzer_task, "buzzer_task", 1024, NULL, 0, NULL);
+    xTaskCreate(buzzer_task, "buzzer_task", 1024 * 50, NULL, 0, NULL);
     led_enable(false, false, true);
 
     Wire.begin();

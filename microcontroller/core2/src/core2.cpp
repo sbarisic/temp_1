@@ -7,6 +7,7 @@
 #include <freertos/task.h>
 #include <nvs_flash.h>
 #include <rtc.h>
+#include <string.h>
 
 #include <esp_netif.h>
 #include <esp_sntp.h>

@@ -25,7 +25,12 @@ void variables_init()
     cvar_port = core2_shell_cvar_register_int32("api_port", 443);
     cvar_api_key = core2_shell_cvar_register_string("api_key", "OoDUEAxaDLE3L+tdG2ZWmvSNJ8A5jnzh9a4r4d4XzEw=");
 
+    //dprintf("cvar_api_key = %p\ncvar_api_key->var_ptr = %p\n", cvar_api_key, cvar_api_key->var_ptr);
+
     cvar_cor_volt1 = core2_shell_cvar_register_float("cor_volt1", 1.0f);
+
+    //dprintf("cvar_api_key = %p\ncvar_api_key->var_ptr = %p\n", cvar_api_key, cvar_api_key->var_ptr);
+
     cvar_cor_volt2 = core2_shell_cvar_register_float("cor_volt2", 1.0f);
     cvar_cor_current = core2_shell_cvar_register_float("cor_current", 1.0f);
     cvar_cor_temp = core2_shell_cvar_register_float("cor_temp", 1.0f);
@@ -37,5 +42,5 @@ void variables_init()
     cvar_firmware_info_url = core2_shell_cvar_register_string("firmware_info_url", "https://demo.sbarisic.com/firmware/version.txt");
     cvar_firmware_bin_url = core2_shell_cvar_register_string("firmware_bin_url", "https://demo.sbarisic.com/firmware/firmware.bin");
 
-    core2_shell_load_cvars();
+    // core2_shell_load_cvars();
 }

@@ -24,6 +24,8 @@ void core2_json_concat(core2_json_t *json, const char *str)
 
 core2_json_t *core2_json_create()
 {
+    dprintf("core2_json_create()\n");
+
     core2_json_t *json = (core2_json_t *)malloc(sizeof(core2_json_t));
 
     json->buffer = (char *)core2_malloc(CHUNK_SIZE);
@@ -38,6 +40,8 @@ core2_json_t *core2_json_create()
 
 void core2_json_delete(core2_json_t *json)
 {
+    dprintf("core2_json_delete()\n");
+
     if (json->buffer != NULL)
     {
         core2_free(json->buffer);
@@ -229,6 +233,8 @@ void core2_json_add_field_float(core2_json_t *json, const char *field_name, floa
 
 void core2_json_serialize(core2_json_t *json, char **dest_buffer, size_t *json_length)
 {
+    dprintf("core2_json_serialize()\n");
+
     core2_json_concat(json, " }");
 
     if (dest_buffer != NULL && json_length != NULL)

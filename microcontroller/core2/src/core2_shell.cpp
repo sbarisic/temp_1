@@ -5,11 +5,13 @@
 
 core2_shell_cmd_t *shell_commands;
 size_t shell_command_count;
-size_t shell_command_count_max;
 
 core2_shell_cvar_t *shell_convars;
 size_t shell_convar_count;
-size_t shell_convar_count_max;
+
+#define DEBUG_PRINT dprintf
+#define shell_command_count_max 15
+#define shell_convar_count_max 25
 
 size_t core2_shell_cmd_count()
 {
@@ -54,20 +56,23 @@ void core2_shell_register(const char *func_name, core2_shell_func func)
         return;
     }
 
-    core2_shell_cmd_t new_cmd;
-    new_cmd.name = core2_string_copy(func_name);
-    new_cmd.func = func;
     // core2_array_insert_end(shell_cmds, &new_cmd);
 
     if (shell_command_count >= shell_command_count_max)
     {
-        shell_command_count_max += 10;
-        shell_commands =
-            (core2_shell_cmd_t *)core2_realloc(shell_commands, shell_command_count_max * sizeof(core2_shell_cmd_t));
+        dprintf("core2_shell_register - OUT OF STORAGE\n");
+        return;
+
+        // shell_command_count_max += 10;
+        // shell_commands = (core2_shell_cmd_t *)core2_realloc(shell_commands, shell_command_count_max * sizeof(core2_shell_cmd_t));
     }
 
+    core2_shell_cmd_t new_cmd;
+    new_cmd.name = core2_string_copy(func_name);
+    new_cmd.func = func;
+    shell_commands[shell_command_count] = new_cmd;
+
     shell_command_count++;
-    shell_commands[shell_command_count - 1] = new_cmd;
 }
 
 core2_shell_cvar_t *core2_shell_cvar_register(const char *var_name, void *var_ptr, core2_cvar_type var_type)
@@ -80,21 +85,28 @@ core2_shell_cvar_t *core2_shell_cvar_register(const char *var_name, void *var_pt
 
     if (shell_convar_count >= shell_convar_count_max)
     {
-        shell_convar_count_max += 10;
-        shell_convars =
-            (core2_shell_cvar_t *)core2_realloc(shell_convars, shell_convar_count_max * sizeof(core2_shell_cvar_t));
+        dprintf("core2_shell_cvar_register - OUT OF STORAGE\n");
+        return NULL;
+
+        // shell_convar_count_max += 10;
+        //  shell_convars = (core2_shell_cvar_t *)core2_realloc(shell_convars, shell_convar_count_max * sizeof(core2_shell_cvar_t));
     }
 
+    core2_shell_cvar_t *cvar_ptr = &shell_convars[shell_convar_count];
     shell_convar_count++;
-    core2_shell_cvar_t *cvar_ptr = &shell_convars[shell_convar_count - 1];
 
-    dprintf("core2_shell_cvar_register(%p, \"%s\", %p, %d)\n", cvar_ptr, var_name, var_ptr, var_type);
+    if (var_type == CORE2_CVAR_STRING)
+        dprintf("core2_shell_cvar_register(%p, \"%s\", \"%s\", %d)\n", cvar_ptr, var_name, var_ptr, var_type);
+    else
+        dprintf("core2_shell_cvar_register(%p, \"%s\", %p, %d)\n", cvar_ptr, var_name, var_ptr, var_type);
+
     cvar_ptr->name = core2_string_copy(var_name);
-    cvar_ptr->var_ptr = var_ptr;
     cvar_ptr->var_type = var_type;
 
     if (var_type == CORE2_CVAR_STRING)
         cvar_ptr->var_ptr = core2_string_copy((char *)var_ptr);
+    else
+        cvar_ptr->var_ptr = var_ptr;
 
     // core2_array_insert_end(shell_cvars, cvar);
 
@@ -151,16 +163,40 @@ core2_shell_cvar_t *core2_shell_cvar_find(const char *var_name)
 
 const char *core2_shell_cvar_get_string_ex(core2_shell_cvar_t *cvar)
 {
+    DEBUG_PRINT("core2_shell_cvar_get_string_ex\n");
+
+    if (cvar == NULL)
+    {
+        DEBUG_PRINT("cvar is null!\n");
+        return 0;
+    }
+
     return core2_string_copy((const char *)cvar->var_ptr);
 }
 
 int32_t core2_shell_cvar_get_int32_ex(core2_shell_cvar_t *cvar)
 {
+    DEBUG_PRINT("core2_shell_cvar_get_int32_ex\n");
+
+    if (cvar == NULL)
+    {
+        DEBUG_PRINT("cvar is null!\n");
+        return 0;
+    }
+
     return (int32_t)cvar->var_ptr;
 }
 
 float core2_shell_cvar_get_float_ex(core2_shell_cvar_t *cvar)
 {
+    DEBUG_PRINT("core2_shell_cvar_get_float_ex\n");
+
+    if (cvar == NULL)
+    {
+        DEBUG_PRINT("cvar is null!\n");
+        return 0;
+    }
+
     return *(float *)cvar->var_ptr;
 }
 
@@ -202,6 +238,8 @@ float core2_shell_cvar_get_float(const char *var_name)
 
 void core2_shell_cvar_set_string_ex(core2_shell_cvar_t *cvar, const char *str)
 {
+    DEBUG_PRINT("core2_shell_cvar_set_string_ex\n");
+
     core2_free(cvar->var_ptr);
     cvar->var_ptr = core2_string_copy(str);
 }
@@ -218,6 +256,8 @@ void core2_shell_cvar_set_string(const char *var_name, const char *str)
 
 void core2_shell_cvar_set_int32_ex(core2_shell_cvar_t *cvar, int32_t val)
 {
+    DEBUG_PRINT("core2_shell_cvar_set_int32_ex\n");
+
     cvar->var_ptr = (void *)val;
 }
 
@@ -233,6 +273,8 @@ void core2_shell_cvar_set_int32(const char *var_name, int32_t val)
 
 void core2_shell_cvar_set_float_ex(core2_shell_cvar_t *cvar, float val)
 {
+    DEBUG_PRINT("core2_shell_cvar_set_float_ex\n");
+
     *(float *)(cvar->var_ptr) = val;
 }
 
@@ -641,11 +683,9 @@ void core2_shell_init()
     // shell_cvars = core2_array_create(sizeof(core2_shell_cvar_t*));
 
     shell_command_count = 0;
-    shell_command_count_max = 10;
     shell_commands = (core2_shell_cmd_t *)core2_malloc(shell_command_count_max * sizeof(core2_shell_cmd_t));
 
     shell_convar_count = 0;
-    shell_convar_count_max = 10;
     shell_convars = (core2_shell_cvar_t *)core2_malloc(shell_command_count_max * sizeof(core2_shell_cvar_t));
 
     core2_shell_register("help", shell_help);

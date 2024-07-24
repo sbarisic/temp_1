@@ -1,4 +1,5 @@
 #include <core2.h>
+#include <core2_variables.h>
 #include <core2_update.h>
 #include <core2_ecumaster.h>
 #include <core2_server_udp.h>
@@ -241,6 +242,8 @@ bool decode_emu_frame(CAN_frame_t *frame)
 
 void core2_can_init()
 {
+    dprintf("core2_can_init()\n");
+
     CAN_cfg.speed = CAN_SPEED_500KBPS;
     CAN_cfg.tx_pin_id = CAN_TX_PIN;
     CAN_cfg.rx_pin_id = CAN_RX_PIN;
@@ -326,7 +329,7 @@ void core2_can_send_task(void *args)
             }
         }
 
-        core2_sleep(1);
+        vPortYield();
     }
 
     vTaskDelete(NULL);
@@ -340,7 +343,7 @@ void core2_ecu_main(void *args)
         {
         }
 
-        core2_sleep(1);
+        vPortYield();
     }
 
     vTaskDelete(NULL);
@@ -359,19 +362,29 @@ void core2_can_main()
     dprintf("Hello CAN World!\n");
     variables_init();
 
-    core2_gpio_set_output(PIN_5V_EN, CORE2_GPIO_MODE_NONE);
-    gpio_set_level(PIN_5V_EN, HIGH);
+    //core2_gpio_set_output(PIN_5V_EN, CORE2_GPIO_MODE_NONE);
+    //core2_gpio_write(PIN_5V_EN, HIGH);
 
     core2_can_init();
-    xTaskCreate(core2_can_recv_task, "core2_can_recv", 1024 * 4, NULL, 10, NULL);
-    xTaskCreate(core2_can_send_task, "core2_can_send", 1024 * 4, NULL, 10, NULL);
-    xTaskCreate(core2_ecu_main, "core2_ecu", 1024 * 4, NULL, 9, NULL);
 
+    dprintf("Adding wifi networks\n");
     core2_wifi_add_network("Barisic", "123456789");
     core2_wifi_add_network("Serengeti", "srgt#2018");
     core2_wifi_add_network("Tst", "123456789");
 
-    xTaskCreate(core2_ws2812fx_service, "ws2812fx.service", 1024 * 8, NULL, 5, NULL);
+    dprintf("Starting tasks\n");
+    int priority = 10;
+
+    bool start_can = false;
+
+    if (start_can)
+    {
+        xTaskCreate(core2_can_recv_task, "core2_can_recv", 1024 * 5, NULL, priority, NULL);
+        xTaskCreate(core2_can_send_task, "core2_can_send", 1024 * 5, NULL, priority, NULL);
+        xTaskCreate(core2_ecu_main, "core2_ecu", 1024 * 5, NULL, priority, NULL);
+    }
+
+    xTaskCreate(core2_ws2812fx_service, "ws2812fx.service", 1024 * 5, NULL, priority, NULL);
     core2_update_callback(on_update);
 
     // core2_update_start_from_file("/sd/firmware.bin");
@@ -381,7 +394,7 @@ void core2_can_main()
     core2_server_udp_start();
 
     while (!color_ready)
-        core2_sleep(1);
+        vPortYield();
 
     int32_t seconds = 0;
 
@@ -389,7 +402,7 @@ void core2_can_main()
     tx_frames[0].frame.data.u8[0] = 0;
     tx_frames[0].frame.FIR.B.DLC = 8;
     tx_frames[0].send_interval = 20;
-    tx_frames_count++;
+    // tx_frames_count++;
 
     for (;;)
     {
@@ -397,7 +410,7 @@ void core2_can_main()
         while (update_anim)
         {
             ws2812fx.setSegment(0, 0, LED_COUNT - 1, FX_MODE_STATIC, COLORS(RGB(100, 0, 0)), 0, NO_OPTIONS);
-            core2_sleep(100);
+            core2_sleep(10);
             continue;
         }
 

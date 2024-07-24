@@ -93,11 +93,19 @@ void core2_gpio_set_input(gpio_num_t pin, core2_gpio_mode_t mode)
 
 void core2_gpio_set_output(gpio_num_t pin, core2_gpio_mode_t mode)
 {
+    dprintf("gpio_pad_select_gpio\n");
     gpio_pad_select_gpio(pin);
+
+    dprintf("gpio_intr_disable\n");
     gpio_intr_disable(pin);
+
+    dprintf("gpio_set_direction\n");
     gpio_set_direction(pin, GPIO_MODE_OUTPUT);
 
+    dprintf("gpio_pulldown_dis\n");
     gpio_pulldown_dis(pin);
+
+    dprintf("gpio_pullup_dis\n");
     gpio_pullup_dis(pin);
 
     switch (mode)
