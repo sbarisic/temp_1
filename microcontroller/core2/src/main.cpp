@@ -194,7 +194,7 @@ void buzzer_task(void *a)
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
 
-        vPortYield();
+        core2_sleep(20);
     }
 
     vTaskDelete(NULL);
