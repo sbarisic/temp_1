@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <core2.h>
 #include <core2_variables.h>
+#include <core2_server_udp.h>
 #include <esp_http_server.h>
 
 volatile bool buzzer_enable = false;
@@ -88,76 +89,80 @@ void read_temp_pressure(float *Temp, float *Press)
 
 void interrupt_read_data()
 {
-    dprintf("interrupt_read_data()\n");
-
-    // bool adc_lock = core2_adc_lock();
-
-    dprintf("[!] interrupt_read_data() core2_adc_read - ");
-    float v1 = 0;
-    float v2 = 0;
-    float cur = 0;
-    core2_adc_read2(&v1, &v2, &cur);
-    dprintf("OK\n");
-
-    dprintf("[!] interrupt_read_data() read_temp_pressure - ");
-    float temp = 0;
-    float press = 0;
-    read_temp_pressure(&temp, &press);
-    dprintf("OK\n");
-
-    /*for (int i = 0; i < 200; i++)
+    if (core2_web_lock())
     {
-        core2_adc_read_ex(&(Volts[i]), NULL, CORE2_ADC_CH2, false);
-        Volts[i] = Volts[i] * 9.215 / 1000;
+        dprintf("interrupt_read_data()\n");
+        // bool adc_lock = core2_adc_lock();
 
-        // WORKING!
-        // float V1, V2;
-        // core2_adc_read(&V1, &V2);
-        // Volts[i] = V2;
+        dprintf("[!] interrupt_read_data() core2_adc_read - ");
+        float v1 = 0;
+        float v2 = 0;
+        float cur = 0;
+        core2_adc_read2(&v1, &v2, &cur);
+        dprintf("OK\n");
 
-        vTaskDelay(pdMS_TO_TICKS(15));
-    }*/
+        dprintf("[!] interrupt_read_data() read_temp_pressure - ");
+        float temp = 0;
+        float press = 0;
+        read_temp_pressure(&temp, &press);
+        dprintf("OK\n");
 
-    core2_json_t *json = core2_json_create();
+        /*for (int i = 0; i < 200; i++)
+        {
+            core2_adc_read_ex(&(Volts[i]), NULL, CORE2_ADC_CH2, false);
+            Volts[i] = Volts[i] * 9.215 / 1000;
 
-    core2_json_add_field_string(json, "APIKey", core2_shell_cvar_get_string_ex(cvar_api_key)); // TODO
-    core2_json_add_field_int(json, "Action", 1);
-    // core2_json_add_field(json, "Volts", &Volts, (sizeof(Volts) / sizeof(*Volts)), CORE2_JSON_FLOAT_ARRAY_DEC2);
+            // WORKING!
+            // float V1, V2;
+            // core2_adc_read(&V1, &V2);
+            // Volts[i] = V2;
 
-    core2_json_add_field_float(json, "ACCvoltage1", v1);
-    core2_json_add_field_float(json, "ACCvoltage2", v2);
-    core2_json_add_field_float(json, "ACCcurrent", cur);
-    core2_json_add_field_float(json, "Tlak", press);
-    core2_json_add_field_float(json, "Temperatura", temp);
+            vTaskDelay(pdMS_TO_TICKS(15));
+        }*/
 
-    char time_now[32] = {0};
-    core2_clock_time_now(time_now);
-    core2_json_add_field_string(json, "LocalTime", time_now);
+        core2_json_t *json = core2_json_create();
 
-    char *json_buffer;
-    size_t json_len;
-    core2_json_serialize(json, &json_buffer, &json_len);
-    core2_json_delete(json);
+        core2_json_add_field_string(json, "APIKey", core2_shell_cvar_get_string_ex(cvar_api_key)); // TODO
+        core2_json_add_field_int(json, "Action", 1);
+        // core2_json_add_field(json, "Volts", &Volts, (sizeof(Volts) / sizeof(*Volts)), CORE2_JSON_FLOAT_ARRAY_DEC2);
 
-    // printf("======= core2_json_test =======\n");
-    // printf("%s\n", json_buffer);
-    // printf("===============================\n");
+        core2_json_add_field_float(json, "ACCvoltage1", v1);
+        core2_json_add_field_float(json, "ACCvoltage2", v2);
+        core2_json_add_field_float(json, "ACCcurrent", cur);
+        core2_json_add_field_float(json, "Tlak", press);
+        core2_json_add_field_float(json, "Temperatura", temp);
 
-    /*if (!core2_file_write_timesuffix("/sd/processing/volts_%s.json", json_buffer, json_len))
-    {
-        // Saving to file failed, send now?
+        char time_now[32] = {0};
+        core2_clock_time_now(time_now);
+        core2_json_add_field_string(json, "LocalTime", time_now);
+
+        char *json_buffer;
+        size_t json_len;
+        core2_json_serialize(json, &json_buffer, &json_len);
+        core2_json_delete(json);
+
+        // printf("======= core2_json_test =======\n");
+        // printf("%s\n", json_buffer);
+        // printf("===============================\n");
+
+        /*if (!core2_file_write_timesuffix("/sd/processing/volts_%s.json", json_buffer, json_len))
+        {
+            // Saving to file failed, send now?
+            send_data_to_server(json_buffer, json_len);
+        }*/
+
         send_data_to_server(json_buffer, json_len);
-    }*/
 
-    send_data_to_server(json_buffer, json_len);
+        core2_free(json_buffer);
+        // core2_adc_unlock(adc_lock);
 
-    core2_free(json_buffer);
-    // core2_adc_unlock(adc_lock);
+        /*for (int i = 0; i < 200; i++)
+        {
+            dprintf("%.2f  ", Volts[i]);
+        }*/
 
-    /*for (int i = 0; i < 200; i++)
-    {
-        dprintf("%.2f  ", Volts[i]);
-    }*/
+        core2_web_unlock();
+    }
 }
 
 void buzzer_task(void *a)
@@ -184,9 +189,12 @@ void buzzer_task(void *a)
         {
             tone(GPIO_NUM_25, 3800, 0);
             vTaskDelay(pdMS_TO_TICKS(1000));
+
             noTone(GPIO_NUM_25);
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
+
+        vPortYield();
     }
 
     vTaskDelete(NULL);
@@ -249,7 +257,7 @@ void core2_main()
     variables_init();
 
     printf("Hello World!\n");
-    xTaskCreate(buzzer_task, "buzzer_task", 1024 * 50, NULL, 0, NULL);
+    xTaskCreate(buzzer_task, "buzzer_task", 1024 * 5, NULL, 1, NULL);
     led_enable(false, false, true);
 
     Wire.begin();
@@ -304,6 +312,9 @@ void core2_main()
         led_enable(false, false, false);
     }
 
+    core2_http_start();
+    core2_server_udp_start();
+
     // TODO: remove defaults
     core2_wifi_add_network("Barisic", "123456789");
     // core2_wifi_add_network("Tst", "123456789");
@@ -313,11 +324,11 @@ void core2_main()
     // core2_shell_func_params_t *params = core2_shell_create_default_params();
 
     dprintf("Getting wifi credentials\n");
-    // const char *wifi_ssid = core2_shell_cvar_get_string_ex(cvar_network_ssid);
-    // const char *wifi_pass = core2_shell_cvar_get_string_ex(cvar_network_password);
+    const char *wifi_ssid = core2_shell_cvar_get_string_ex(cvar_network_ssid);
+    const char *wifi_pass = core2_shell_cvar_get_string_ex(cvar_network_password);
 
-    const char *wifi_ssid = "Barisic";
-    const char *wifi_pass = "123456789";
+    // const char *wifi_ssid = "Barisic";
+    // const char *wifi_pass = "123456789";
 
     if (wifi_ssid != NULL && wifi_pass != NULL)
     {

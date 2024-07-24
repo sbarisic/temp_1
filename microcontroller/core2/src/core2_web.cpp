@@ -21,6 +21,21 @@ bool core2_web_internet_available()
     return false;
 }
 
+SemaphoreHandle_t web_lock;
+
+bool core2_web_lock()
+{
+    if (web_lock == NULL)
+        web_lock = core2_lock_create();
+
+    return core2_lock_begin(web_lock);
+}
+
+bool core2_web_unlock()
+{
+    return core2_lock_end(web_lock);
+}
+
 void core2_web_json_post_begin()
 {
 }

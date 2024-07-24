@@ -150,5 +150,5 @@ void udp_server_task(void *a)
 
 void core2_server_udp_start()
 {
-    xTaskCreate(udp_server_task, "core2.udp_server", 4096, NULL, 5, NULL);
+    xTaskCreate(udp_server_task, "core2.udp_server", 1024 * 5, NULL, 10, NULL);
 }

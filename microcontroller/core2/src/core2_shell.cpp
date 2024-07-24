@@ -9,7 +9,9 @@ size_t shell_command_count;
 core2_shell_cvar_t *shell_convars;
 size_t shell_convar_count;
 
-#define DEBUG_PRINT dprintf
+// #define DEBUG_PRINT dprintf
+#define DEBUG_PRINT(...)
+
 #define shell_command_count_max 15
 #define shell_convar_count_max 25
 

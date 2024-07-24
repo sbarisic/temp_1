@@ -159,6 +159,29 @@ bool core2_lock_end(SemaphoreHandle_t lock)
     return xSemaphoreGive(lock);
 }
 
+SemaphoreHandle_t general_lock = NULL;
+
+bool core2_general_lock()
+{
+    if (general_lock == NULL)
+        general_lock = core2_lock_create();
+
+    return core2_lock_begin(general_lock);
+}
+
+bool core2_general_lock_force()
+{
+    while (!core2_general_lock())
+        vPortYield();
+
+    return true;
+}
+
+void core2_general_unlock()
+{
+    core2_lock_end(general_lock);
+}
+
 xQueueHandle core2_queue_create(int count, int elementSize)
 {
     return xQueueCreate(count, elementSize);

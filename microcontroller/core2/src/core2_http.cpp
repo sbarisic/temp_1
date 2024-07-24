@@ -163,11 +163,17 @@ esp_err_t firmware_post_handler2(httpd_req_t *req)
         return ESP_FAIL;
     }
 
+    while (!core2_web_lock())
+        vPortYield();
+
+    esp_err_t err;
     request = req;
-    if (core2_update_start(write_from_http, req->content_len) != ESP_OK)
+    if ((err = core2_update_start(write_from_http, req->content_len)) != ESP_OK)
     {
-        dprintf("core2_update_start failed\n");
+        dprintf("core2_update_start failed - %d\n", err);
+
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "core2_update_start failed");
+        core2_web_unlock();
         return ESP_FAIL;
     }
 
@@ -176,6 +182,7 @@ esp_err_t firmware_post_handler2(httpd_req_t *req)
     xTaskCreate(restart_task, "restart_task", 1024, NULL, 0, NULL);
 
     httpd_resp_send(req, "Firmware OK", HTTPD_RESP_USE_STRLEN);
+    core2_web_unlock();
     return ESP_OK;
 }
 

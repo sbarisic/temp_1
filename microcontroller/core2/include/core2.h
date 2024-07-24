@@ -165,6 +165,10 @@ extern "C"
     bool core2_lock_begin(SemaphoreHandle_t lock);
     bool core2_lock_end(SemaphoreHandle_t lock);
 
+    bool core2_general_lock();
+    bool core2_general_lock_force();
+    void core2_general_unlock();
+
     xQueueHandle core2_queue_create(int count, int elementSize);
     BaseType_t core2_queue_send(xQueueHandle q, const void *item);
     BaseType_t core2_queue_receive(xQueueHandle q, void *buffer);
@@ -431,6 +435,8 @@ extern "C"
     // Web
     // =================================================================================================
 
+    bool core2_web_lock();
+    bool core2_web_unlock();
     bool core2_web_json_post(const char *server_name, const char *json_txt, size_t json_txt_len);
 
     // HTTP
