@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <core2.h>
-#include <core2_variables.h>
 #include <core2_server_udp.h>
+#include <core2_variables.h>
 #include <esp_http_server.h>
 
 volatile bool buzzer_enable = false;
@@ -229,9 +229,9 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t *params, int argc, c
             core2_json_add_field_int(json, "value", (int32_t)cvar->var_ptr);
             break;
 
-        /*case CORE2_CVAR_FLOAT:
-            core2_json_add_field_float(json, "value", *(float *)cvar->var_ptr);
-            break;*/
+            /*case CORE2_CVAR_FLOAT:
+                core2_json_add_field_float(json, "value", *(float *)cvar->var_ptr);
+                break;*/
 
         default:
             // TODO:
@@ -265,6 +265,8 @@ void core2_main()
 
     Wire.begin();
     core2_buzz(250);
+
+    core2_gpio_enable_interrupt0(true);
 
     // Read pin on boot
     core2_gpio_set_input(CORE2_GPIO_SETUP_BUTTON_PIN, CORE2_GPIO_MODE_PULLUP);
@@ -350,19 +352,22 @@ void core2_main()
 
     for (;;)
     {
-        interrupt_read_data();
-        core2_sleep(2000);
+        vPortYield();
 
-        /*if (core2_gpio_get_interrupt0())
+        //interrupt_read_data();
+        //core2_sleep(500);
+
+        if (core2_gpio_get_interrupt0())
         {
             core2_gpio_enable_interrupt0(false);
 
             dprintf("[INT 0]!\n");
-            interrupt_read_voltage();
+            interrupt_read_data();
+            // interrupt_read_voltage();
 
             core2_gpio_clear_interrupt0();
             core2_gpio_enable_interrupt0(true);
-        }*/
+        }//*/
 
         // interrupt_read_voltage();
 

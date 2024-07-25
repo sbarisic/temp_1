@@ -229,6 +229,10 @@ bool core2_mcp320x_init()
     dprintf("core2_mcp320x_init()\n");
     lock = core2_lock_create();
 
+    pinMode(5, OUTPUT);
+    pinMode(17, OUTPUT);
+    pinMode(4, OUTPUT);
+
     pinMode(MCP320X_CS_CHANNEL1, OUTPUT);
     pinMode(MCP320X_CS_CHANNEL2, OUTPUT);
 
