@@ -187,10 +187,10 @@ void buzzer_task(void *a)
         if (buzzer_enable)
         {
             tone(GPIO_NUM_25, 3800, 0);
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            core2_sleep(1000);
 
             noTone(GPIO_NUM_25);
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            core2_sleep(1000);
         }
 
         core2_sleep(20);
@@ -228,6 +228,10 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t *params, int argc, c
         case CORE2_CVAR_INT32:
             core2_json_add_field_int(json, "value", (int32_t)cvar->var_ptr);
             break;
+
+        /*case CORE2_CVAR_FLOAT:
+            core2_json_add_field_float(json, "value", *(float *)cvar->var_ptr);
+            break;*/
 
         default:
             // TODO:
