@@ -11,9 +11,9 @@ SemaphoreHandle_t lock = NULL;
 // MCP3201 adc(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL1); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
 // MCP3201 adc1(MCP320X_ADC_VREF, MCP320X_CS_CHANNEL2);
 
-//MCP3201 adc(ADC_VREF, 5); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
-//MCP3201 adc1(ADC_VREF, 17);
-//MCP3201 adcc(ADC_VREF, 4);
+// MCP3201 adc(ADC_VREF, 5); // ovisno o tipu AD konvertera MCP 3201,3202,3204,3208
+// MCP3201 adc1(ADC_VREF, 17);
+// MCP3201 adcc(ADC_VREF, 4);
 
 #endif
 
@@ -155,6 +155,11 @@ void core2_adc_read2(float *voltage1, float *voltage2, float *current)
         voltagesum = voltagesum + int(valc);
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
+
+    dprintf("raw = %d, ", raw);
+    dprintf("raw1 = %d, ", raw1);
+    dprintf("val = %d, ", val);
+    dprintf("val1 = %d\n", val1);
 
     *voltage1 = val * 7.34 / 1000;
     *voltage2 = val1 * 13.75 / 1000 - val * 7.34 / 1000;
