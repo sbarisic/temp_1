@@ -232,9 +232,9 @@ void core2_shellcmd_get_variables(core2_shell_func_params_t *params, int argc, c
             core2_json_add_field_int(json, "value", (int32_t)cvar->var_ptr);
             break;
 
-            /*case CORE2_CVAR_FLOAT:
-                core2_json_add_field_float(json, "value", *(float *)cvar->var_ptr);
-                break;*/
+        case CORE2_CVAR_FLOAT:
+            core2_json_add_field_float(json, "value", *(float *)cvar->var_ptr);
+            break;
 
         default:
             // TODO:
