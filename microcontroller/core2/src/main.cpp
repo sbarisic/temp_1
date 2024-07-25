@@ -107,24 +107,27 @@ void interrupt_read_data()
         read_temp_pressure(&temp, &press);
         dprintf("OK\n");
 
-        /*for (int i = 0; i < 200; i++)
+        for (int i = 0; i < 200; i++)
         {
-            core2_adc_read_ex(&(Volts[i]), NULL, CORE2_ADC_CH2, false);
-            Volts[i] = Volts[i] * 9.215 / 1000;
+            core2_adc_read2(&v1, &v2, &cur);
+            Volts[i] = v2;
+            // core2_adc_read_ex((float *)&(Volts[i]), NULL, CORE2_ADC_CH2, false);
+            // Volts[i] = Volts[i] * 9.215 / 1000;
 
             // WORKING!
             // float V1, V2;
             // core2_adc_read(&V1, &V2);
             // Volts[i] = V2;
 
-            vTaskDelay(pdMS_TO_TICKS(15));
-        }*/
+            vTaskDelay(pdMS_TO_TICKS(1));
+        }
 
         core2_json_t *json = core2_json_create();
 
         core2_json_add_field_string(json, "APIKey", core2_shell_cvar_get_string_ex(cvar_api_key)); // TODO
         core2_json_add_field_int(json, "Action", 1);
-        // core2_json_add_field(json, "Volts", &Volts, (sizeof(Volts) / sizeof(*Volts)), CORE2_JSON_FLOAT_ARRAY_DEC2);
+        core2_json_add_field(json, "Volts", (const void *)&Volts, (sizeof(Volts) / sizeof(*Volts)),
+                             CORE2_JSON_FLOAT_ARRAY_DEC2);
 
         core2_json_add_field_float(json, "ACCvoltage1", v1);
         core2_json_add_field_float(json, "ACCvoltage2", v2);
@@ -354,8 +357,8 @@ void core2_main()
     {
         vPortYield();
 
-        //interrupt_read_data();
-        //core2_sleep(500);
+        // interrupt_read_data();
+        // core2_sleep(500);
 
         if (core2_gpio_get_interrupt0())
         {
@@ -367,7 +370,7 @@ void core2_main()
 
             core2_gpio_clear_interrupt0();
             core2_gpio_enable_interrupt0(true);
-        }//*/
+        } //*/
 
         // interrupt_read_voltage();
 
