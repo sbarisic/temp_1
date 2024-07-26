@@ -1,8 +1,8 @@
 #include <core2.h>
-#include <core2_variables.h>
-#include <core2_update.h>
 #include <core2_ecumaster.h>
 #include <core2_server_udp.h>
+#include <core2_update.h>
+#include <core2_variables.h>
 
 #ifdef CORE2_CAN
 #include <ESP32CAN.h>
@@ -360,10 +360,15 @@ void on_update(core2_update_event_t e)
 void core2_can_main()
 {
     dprintf("Hello CAN World!\n");
+
+    while (true)
+    {
+    }
+
     variables_init();
 
-    //core2_gpio_set_output(PIN_5V_EN, CORE2_GPIO_MODE_NONE);
-    //core2_gpio_write(PIN_5V_EN, HIGH);
+    // core2_gpio_set_output(PIN_5V_EN, CORE2_GPIO_MODE_NONE);
+    // core2_gpio_write(PIN_5V_EN, HIGH);
 
     core2_can_init();
 
