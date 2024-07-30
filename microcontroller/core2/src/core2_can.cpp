@@ -109,6 +109,8 @@ bool emu_errorflag(ERRORFLAG flag)
 
 void core2_can_log(emu_data_t *emu, FILE *f)
 {
+    if (!core2_filesystem_mounted())
+        return;
 }
 
 bool decode_emu_frame(CAN_frame_t *frame)
