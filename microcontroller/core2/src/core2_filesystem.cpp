@@ -12,6 +12,8 @@
 #include <shlwapi.h>
 #endif
 
+sdmmc_card_t *card = NULL;
+
 #undef ESP_LOGI
 #define ESP_LOGI(a, ...)                                                                                               \
     do                                                                                                                 \
@@ -325,6 +327,11 @@ void *core2_file_read_all(const char *filename, size_t *len)
     return NULL;
 }
 
+bool core2_filesystem_mounted()
+{
+    return card != NULL;
+}
+
 bool core2_filesystem_init(sdmmc_host_t *host, int CS)
 {
     dprintf("core2_filesystem_init()\n");
@@ -340,7 +347,6 @@ bool core2_filesystem_init(sdmmc_host_t *host, int CS)
     slot_config.host_id = (spi_host_device_t)host->slot;
 
     dprintf("core2_filesystem_init() - Mounting filesystem\n");
-    sdmmc_card_t *card;
     esp_err_t ret = esp_vfs_fat_sdspi_mount(mount_point, host, &slot_config, &mount_config, &card);
 
     if (ret != ESP_OK)
@@ -348,6 +354,7 @@ bool core2_filesystem_init(sdmmc_host_t *host, int CS)
         if (ret == ESP_FAIL)
             dprintf("core2_filesystem_init() - Failed to mount filesystem. Please format SD card as FAT32\n");
 
+        card = NULL;
         return false;
     }
 
