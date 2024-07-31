@@ -335,14 +335,16 @@ bool core2_http_start()
 
     if (httpd_start(&http_server, &config) == ESP_OK)
     {
+        dprintf("Registering URI handlers\n");
+
         httpd_register_uri_handler(http_server, &root_handler);
         httpd_register_uri_handler(http_server, &shell_handler);
         httpd_register_uri_handler(http_server, &firmware_handler);
-    }
-    else
-    {
-        dprintf("core2_http_start() - httpd_start() FAILED\n");
+
+        dprintf("core2_http_start - OK\n");
+        return true;
     }
 
-    return true;
+    dprintf("core2_http_start - FAILED\n");
+    return false;
 }
