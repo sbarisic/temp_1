@@ -356,6 +356,7 @@ extern "C"
     typedef void (*onFileFoundFn)(const char *full_name, const char *file_name);
 
     bool core2_filesystem_init(sdmmc_host_t *host, int CS);
+    bool core2_filesystem_mounted();
     FILE *core2_file_open(const char *filename, const char *type);
     bool core2_file_close(FILE *f);
     bool core2_file_move(const char *full_file_path, const char *new_directory);

@@ -1,8 +1,8 @@
 #include <core2.h>
-#include <core2_variables.h>
-#include <core2_update.h>
 #include <core2_ecumaster.h>
 #include <core2_server_udp.h>
+#include <core2_update.h>
+#include <core2_variables.h>
 
 #ifdef CORE2_CAN
 #include <ESP32CAN.h>
@@ -22,11 +22,11 @@ typedef struct
 void variables_init();
 
 WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ400);
-volatile bool update_anim = false;
-volatile bool color_ready = false;
+bool update_anim = false;
+bool color_ready = false;
 
-volatile core2_tx_can_frame_t tx_frames[16];
-volatile int tx_frames_count = 0;
+core2_tx_can_frame_t tx_frames[16];
+int tx_frames_count = 0;
 
 void core2_ws2812fx_service(void *args)
 {
@@ -55,8 +55,9 @@ void core2_ws2812fx_service(void *args)
 CAN_device_t CAN_cfg;         // CAN Config
 const int rx_queue_size = 10; // Receive Queue size
 
-volatile emu_data_t emu_data;
-volatile int64_t emu_tstp[8];
+FILE *log_file;
+emu_data_t emu_data;
+int64_t emu_tstp[8];
 
 int64_t timestamp_get(uint32_t can_id)
 {
@@ -104,6 +105,12 @@ bool emu_flag(FLAGS1 flag)
 bool emu_errorflag(ERRORFLAG flag)
 {
     return (emu_data.cel & flag) != 0;
+}
+
+void core2_can_log(emu_data_t *emu, FILE *f)
+{
+    if (!core2_filesystem_mounted())
+        return;
 }
 
 bool decode_emu_frame(CAN_frame_t *frame)
@@ -237,6 +244,7 @@ bool decode_emu_frame(CAN_frame_t *frame)
         }
     }
 
+    core2_can_log(&emu_data, log_file);
     return true;
 }
 
@@ -282,7 +290,6 @@ void core2_can_recv_task(void *args)
         {
             if (!decode_emu_frame(&rx_frame))
             {
-
                 if (rx_frame.FIR.B.FF == CAN_frame_std)
                 {
                     dprintf("New standard frame");
@@ -360,10 +367,15 @@ void on_update(core2_update_event_t e)
 void core2_can_main()
 {
     dprintf("Hello CAN World!\n");
+
+    while (true)
+    {
+    }
+
     variables_init();
 
-    //core2_gpio_set_output(PIN_5V_EN, CORE2_GPIO_MODE_NONE);
-    //core2_gpio_write(PIN_5V_EN, HIGH);
+    // core2_gpio_set_output(PIN_5V_EN, CORE2_GPIO_MODE_NONE);
+    // core2_gpio_write(PIN_5V_EN, HIGH);
 
     core2_can_init();
 
@@ -407,6 +419,7 @@ void core2_can_main()
     for (;;)
     {
         seconds = core2_clock_bootseconds();
+
         while (update_anim)
         {
             ws2812fx.setSegment(0, 0, LED_COUNT - 1, FX_MODE_STATIC, COLORS(RGB(100, 0, 0)), 0, NO_OPTIONS);
