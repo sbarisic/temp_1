@@ -219,9 +219,9 @@ void core2_queue_reset(xQueueHandle q)
 // @brief Expects 30 byte buffer
 void core2_err_tostr(esp_err_t err, char *buffer)
 {
-#define MAKE_CASE(err)        \
-    case err:                 \
-        strcpy(buffer, #err); \
+#define MAKE_CASE(err)                                                                                                 \
+    case err:                                                                                                          \
+        strcpy(buffer, #err);                                                                                          \
         break
 
     switch (err)
@@ -258,16 +258,16 @@ void core2_err_tostr(esp_err_t err, char *buffer)
 void core2_resetreason_tostr(esp_reset_reason_t err, char *buffer, bool desc)
 {
 #undef MAKE_CASE
-#define MAKE_CASE(err, descr)      \
-    case err:                      \
-        if (desc)                  \
-        {                          \
-            strcpy(buffer, descr); \
-        }                          \
-        else                       \
-        {                          \
-            strcpy(buffer, #err);  \
-        }                          \
+#define MAKE_CASE(err, descr)                                                                                          \
+    case err:                                                                                                          \
+        if (desc)                                                                                                      \
+        {                                                                                                              \
+            strcpy(buffer, descr);                                                                                     \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            strcpy(buffer, #err);                                                                                      \
+        }                                                                                                              \
         break
 
     switch (err)
@@ -505,8 +505,7 @@ void setup2(void *args)
 #if defined(CORE2_TR_MOD)
     {
         core2_shell_register(
-            "int0", [](core2_shell_func_params_t *params, int argc, char **argv)
-            { core2_gpio_set_interrupt0(); });
+            "int0", [](core2_shell_func_params_t *params, int argc, char **argv) { core2_gpio_set_interrupt0(); });
 
         core2_mcp320x_init();
         // run_tests();
@@ -554,8 +553,10 @@ void setup2(void *args)
 
 void setup()
 {
-    xTaskCreate(setup2, "setup2", 1024 * 128, NULL, 1, NULL);
-    vTaskDelete(NULL);
+    // xTaskCreate(setup2, "setup2", 1024 * 128, NULL, 1, NULL);
+    // vTaskDelete(NULL);
+
+    setup2(NULL);
 }
 
 #ifdef CORE2_WINDOWS
