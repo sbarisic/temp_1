@@ -8,6 +8,8 @@ volatile bool buzzer_enable = false;
 volatile bool leds_initialized = false;
 volatile float Volts[200];
 
+volatile bool periodic_send_data_enable = false;
+
 bool send_data_to_server(char *json_buffer, size_t json_len)
 {
     dprintf("Sending data - ");
@@ -107,19 +109,28 @@ void interrupt_read_data()
         read_temp_pressure(&temp, &press);
         dprintf("OK\n");
 
-        for (int i = 0; i < 200; i++)
+        if (periodic_send_data_enable)
         {
             core2_adc_read2(&v1, &v2, &cur);
-            Volts[i] = v2;
-            // core2_adc_read_ex((float *)&(Volts[i]), NULL, CORE2_ADC_CH2, false);
-            // Volts[i] = Volts[i] * 9.215 / 1000;
+        }
+        else
+        {
+            // TODO: 300 ms okidac ide ovdje
 
-            // WORKING!
-            // float V1, V2;
-            // core2_adc_read(&V1, &V2);
-            // Volts[i] = V2;
+            for (int i = 0; i < 200; i++)
+            {
+                core2_adc_read2(&v1, &v2, &cur);
+                Volts[i] = v2;
+                // core2_adc_read_ex((float *)&(Volts[i]), NULL, CORE2_ADC_CH2, false);
+                // Volts[i] = Volts[i] * 9.215 / 1000;
 
-            vTaskDelay(pdMS_TO_TICKS(1));
+                // WORKING!
+                // float V1, V2;
+                // core2_adc_read(&V1, &V2);
+                // Volts[i] = V2;
+
+                vTaskDelay(pdMS_TO_TICKS(1));
+            }
         }
 
         core2_json_t *json = core2_json_create();
@@ -165,6 +176,21 @@ void interrupt_read_data()
         }*/
 
         core2_web_unlock();
+    }
+}
+
+void periodic_timer_task(void *a)
+{
+    dprintf("Periodic timer task started\n");
+
+    for (;;)
+    {
+        core2_sleep(15000);
+
+        dprintf("Periodic!\n");
+        core2_gpio_set_interrupt0();
+
+        periodic_send_data_enable = true;
     }
 }
 
@@ -353,6 +379,8 @@ void core2_main()
 
     Wire.begin();
 
+    xTaskCreate(periodic_timer_task, "periodic_timer_task", 1024 * 5, NULL, 15, NULL);
+
     for (;;)
     {
         vPortYield();
@@ -367,6 +395,11 @@ void core2_main()
             dprintf("[INT 0]!\n");
             interrupt_read_data();
             // interrupt_read_voltage();
+
+            if (periodic_send_data_enable)
+            {
+                periodic_send_data_enable = false;
+            }
 
             core2_gpio_clear_interrupt0();
             core2_gpio_enable_interrupt0(true);
