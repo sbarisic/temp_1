@@ -611,7 +611,15 @@ void shell_set(core2_shell_func_params_t *params, int argc, char **argv)
         cvar->var_ptr = core2_string_copy(argv[2]);
         break;
 
+    case CORE2_CVAR_FLOAT:
+    {
+        float num = atof(argv[2]);
+        cvar->var_ptr = (void *)((int)num);
+        break;
+    }
+
     default:
+        // TODO
         eprintf("set cvar type not implemented: %d\n", cvar->var_type);
         break;
     }
@@ -642,7 +650,11 @@ void shell_get(core2_shell_func_params_t *params, int argc, char **argv)
         params->printf(params, "%s = %d", cvar->name, (int32_t)cvar->var_ptr);
         break;
 
+    case CORE2_CVAR_FLOAT:
+        break;
+
     default:
+        // TODO
         params->printf(params, "core2_shell_cvar_tostring() - unkown var_type %d\n", cvar->var_type);
         eprintf("core2_shell_cvar_tostring() - unkown var_type %d\n", cvar->var_type);
         break;

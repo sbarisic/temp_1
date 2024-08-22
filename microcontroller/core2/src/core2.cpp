@@ -448,7 +448,7 @@ void loop()
 {
 }
 
-void setup()
+void setup2(void *args)
 {
 #if defined(CORE2_DOOR_CONTROLLER)
     core2_door_controller_setup();
@@ -550,6 +550,12 @@ void setup()
         xTaskCreate(core2_main_impl, "core2_main", 1024 * 32, NULL, 1, NULL);
         vTaskDelete(NULL);
     #endif*/
+}
+
+void setup()
+{
+    xTaskCreate(setup2, "setup2", 1024 * 128, NULL, 1, NULL);
+    vTaskDelete(NULL);
 }
 
 #ifdef CORE2_WINDOWS
