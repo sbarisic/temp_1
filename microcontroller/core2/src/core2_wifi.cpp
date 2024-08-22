@@ -113,14 +113,14 @@ bool core2_wifi_ap_start()
         return false;
     }
 
-    const char *ssid = core2_shell_cvar_get_string_ex(cvar_network_ssid);
-    const char *pass = core2_shell_cvar_get_string_ex(cvar_network_password);
+    const char *ssid ;//= core2_shell_cvar_get_string_ex(cvar_network_ssid);
+    const char *pass ;//= core2_shell_cvar_get_string_ex(cvar_network_password);
 
-    if (ssid == NULL || pass == NULL)
-    {
+    //if (ssid == NULL || pass == NULL)
+    //{
         ssid = "core2_wifi_ap";
         pass = "core21234";
-    }
+    //}
 
     // TODO: Move to separate config
     if (!WiFi.softAP(ssid, pass))
